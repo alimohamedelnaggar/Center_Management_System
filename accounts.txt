@@ -1,0 +1,4 @@
+publish credentials removed from the repository on 2026-10-20.
+Rotate the password that used to live here; it was committed in git history.
+Store secrets with: dotnet user-secrets set <key> <value> (or environment variables).
+

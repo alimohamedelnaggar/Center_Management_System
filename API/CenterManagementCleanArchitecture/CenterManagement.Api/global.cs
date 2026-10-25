@@ -1,0 +1,17 @@
+﻿global using CenterManagement.Api.Base;
+global using CenterManagement.Api.Authorization;
+global using CenterManagement.Core;
+global using CenterManagement.Core.Features.Groups.Commands.Models;
+global using CenterManagement.Core.Features.Groups.Queries.Models;
+global using CenterManagement.Core.Filters;
+global using CenterManagement.Data.AppMetaData;
+global using CenterManagement.Infrustructure;
+global using CenterManagement.Infrustructure.ServiceExtentions;
+global using Microsoft.AspNetCore.Authorization;
+global using Microsoft.AspNetCore.Localization;
+global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.AspNetCore.Mvc.Infrastructure;
+global using Microsoft.AspNetCore.Mvc.Routing;
+global using Microsoft.Extensions.Options;
+global using Serilog;
+global using System.Globalization;

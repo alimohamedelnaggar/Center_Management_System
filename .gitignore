@@ -1,0 +1,46 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+
+# Environment
+*.local
+.env
+
+# Local secrets (connection strings, etc.)
+appsettings.Development.json
+
+# Visual Studio
+.vs/
+.vscode/*
+!.vscode/extensions.json
+
+# .NET
+bin/
+obj/
+.vs/
+
+# IDE
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Visual Studio files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.ntvs*
+*.njsproj
+*.sw?
