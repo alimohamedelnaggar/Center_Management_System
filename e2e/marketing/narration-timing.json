@@ -1,0 +1,740 @@
+{
+  "meta": {
+    "source": "e2e/marketing/narration.ar.json",
+    "wordsPerSecond": 2.3,
+    "generatedAt": "2026-11-02T12:52:39.041Z",
+    "note": "localMs is inside the scene; globalMs is inside marketing-tour.mp4. gapMs is the quiet room until the next beat."
+  },
+  "scenes": [
+    {
+      "scene": 1,
+      "name": "لوحة التحكم",
+      "durationMs": 51480,
+      "startMs": 0,
+      "beats": [
+        {
+          "atStep": "arrive",
+          "caption": "لوحة واحدة لكل أرقام المركز",
+          "text": "أول ما تفتح النظام، لوحة واحدة بتجمع أرقام السنتر.",
+          "localMs": 3690,
+          "globalMs": 3690,
+          "local": "00:04",
+          "global": "00:04",
+          "words": 9,
+          "estMs": 3913,
+          "gapMs": 4360,
+          "fits": true
+        },
+        {
+          "atStep": "students",
+          "caption": "الطلاب والمجموعات في لمحة",
+          "text": "الطلاب والمجموعات قدامك في لمحة، وتشوف الطلاب الجدد ونمو الطلاب الشهر ده.",
+          "localMs": 8050,
+          "globalMs": 8050,
+          "local": "00:08",
+          "global": "00:08",
+          "words": 12,
+          "estMs": 5217,
+          "gapMs": 9949,
+          "fits": true
+        },
+        {
+          "atStep": "finance",
+          "caption": "إيرادات الشهر وصافي الربح",
+          "text": "الوضع المالي واضح: الإيرادات وصافي الربح، وتقدر تتابع الإيرادات شهر ورا شهر.",
+          "localMs": 17999,
+          "globalMs": 17999,
+          "local": "00:18",
+          "global": "00:18",
+          "words": 12,
+          "estMs": 5217,
+          "gapMs": 10877,
+          "fits": true
+        },
+        {
+          "atStep": "attendance",
+          "caption": "نسبة الحضور محسوبة تلقائيًا",
+          "text": "ونسبة الحضور محسوبة تلقائي، وأفضل المجموعات مرتبة حسب حضورها.",
+          "localMs": 28876,
+          "globalMs": 28876,
+          "local": "00:29",
+          "global": "00:29",
+          "words": 9,
+          "estMs": 3913,
+          "gapMs": 16559,
+          "fits": true
+        },
+        {
+          "atStep": "done",
+          "caption": "قرارات مبنية على أرقام حقيقية",
+          "text": "كل ده في شاشة واحدة، وقراراتك مبنية على أرقام حقيقية.",
+          "localMs": 45435,
+          "globalMs": 45435,
+          "local": "00:45",
+          "global": "00:45",
+          "words": 10,
+          "estMs": 4348,
+          "gapMs": 6045,
+          "fits": true
+        }
+      ]
+    },
+    {
+      "scene": 2,
+      "name": "الطلاب",
+      "durationMs": 53520,
+      "startMs": 51480,
+      "beats": [
+        {
+          "atStep": "overview",
+          "caption": "الطلاب في شاشة واحدة",
+          "text": "لو عندك طالب جديد، إضافته بقت سهلة.",
+          "localMs": 3675,
+          "globalMs": 55155,
+          "local": "00:04",
+          "global": "00:55",
+          "words": 7,
+          "estMs": 3043,
+          "gapMs": 7029,
+          "fits": true
+        },
+        {
+          "atStep": "name",
+          "caption": "اكتب اسم الطالب كاملًا",
+          "text": "اكتب اسمه كامل، ورقم الطالب ورقم ولي الأمر، واختار المجموعة ونوع الاشتراك.",
+          "localMs": 10704,
+          "globalMs": 62184,
+          "local": "00:11",
+          "global": "01:02",
+          "words": 12,
+          "estMs": 5217,
+          "gapMs": 18977,
+          "fits": true
+        },
+        {
+          "atStep": "save",
+          "caption": "احفظ البيانات في ثوانٍ",
+          "text": "احفظ، والطالب بيظهر في القائمة على طول.",
+          "localMs": 29681,
+          "globalMs": 81161,
+          "local": "00:30",
+          "global": "01:21",
+          "words": 7,
+          "estMs": 3043,
+          "gapMs": 3644,
+          "fits": true
+        },
+        {
+          "atStep": "search",
+          "caption": "ابحث بالاسم أو الهاتف",
+          "text": "ولو العدد كبير، ابحث بالاسم أو بالهاتف وهتلاقيه على طول.",
+          "localMs": 33325,
+          "globalMs": 84805,
+          "local": "00:33",
+          "global": "01:25",
+          "words": 10,
+          "estMs": 4348,
+          "gapMs": 11958,
+          "fits": true
+        },
+        {
+          "atStep": "view",
+          "caption": "راجع بيانات الطالب كاملة",
+          "text": "من قائمة الإجراءات، افتح ملفه وراجع بياناته كاملة.",
+          "localMs": 45283,
+          "globalMs": 96763,
+          "local": "00:45",
+          "global": "01:37",
+          "words": 8,
+          "estMs": 3478,
+          "gapMs": 8237,
+          "fits": true
+        }
+      ]
+    },
+    {
+      "scene": 3,
+      "name": "الاستيراد من إكسل",
+      "durationMs": 81640,
+      "startMs": 105000,
+      "beats": [
+        {
+          "atStep": "students",
+          "caption": "كل طلابك في قائمة واحدة",
+          "text": "لو عندك قائمة طلاب في ملف إكسل، متكتبهاش بإيدك.",
+          "localMs": 2951,
+          "globalMs": 107951,
+          "local": "00:03",
+          "global": "01:48",
+          "words": 9,
+          "estMs": 3913,
+          "gapMs": 10199,
+          "fits": true
+        },
+        {
+          "atStep": "template",
+          "caption": "نزّل القالب واملأه",
+          "text": "من صفحة الطلاب، افتح استيراد من إكسل، ونزّل القالب واملأه على راحتك.",
+          "localMs": 13150,
+          "globalMs": 118150,
+          "local": "00:13",
+          "global": "01:58",
+          "words": 12,
+          "estMs": 5217,
+          "gapMs": 21514,
+          "fits": true
+        },
+        {
+          "atStep": "preview",
+          "caption": "راجع المعاينة قبل الحفظ",
+          "text": "ارفع الملف، والنظام بيعرضلك معاينة قبل أي حفظ. الصفوف المكررة واضحة، والصفوف الصح جاهزة للإضافة، والأخطاء ظاهرة صف بصف.",
+          "localMs": 34664,
+          "globalMs": 139664,
+          "local": "00:35",
+          "global": "02:20",
+          "words": 19,
+          "estMs": 8261,
+          "gapMs": 17446,
+          "fits": true
+        },
+        {
+          "atStep": "options",
+          "caption": "اختر طريقة التعامل مع المكرر",
+          "text": "وانت اللي بتختار طريقة التعامل مع المكرر.",
+          "localMs": 52110,
+          "globalMs": 157110,
+          "local": "00:52",
+          "global": "02:37",
+          "words": 7,
+          "estMs": 3043,
+          "gapMs": 5300,
+          "fits": true
+        },
+        {
+          "atStep": "commit",
+          "caption": "احفظ الكل بضغطة",
+          "text": "لما تطمن، احفظ الكل بضغطة، والطلاب بيضافوا للمركز.",
+          "localMs": 57410,
+          "globalMs": 162410,
+          "local": "00:57",
+          "global": "02:42",
+          "words": 8,
+          "estMs": 3478,
+          "gapMs": 12025,
+          "fits": true
+        },
+        {
+          "atStep": "done",
+          "caption": "استيراد منظم بدون إدخال يدوي",
+          "text": "استيراد منظم من غير إدخال يدوي.",
+          "localMs": 69435,
+          "globalMs": 174435,
+          "local": "01:09",
+          "global": "02:54",
+          "words": 6,
+          "estMs": 2609,
+          "gapMs": 12205,
+          "fits": true
+        }
+      ]
+    },
+    {
+      "scene": 4,
+      "name": "الحضور والغياب",
+      "durationMs": 74600,
+      "startMs": 186640,
+      "beats": [
+        {
+          "atStep": "qrOverview",
+          "caption": "كارت لكل طالب بكود QR",
+          "text": "كل طالب ليه كارت حضور بكود QR، وتقدر تطبع كروت الحصة بضغطة.",
+          "localMs": 3711,
+          "globalMs": 190351,
+          "local": "00:04",
+          "global": "03:10",
+          "words": 12,
+          "estMs": 5217,
+          "gapMs": 13210,
+          "fits": true
+        },
+        {
+          "atStep": "scanOpen",
+          "caption": "امسح الكود أو أدخله يدويًا",
+          "text": "وقت الحصة، افتح السكانر، وادخل كود الطالب بإيدك.",
+          "localMs": 16921,
+          "globalMs": 203561,
+          "local": "00:17",
+          "global": "03:24",
+          "words": 8,
+          "estMs": 3478,
+          "gapMs": 5608,
+          "fits": true
+        },
+        {
+          "atStep": "scanOk",
+          "caption": "تم تسجيل الحضور بكود الطالب",
+          "text": "النظام بيسجل الحضور، ولو الكود اتسجل قبل كده، بينبهك على طول.",
+          "localMs": 22529,
+          "globalMs": 209169,
+          "local": "00:23",
+          "global": "03:29",
+          "words": 11,
+          "estMs": 4783,
+          "gapMs": 16597,
+          "fits": true
+        },
+        {
+          "atStep": "overview",
+          "caption": "سجّل الحضور والغياب بضغطة",
+          "text": "ولو مش معاك سكانر، كشف الحضور موجود: سجّل الحضور والغياب بضغطة على الكارت.",
+          "localMs": 39126,
+          "globalMs": 225766,
+          "local": "00:39",
+          "global": "03:46",
+          "words": 13,
+          "estMs": 5652,
+          "gapMs": 8500,
+          "fits": true
+        },
+        {
+          "atStep": "save",
+          "caption": "احفظ الكشف واعتمده",
+          "text": "احفظ الكشف، والحضور بيتعتمد فورًا.",
+          "localMs": 47626,
+          "globalMs": 234266,
+          "local": "00:48",
+          "global": "03:54",
+          "words": 5,
+          "estMs": 2174,
+          "gapMs": 8460,
+          "fits": true
+        },
+        {
+          "atStep": "edit",
+          "caption": "يمكنك التعديل في أي وقت",
+          "text": "ولو حصل خطأ، عدّل في أي وقت، وبضغطة تانية ترجّع الحالة، وتحفظ الكشف النهائي.",
+          "localMs": 56086,
+          "globalMs": 242726,
+          "local": "00:56",
+          "global": "04:03",
+          "words": 14,
+          "estMs": 6087,
+          "gapMs": 18514,
+          "fits": true
+        }
+      ]
+    },
+    {
+      "scene": 5,
+      "name": "المالية",
+      "durationMs": 100480,
+      "startMs": 261240,
+      "beats": [
+        {
+          "atStep": "overdue",
+          "caption": "المتأخرون بالاسم والمبلغ",
+          "text": "وفي صفحة المتأخرين، كل طالب متأخر ظاهر بالاسم والمبلغ والمتبقي.",
+          "localMs": 7663,
+          "globalMs": 268903,
+          "local": "00:08",
+          "global": "04:29",
+          "words": 10,
+          "estMs": 4348,
+          "gapMs": 19672,
+          "fits": true
+        },
+        {
+          "atStep": "search",
+          "caption": "ابحث عن الطالب بالاسم",
+          "text": "ابحث بالاسم، واضغط إضافة دفعة. سجّل دفعة جزئية 300 جنيه. المتبقي بيتحدث في نفس اللحظة من 1300 لـ 1000، والحالة بتبقى دفع جزء.",
+          "localMs": 27335,
+          "globalMs": 288575,
+          "local": "00:27",
+          "global": "04:49",
+          "words": 23,
+          "estMs": 10000,
+          "gapMs": 42931,
+          "fits": true
+        },
+        {
+          "atStep": "expenses",
+          "caption": "مصروفاتك مصنفة ومسجلة",
+          "text": "وبعد التحصيل، المصروفات مصنفة ومسجلة، وصافي الربح واضح.",
+          "localMs": 70266,
+          "globalMs": 331506,
+          "local": "01:10",
+          "global": "05:32",
+          "words": 8,
+          "estMs": 3478,
+          "gapMs": 15210,
+          "fits": true
+        },
+        {
+          "atStep": "report",
+          "caption": "تقرير شهري للتصدير والطباعة",
+          "text": "وتقدر تصدّر تقرير شهري أو تطبعه ورقة منظمة.",
+          "localMs": 85476,
+          "globalMs": 346716,
+          "local": "01:25",
+          "global": "05:47",
+          "words": 8,
+          "estMs": 3478,
+          "gapMs": 15004,
+          "fits": true
+        }
+      ]
+    },
+    {
+      "scene": 6,
+      "name": "الامتحانات",
+      "durationMs": 109760,
+      "startMs": 361720,
+      "beats": [
+        {
+          "atStep": "bank",
+          "caption": "بنك أسئلة جاهز لكل مادة",
+          "text": "الامتحانات بتبدأ من بنك أسئلة جاهز لكل مادة.",
+          "localMs": 3674,
+          "globalMs": 365394,
+          "local": "00:04",
+          "global": "06:05",
+          "words": 8,
+          "estMs": 3478,
+          "gapMs": 4666,
+          "fits": true
+        },
+        {
+          "atStep": "questions",
+          "caption": "اختر نوع السؤال ودرجته",
+          "text": "اختار نوع السؤال ودرجته، وضيفه لبنك الأسئلة.",
+          "localMs": 8340,
+          "globalMs": 370060,
+          "local": "00:08",
+          "global": "06:10",
+          "words": 7,
+          "estMs": 3043,
+          "gapMs": 8988,
+          "fits": true
+        },
+        {
+          "atStep": "exams",
+          "caption": "أنشئ امتحانًا إلكترونيًا",
+          "text": "أنشئ امتحان إلكتروني، وحدد المجموعة والدرجة، والامتحان بيظهر في القائمة جاهز.",
+          "localMs": 17328,
+          "globalMs": 379048,
+          "local": "00:17",
+          "global": "06:19",
+          "words": 11,
+          "estMs": 4783,
+          "gapMs": 20538,
+          "fits": true
+        },
+        {
+          "atStep": "studentExam",
+          "caption": "الطالب يحل الامتحان من حسابه",
+          "text": "الطالب بيدخل من حسابه، يبدأ الامتحان، ويجاوب. سلّم الإجابات، والتصحيح بيتم تلقائي.",
+          "localMs": 37866,
+          "globalMs": 399586,
+          "local": "00:38",
+          "global": "06:40",
+          "words": 12,
+          "estMs": 5217,
+          "gapMs": 35117,
+          "fits": true
+        },
+        {
+          "atStep": "results",
+          "caption": "التصحيح التلقائي محسوب",
+          "text": "المدرس بيراجع النتائج، ويصحّح المقالي بنفسه، ويحفظ الدرجة. الدرجة النهائية بقت 5 من 6، يعني 83%.",
+          "localMs": 72983,
+          "globalMs": 434703,
+          "local": "01:13",
+          "global": "07:15",
+          "words": 16,
+          "estMs": 6957,
+          "gapMs": 19873,
+          "fits": true
+        },
+        {
+          "atStep": "publish",
+          "caption": "انشر النتائج للطلاب",
+          "text": "لما تنشر النتائج، الطالب بيشوف نتيجته على طول.",
+          "localMs": 92856,
+          "globalMs": 454576,
+          "local": "01:33",
+          "global": "07:35",
+          "words": 8,
+          "estMs": 3478,
+          "gapMs": 16904,
+          "fits": true
+        }
+      ]
+    },
+    {
+      "scene": 7,
+      "name": "من الموبايل",
+      "durationMs": 71200,
+      "startMs": 471480,
+      "beats": [
+        {
+          "atStep": "exams",
+          "caption": "كل امتحاناتك في شاشة واحدة",
+          "text": "الطالب بيفتح متصفح الموبايل ويلاقي امتحاناته كلها.",
+          "localMs": 3678,
+          "globalMs": 475158,
+          "local": "00:04",
+          "global": "07:55",
+          "words": 7,
+          "estMs": 3043,
+          "gapMs": 3875,
+          "fits": true
+        },
+        {
+          "atStep": "pending",
+          "caption": "النتيجة تظهر بعد النشر",
+          "text": "النتيجة مش بتظهر غير لما المدرس ينشرها.",
+          "localMs": 7553,
+          "globalMs": 479033,
+          "local": "00:08",
+          "global": "07:59",
+          "words": 7,
+          "estMs": 3043,
+          "gapMs": 6841,
+          "fits": true
+        },
+        {
+          "atStep": "result",
+          "caption": "النتيجة ظهرت بعد التصحيح",
+          "text": "وبعد النشر، بيشوف 3 من 3 و100%.",
+          "localMs": 14394,
+          "globalMs": 485874,
+          "local": "00:14",
+          "global": "08:06",
+          "words": 7,
+          "estMs": 3043,
+          "gapMs": 6717,
+          "fits": true
+        },
+        {
+          "atStep": "attendance",
+          "caption": "حضورك وغيابك مسجل",
+          "text": "حضوره وغيابه مسجل، ومدفوعاته والمتبقي واضحين.",
+          "localMs": 21111,
+          "globalMs": 492591,
+          "local": "00:21",
+          "global": "08:13",
+          "words": 6,
+          "estMs": 2609,
+          "gapMs": 13814,
+          "fits": true
+        },
+        {
+          "atStep": "children",
+          "caption": "تابع أبناءك من حساب واحد",
+          "text": "وولي الأمر بيدخل من حسابه يتابع أبناءه: حضور الابن قدامه، ودرجاته في كل امتحان، ومدفوعاته والمتبقي.",
+          "localMs": 34925,
+          "globalMs": 506405,
+          "local": "00:35",
+          "global": "08:26",
+          "words": 16,
+          "estMs": 6957,
+          "gapMs": 21198,
+          "fits": true
+        },
+        {
+          "atStep": "notify",
+          "caption": "غياب الابن يظهر في إشعاراته",
+          "text": "ولما الابن يغيب، الإشعار بيظهر في حسابه، وبضغطة بيتفتح ملف الابن.",
+          "localMs": 56123,
+          "globalMs": 527603,
+          "local": "00:56",
+          "global": "08:48",
+          "words": 11,
+          "estMs": 4783,
+          "gapMs": 15077,
+          "fits": true
+        }
+      ]
+    },
+    {
+      "scene": 8,
+      "name": "التقارير",
+      "durationMs": 54720,
+      "startMs": 542680,
+      "beats": [
+        {
+          "atStep": "dashboard",
+          "caption": "ابدأ من لوحة التحكم",
+          "text": "من لوحة التحكم، على شهر أكتوبر: الإيرادات 62 ألف جنيه، وصافي الربح 31,150.",
+          "localMs": 3696,
+          "globalMs": 546376,
+          "local": "00:04",
+          "global": "09:06",
+          "words": 13,
+          "estMs": 5652,
+          "gapMs": 13833,
+          "fits": true
+        },
+        {
+          "atStep": "totals",
+          "caption": "أرقام المركز كاملة",
+          "text": "افتح تقارير المركز: أرقام المركز كاملة، الطلاب والمدرسين والمساعدين والمجموعات.",
+          "localMs": 17529,
+          "globalMs": 560209,
+          "local": "00:18",
+          "global": "09:20",
+          "words": 10,
+          "estMs": 4348,
+          "gapMs": 4802,
+          "fits": true
+        },
+        {
+          "atStep": "finance",
+          "caption": "المحصّل والمصروفات والصافي",
+          "text": "والقيود المالية بالمحصّل 60,250 والصافي 31,150.",
+          "localMs": 22331,
+          "globalMs": 565011,
+          "local": "00:22",
+          "global": "09:25",
+          "words": 6,
+          "estMs": 2609,
+          "gapMs": 4810,
+          "fits": true
+        },
+        {
+          "atStep": "export",
+          "caption": "صدّر التقرير كملف CSV",
+          "text": "صدّر التقرير CSV أو اطبعه ورقة منظمة.",
+          "localMs": 27141,
+          "globalMs": 569821,
+          "local": "00:27",
+          "global": "09:30",
+          "words": 7,
+          "estMs": 3043,
+          "gapMs": 13997,
+          "fits": true
+        },
+        {
+          "atStep": "dark",
+          "caption": "وضع ليلي مريح للعين",
+          "text": "ووضع ليلي مريح للعين. التقارير جاهزة في أي وقت.",
+          "localMs": 41138,
+          "globalMs": 583818,
+          "local": "00:41",
+          "global": "09:44",
+          "words": 9,
+          "estMs": 3913,
+          "gapMs": 13582,
+          "fits": true
+        }
+      ]
+    },
+    {
+      "scene": 9,
+      "name": "المنصة",
+      "durationMs": 38360,
+      "startMs": 597400,
+      "beats": [
+        {
+          "atStep": "centers",
+          "caption": "المنصة تدير كل المراكز",
+          "text": "المنصة بتدير كل المراكز في مكان واحد. حالة كل مركز واضحة.",
+          "localMs": 3663,
+          "globalMs": 601063,
+          "local": "00:04",
+          "global": "10:01",
+          "words": 11,
+          "estMs": 4783,
+          "gapMs": 9634,
+          "fits": true
+        },
+        {
+          "atStep": "platform",
+          "caption": "أرقام المنصة في مكان واحد",
+          "text": "وأرقام المنصة كلها مجمعة قدامك.",
+          "localMs": 13297,
+          "globalMs": 610697,
+          "local": "00:13",
+          "global": "10:11",
+          "words": 5,
+          "estMs": 2174,
+          "gapMs": 6404,
+          "fits": true
+        },
+        {
+          "atStep": "teacher",
+          "caption": "المدرس يرى مجموعاته فقط",
+          "text": "والمدرس لما يدخل، بيشوف مجموعاته هو بس، وصفحاته على قد صلاحياته.",
+          "localMs": 19701,
+          "globalMs": 617101,
+          "local": "00:20",
+          "global": "10:17",
+          "words": 11,
+          "estMs": 4783,
+          "gapMs": 10159,
+          "fits": true
+        },
+        {
+          "atStep": "audit",
+          "caption": "كل إجراء في سجل المراجعة",
+          "text": "وكل إجراء على المنصة بيتسجل في سجل المراجعة.",
+          "localMs": 29860,
+          "globalMs": 627260,
+          "local": "00:30",
+          "global": "10:27",
+          "words": 8,
+          "estMs": 3478,
+          "gapMs": 8500,
+          "fits": true
+        }
+      ]
+    },
+    {
+      "scene": 10,
+      "name": "الختام",
+      "durationMs": 30440,
+      "startMs": 635760,
+      "beats": [
+        {
+          "atStep": "recap",
+          "caption": "طلاب وحضور ومالية",
+          "text": "باختصار: 139 طالب، وإيرادات 62,000 جنيه، وصافي ربح 31,150، ونسبة حضور 87.8%.",
+          "localMs": 3680,
+          "globalMs": 639440,
+          "local": "00:04",
+          "global": "10:39",
+          "words": 12,
+          "estMs": 5217,
+          "gapMs": 9215,
+          "fits": true
+        },
+        {
+          "atStep": "browser",
+          "caption": "افتحه من المتصفح",
+          "text": "كل ده في نظام واحد، من المتصفح، على الكمبيوتر والموبايل.",
+          "localMs": 12895,
+          "globalMs": 648655,
+          "local": "00:13",
+          "global": "10:49",
+          "words": 10,
+          "estMs": 4348,
+          "gapMs": 11945,
+          "fits": true
+        },
+        {
+          "atStep": "end",
+          "caption": "مركزك أوضح وأسهل",
+          "text": "ابدأ بتنظيم مركزك النهارده، ومركزك هيبقى أوضح وأسهل.",
+          "localMs": 24840,
+          "globalMs": 660600,
+          "local": "00:25",
+          "global": "11:01",
+          "words": 8,
+          "estMs": 3478,
+          "gapMs": 5600,
+          "fits": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "sceneId": "4",
+  "clipId": "scene04-attendance",
+  "role": "assistant",
+  "roleLabel": "مساعد",
+  "startPath": "/attendance",
+  "recordedAt": "2026-10-28T18:15:41.114Z",
+  "contextStartWall": 1793211341114,
+  "t0Wall": 1793211344951,
+  "tEndWall": 1793211381091,
+  "contextLeadInMs": 3837,
+  "durationMs": 36140,
+  "videoPath": "e2e/artifacts/marketing/raw/scene04-attendance/scene04-attendance.webm",
+  "steps": [
+    {
+      "id": "overview",
+      "atMs": 735
+    },
+    {
+      "id": "absent",
+      "atMs": 4812
+    },
+    {
+      "id": "save",
+      "atMs": 9235
+    },
+    {
+      "id": "saved",
+      "atMs": 14015
+    },
+    {
+      "id": "edit",
+      "atMs": 17695
+    },
+    {
+      "id": "restore",
+      "atMs": 22148
+    },
+    {
+      "id": "resave",
+      "atMs": 26555
+    },
+    {
+      "id": "done",
+      "atMs": 31221
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": []
+}

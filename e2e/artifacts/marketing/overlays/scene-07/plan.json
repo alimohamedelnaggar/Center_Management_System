@@ -1,0 +1,145 @@
+{
+  "sceneKey": "7",
+  "number": "٠٧",
+  "name": "من الموبايل",
+  "kicker": "بوابة الطالب وولي الأمر",
+  "title": "٠٧ — من الموبايل",
+  "targetSeconds": 74,
+  "titleMs": 2500,
+  "totalMs": 71114,
+  "fps": 25,
+  "width": 1920,
+  "height": 1080,
+  "captionBottomPx": 64,
+  "captionFadeMs": 240,
+  "titlePng": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-07\\title.png",
+  "segments": [
+    {
+      "clipId": "scene07-student",
+      "role": "student",
+      "roleLabel": "طالب",
+      "videoAbs": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\raw\\scene07-student\\scene07-student.webm",
+      "videoRel": "e2e/artifacts/marketing/raw/scene07-student/scene07-student.webm",
+      "seekMs": 4242,
+      "preRollMs": 450,
+      "durationMs": 31248,
+      "startMs": 2500,
+      "endMs": 33748
+    },
+    {
+      "clipId": "scene07-parent",
+      "role": "parent",
+      "roleLabel": "ولي أمر",
+      "videoAbs": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\raw\\scene07-parent\\scene07-parent.webm",
+      "videoRel": "e2e/artifacts/marketing/raw/scene07-parent/scene07-parent.webm",
+      "seekMs": 3939,
+      "preRollMs": 450,
+      "durationMs": 37366,
+      "startMs": 33748,
+      "endMs": 71114
+    }
+  ],
+  "captions": [
+    {
+      "id": "exams",
+      "text": "كل امتحاناتك في شاشة واحدة",
+      "clipId": "scene07-student",
+      "startMs": 3678,
+      "endMs": 7178,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-07\\cap-01-exams.png"
+    },
+    {
+      "id": "pending",
+      "text": "النتيجة تظهر بعد النشر",
+      "clipId": "scene07-student",
+      "startMs": 7553,
+      "endMs": 10653,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-07\\cap-02-pending.png"
+    },
+    {
+      "id": "result",
+      "text": "النتيجة ظهرت بعد التصحيح",
+      "clipId": "scene07-student",
+      "startMs": 14394,
+      "endMs": 17494,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-07\\cap-03-result.png"
+    },
+    {
+      "id": "attendance",
+      "text": "حضورك وغيابك مسجل",
+      "clipId": "scene07-student",
+      "startMs": 21111,
+      "endMs": 24111,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-07\\cap-04-attendance.png"
+    },
+    {
+      "id": "fees",
+      "text": "مدفوعاتك ومتبقي الاشتراك",
+      "clipId": "scene07-student",
+      "startMs": 26957,
+      "endMs": 29957,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-07\\cap-05-fees.png"
+    },
+    {
+      "id": "children",
+      "text": "تابع أبناءك من حساب واحد",
+      "clipId": "scene07-parent",
+      "startMs": 34925,
+      "endMs": 38425,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-07\\cap-06-children.png"
+    },
+    {
+      "id": "childAttendance",
+      "text": "حضور الابن أمامك",
+      "clipId": "scene07-parent",
+      "startMs": 38752,
+      "endMs": 41752,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-07\\cap-07-childAttendance.png"
+    },
+    {
+      "id": "childGrades",
+      "text": "ودرجاته في كل امتحان",
+      "clipId": "scene07-parent",
+      "startMs": 45713,
+      "endMs": 48813,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-07\\cap-08-childGrades.png"
+    },
+    {
+      "id": "childPayments",
+      "text": "ومدفوعاته والمبلغ المتبقي",
+      "clipId": "scene07-parent",
+      "startMs": 50584,
+      "endMs": 53584,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-07\\cap-09-childPayments.png"
+    },
+    {
+      "id": "notify",
+      "text": "غياب الابن يظهر في إشعاراته",
+      "clipId": "scene07-parent",
+      "startMs": 56123,
+      "endMs": 59623,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-07\\cap-10-notify.png"
+    },
+    {
+      "id": "done",
+      "text": "كل ذلك من متصفح الهاتف",
+      "clipId": "scene07-parent",
+      "startMs": 63708,
+      "endMs": 67208,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-07\\cap-11-done.png"
+    }
+  ],
+  "coverage": 0.496,
+  "renderedAt": "2026-11-02T12:20:29.083Z"
+}

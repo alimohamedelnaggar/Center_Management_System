@@ -1,0 +1,127 @@
+{
+  "at": "2026-10-31T09:24:16.725Z",
+  "examId": "4f29fc78-ae3d-477a-bdfe-8754ef71d83e",
+  "removedExams": 0,
+  "exam": {
+    "name": "اختبار تدريبي - الجبر",
+    "groupName": "الصف الثالث الإعدادي - أ",
+    "academicYearName": "2026 / 2027",
+    "mode": 2,
+    "durationMinutes": 120,
+    "questionsCount": 3,
+    "totalMarks": 6,
+    "isResultsPublished": false
+  },
+  "questions": [
+    {
+      "id": "3ae66ba3-0a0c-4d9c-87a8-47b03808a652",
+      "type": 1,
+      "typeName": "صح وغلط",
+      "mark": 1
+    },
+    {
+      "id": "c99b917d-600f-46a2-8d8f-31dd2e3fd301",
+      "type": 2,
+      "typeName": "اختيار من متعدد",
+      "mark": 2
+    },
+    {
+      "id": "684c1f87-7a86-45de-8c1d-93049a4185d3",
+      "type": 3,
+      "typeName": "مقالي",
+      "mark": 3
+    }
+  ],
+  "student": {
+    "studentId": "5c190376-6b0d-4873-bcc6-941200f6b154",
+    "fullName": "يوسف أحمد محمود"
+  },
+  "seededAttempt": null,
+  "beforePublish": {
+    "at": "2026-10-31T09:25:46.620Z",
+    "results": {
+      "score": null,
+      "totalMark": 6,
+      "isPublished": false,
+      "hasPendingManualGrading": true
+    },
+    "examsPage": {
+      "status": "finished",
+      "score": 3,
+      "scoredTotalMark": 6,
+      "hasPendingManualGrading": true
+    },
+    "screenshot": "scene-06-prepublish-exams.png",
+    "leak": true
+  },
+  "published": {
+    "studentId": "5c190376-6b0d-4873-bcc6-941200f6b154",
+    "studentName": "يوسف أحمد محمود",
+    "attemptId": "83472e35-2735-44c8-93a6-62050b71b032",
+    "status": "finished",
+    "score": 5,
+    "totalMark": 6,
+    "startedAt": "2026-10-31T11:25:15.6526777",
+    "submittedAt": "2026-10-31T11:25:39.2537144",
+    "hasPendingManualGrading": false,
+    "violationCount": 0,
+    "violations": []
+  },
+  "clips": {
+    "bank": "recorded",
+    "student": "recorded",
+    "grading": "recorded",
+    "result": "recorded",
+    "scene06-bank": {
+      "state": "reused",
+      "durationMs": 33744,
+      "steps": [
+        "bank",
+        "questions",
+        "exams",
+        "examRow"
+      ],
+      "consoleErrors": 0,
+      "pageErrors": 0
+    },
+    "scene06-student": {
+      "state": "reused",
+      "durationMs": 34666,
+      "steps": [
+        "studentExam",
+        "attempt",
+        "answers",
+        "submit"
+      ],
+      "consoleErrors": 0,
+      "pageErrors": 0
+    },
+    "scene06-grading": {
+      "state": "reused",
+      "durationMs": 30139,
+      "steps": [
+        "results",
+        "grade",
+        "essay",
+        "publish"
+      ],
+      "consoleErrors": 0,
+      "pageErrors": 0
+    },
+    "scene06-result": {
+      "state": "reused",
+      "durationMs": 6853,
+      "steps": [
+        "result"
+      ],
+      "consoleErrors": 0,
+      "pageErrors": 0
+    }
+  },
+  "afterPublish": {
+    "score": 5,
+    "totalMark": 6,
+    "isPublished": true,
+    "hasPendingManualGrading": false
+  }
+}

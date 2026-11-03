@@ -1,0 +1,133 @@
+{
+  "sceneKey": "2",
+  "number": "٠٢",
+  "name": "الطلاب",
+  "kicker": "إضافة طالب",
+  "title": "٠٢ — الطلاب",
+  "targetSeconds": 55,
+  "titleMs": 2500,
+  "totalMs": 53487,
+  "fps": 25,
+  "width": 1920,
+  "height": 1080,
+  "captionBottomPx": 64,
+  "captionFadeMs": 240,
+  "titlePng": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-02\\title.png",
+  "segments": [
+    {
+      "clipId": "scene02-add-student",
+      "role": "assistant",
+      "roleLabel": "مساعد",
+      "videoAbs": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\raw\\scene02-add-student\\scene02-add-student.webm",
+      "videoRel": "e2e/artifacts/marketing/raw/scene02-add-student/scene02-add-student.webm",
+      "seekMs": 3492,
+      "preRollMs": 450,
+      "durationMs": 50987,
+      "startMs": 2500,
+      "endMs": 53487
+    }
+  ],
+  "captions": [
+    {
+      "id": "overview",
+      "text": "الطلاب في شاشة واحدة",
+      "clipId": "scene02-add-student",
+      "startMs": 3675,
+      "endMs": 6775,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-02\\cap-01-overview.png"
+    },
+    {
+      "id": "openAdd",
+      "text": "أضف طالبًا جديدًا بضغطة",
+      "clipId": "scene02-add-student",
+      "startMs": 7104,
+      "endMs": 10204,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-02\\cap-02-openAdd.png"
+    },
+    {
+      "id": "name",
+      "text": "اكتب اسم الطالب كاملًا",
+      "clipId": "scene02-add-student",
+      "startMs": 10704,
+      "endMs": 13804,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-02\\cap-03-name.png"
+    },
+    {
+      "id": "phones",
+      "text": "رقم الطالب وولي الأمر",
+      "clipId": "scene02-add-student",
+      "startMs": 15452,
+      "endMs": 18552,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-02\\cap-04-phones.png"
+    },
+    {
+      "id": "group",
+      "text": "اختر المجموعة ونوع الاشتراك",
+      "clipId": "scene02-add-student",
+      "startMs": 21438,
+      "endMs": 24538,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-02\\cap-05-group.png"
+    },
+    {
+      "id": "save",
+      "text": "احفظ البيانات في ثوانٍ",
+      "clipId": "scene02-add-student",
+      "startMs": 29681,
+      "endMs": 32781,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-02\\cap-06-save.png"
+    },
+    {
+      "id": "search",
+      "text": "ابحث بالاسم أو الهاتف",
+      "clipId": "scene02-add-student",
+      "startMs": 33325,
+      "endMs": 36425,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-02\\cap-07-search.png"
+    },
+    {
+      "id": "found",
+      "text": "الطالب ظهر في النتائج",
+      "clipId": "scene02-add-student",
+      "startMs": 37649,
+      "endMs": 40749,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-02\\cap-08-found.png"
+    },
+    {
+      "id": "actions",
+      "text": "افتح قائمة الإجراءات",
+      "clipId": "scene02-add-student",
+      "startMs": 41413,
+      "endMs": 44413,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-02\\cap-09-actions.png"
+    },
+    {
+      "id": "view",
+      "text": "راجع بيانات الطالب كاملة",
+      "clipId": "scene02-add-student",
+      "startMs": 45283,
+      "endMs": 48383,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-02\\cap-10-view.png"
+    },
+    {
+      "id": "done",
+      "text": "الطالب أصبح في قائمتك",
+      "clipId": "scene02-add-student",
+      "startMs": 49041,
+      "endMs": 52141,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-02\\cap-11-done.png"
+    }
+  ],
+  "coverage": 0.636,
+  "renderedAt": "2026-10-28T17:36:04.988Z"
+}

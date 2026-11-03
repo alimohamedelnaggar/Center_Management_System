@@ -1,0 +1,26 @@
+{
+  "sceneId": "4",
+  "clipId": "scene04-qr",
+  "role": "assistant",
+  "roleLabel": "مساعد",
+  "startPath": "/qr-cards",
+  "recordedAt": "2026-10-28T18:14:42.069Z",
+  "contextStartWall": 1793211282069,
+  "t0Wall": 1793211295960,
+  "tEndWall": 1793211308770,
+  "contextLeadInMs": 13891,
+  "durationMs": 12810,
+  "videoPath": "e2e/artifacts/marketing/raw/scene04-qr/scene04-qr.webm",
+  "steps": [
+    {
+      "id": "qrOverview",
+      "atMs": 761
+    },
+    {
+      "id": "qrPrint",
+      "atMs": 5107
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": []
+}

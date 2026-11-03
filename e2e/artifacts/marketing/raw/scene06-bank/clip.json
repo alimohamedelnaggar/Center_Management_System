@@ -1,0 +1,34 @@
+{
+  "sceneId": "6",
+  "clipId": "scene06-bank",
+  "role": "teacher",
+  "roleLabel": "مدرس",
+  "startPath": "/question-bank",
+  "recordedAt": "2026-10-31T09:24:17.249Z",
+  "contextStartWall": 1793438657249,
+  "t0Wall": 1793438663084,
+  "tEndWall": 1793438696828,
+  "contextLeadInMs": 5835,
+  "durationMs": 33744,
+  "videoPath": "e2e/artifacts/marketing/raw/scene06-bank/scene06-bank.webm",
+  "steps": [
+    {
+      "id": "bank",
+      "atMs": 724
+    },
+    {
+      "id": "questions",
+      "atMs": 5390
+    },
+    {
+      "id": "exams",
+      "atMs": 14378
+    },
+    {
+      "id": "examRow",
+      "atMs": 27662
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": []
+}

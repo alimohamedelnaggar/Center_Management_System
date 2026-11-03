@@ -1,0 +1,142 @@
+{
+  "sceneKey": "3",
+  "number": "٠٣",
+  "name": "الاستيراد من إكسل",
+  "kicker": "معاينة قبل الحفظ",
+  "title": "٠٣ — الاستيراد من إكسل",
+  "targetSeconds": 80,
+  "titleMs": 2500,
+  "totalMs": 81606,
+  "fps": 25,
+  "width": 1920,
+  "height": 1080,
+  "captionBottomPx": 64,
+  "captionFadeMs": 240,
+  "titlePng": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-03\\title.png",
+  "segments": [
+    {
+      "clipId": "scene03-import",
+      "role": "teacher",
+      "roleLabel": "مدرس",
+      "videoAbs": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\raw\\scene03-import\\scene03-import.webm",
+      "videoRel": "e2e/artifacts/marketing/raw/scene03-import/scene03-import.webm",
+      "seekMs": 22352,
+      "preRollMs": 450,
+      "durationMs": 79106,
+      "startMs": 2500,
+      "endMs": 81606
+    }
+  ],
+  "captions": [
+    {
+      "id": "students",
+      "text": "كل طلابك في قائمة واحدة",
+      "clipId": "scene03-import",
+      "startMs": 2951,
+      "endMs": 6451,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-03\\cap-01-students.png"
+    },
+    {
+      "id": "open",
+      "text": "استورد طلابك من ملف إكسل",
+      "clipId": "scene03-import",
+      "startMs": 7061,
+      "endMs": 10561,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-03\\cap-02-open.png"
+    },
+    {
+      "id": "template",
+      "text": "نزّل القالب واملأه",
+      "clipId": "scene03-import",
+      "startMs": 13150,
+      "endMs": 16150,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-03\\cap-03-template.png"
+    },
+    {
+      "id": "upload",
+      "text": "ارفع الملف واختبره قبل الحفظ",
+      "clipId": "scene03-import",
+      "startMs": 25729,
+      "endMs": 29229,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-03\\cap-04-upload.png"
+    },
+    {
+      "id": "preview",
+      "text": "راجع المعاينة قبل الحفظ",
+      "clipId": "scene03-import",
+      "startMs": 34664,
+      "endMs": 37764,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-03\\cap-05-preview.png"
+    },
+    {
+      "id": "duplicates",
+      "text": "الصفوف المكررة ظاهرة بوضوح",
+      "clipId": "scene03-import",
+      "startMs": 38312,
+      "endMs": 41412,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-03\\cap-06-duplicates.png"
+    },
+    {
+      "id": "valid",
+      "text": "الصفوف الصحيحة جاهزة للإضافة",
+      "clipId": "scene03-import",
+      "startMs": 42854,
+      "endMs": 45954,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-03\\cap-07-valid.png"
+    },
+    {
+      "id": "errors",
+      "text": "راجع الأخطاء صفًا بصف",
+      "clipId": "scene03-import",
+      "startMs": 47420,
+      "endMs": 50520,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-03\\cap-08-errors.png"
+    },
+    {
+      "id": "options",
+      "text": "اختر طريقة التعامل مع المكرر",
+      "clipId": "scene03-import",
+      "startMs": 52110,
+      "endMs": 55610,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-03\\cap-09-options.png"
+    },
+    {
+      "id": "commit",
+      "text": "احفظ الكل بضغطة",
+      "clipId": "scene03-import",
+      "startMs": 57410,
+      "endMs": 60410,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-03\\cap-10-commit.png"
+    },
+    {
+      "id": "result",
+      "text": "الطلاب أضيفوا للمركز",
+      "clipId": "scene03-import",
+      "startMs": 64012,
+      "endMs": 67012,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-03\\cap-11-result.png"
+    },
+    {
+      "id": "done",
+      "text": "استيراد منظم بدون إدخال يدوي",
+      "clipId": "scene03-import",
+      "startMs": 69435,
+      "endMs": 72935,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-03\\cap-12-done.png"
+    }
+  ],
+  "coverage": 0.477,
+  "renderedAt": "2026-10-31T09:29:29.144Z"
+}

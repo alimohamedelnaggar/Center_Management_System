@@ -1,0 +1,79 @@
+{
+  "sceneKey": "10",
+  "number": "١٠",
+  "name": "الختام",
+  "kicker": "ابدأ الآن",
+  "title": "١٠ — الختام",
+  "targetSeconds": 33,
+  "titleMs": 2500,
+  "totalMs": 30387,
+  "fps": 25,
+  "width": 1920,
+  "height": 1080,
+  "captionBottomPx": 64,
+  "captionFadeMs": 240,
+  "titlePng": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-10\\title.png",
+  "segments": [
+    {
+      "clipId": "scene10-closing",
+      "role": "centerOwner",
+      "roleLabel": "صاحب المركز",
+      "videoAbs": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\raw\\scene10-closing\\scene10-closing.webm",
+      "videoRel": "e2e/artifacts/marketing/raw/scene10-closing/scene10-closing.webm",
+      "seekMs": 5653,
+      "preRollMs": 450,
+      "durationMs": 27887,
+      "startMs": 2500,
+      "endMs": 30387
+    }
+  ],
+  "captions": [
+    {
+      "id": "recap",
+      "text": "طلاب وحضور ومالية",
+      "clipId": "scene10-closing",
+      "startMs": 3680,
+      "endMs": 6680,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-10\\cap-01-recap.png"
+    },
+    {
+      "id": "one",
+      "text": "كل ذلك في نظام واحد",
+      "clipId": "scene10-closing",
+      "startMs": 8098,
+      "endMs": 11598,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-10\\cap-02-one.png"
+    },
+    {
+      "id": "browser",
+      "text": "افتحه من المتصفح",
+      "clipId": "scene10-closing",
+      "startMs": 12895,
+      "endMs": 15895,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-10\\cap-03-browser.png"
+    },
+    {
+      "id": "start",
+      "text": "ابدأ بتنظيم مركزك اليوم",
+      "clipId": "scene10-closing",
+      "startMs": 20201,
+      "endMs": 23301,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-10\\cap-04-start.png"
+    },
+    {
+      "id": "end",
+      "text": "مركزك أوضح وأسهل",
+      "clipId": "scene10-closing",
+      "startMs": 24840,
+      "endMs": 27840,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-10\\cap-05-end.png"
+    }
+  ],
+  "coverage": 0.513,
+  "renderedAt": "2026-11-02T12:20:35.513Z"
+}

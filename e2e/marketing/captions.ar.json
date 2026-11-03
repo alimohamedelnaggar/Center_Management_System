@@ -1,0 +1,204 @@
+{
+  "meta": {
+    "version": 2,
+    "fps": 25,
+    "width": 1920,
+    "height": 1080,
+    "titleCardMs": 2500,
+    "minCaptionMs": 3000,
+    "maxCaptionMs": 4000
+  },
+  "scenes": {
+    "1": {
+      "number": "٠١",
+      "name": "لوحة التحكم",
+      "kicker": "نظرة شاملة",
+      "targetSeconds": 45,
+      "clips": ["scene01-overview"],
+      "steps": {
+        "arrive": { "text": "لوحة واحدة لكل أرقام المركز" },
+        "students": { "text": "الطلاب والمجموعات في لمحة" },
+        "movement": { "text": "حركة الطلاب هذا الشهر" },
+        "finance": { "text": "إيرادات الشهر وصافي الربح" },
+        "revenue": { "text": "تابع نمو إيراداتك شهر بعد شهر" },
+        "attendance": { "text": "نسبة الحضور محسوبة تلقائيًا" },
+        "groups": { "text": "أفضل المجموعات بأدائها" },
+        "topGroup": { "text": "المجموعة الأعلى في الحضور" },
+        "done": { "text": "قرارات مبنية على أرقام حقيقية" }
+      }
+    },
+    "2": {
+      "number": "٠٢",
+      "name": "الطلاب",
+      "kicker": "إضافة طالب",
+      "targetSeconds": 55,
+      "clips": ["scene02-add-student"],
+      "steps": {
+        "overview": { "text": "الطلاب في شاشة واحدة" },
+        "openAdd": { "text": "أضف طالبًا جديدًا بضغطة" },
+        "name": { "text": "اكتب اسم الطالب كاملًا" },
+        "phones": { "text": "رقم الطالب وولي الأمر" },
+        "group": { "text": "اختر المجموعة ونوع الاشتراك" },
+        "save": { "text": "احفظ البيانات في ثوانٍ" },
+        "search": { "text": "ابحث بالاسم أو الهاتف" },
+        "found": { "text": "الطالب ظهر في النتائج" },
+        "actions": { "text": "افتح قائمة الإجراءات" },
+        "view": { "text": "راجع بيانات الطالب كاملة" },
+        "done": { "text": "الطالب أصبح في قائمتك" }
+      }
+    },
+    "3": {
+      "number": "٠٣",
+      "name": "الاستيراد من إكسل",
+      "kicker": "معاينة قبل الحفظ",
+      "targetSeconds": 80,
+      "clips": ["scene03-import"],
+      "steps": {
+        "students": { "text": "كل طلابك في قائمة واحدة" },
+        "open": { "text": "استورد طلابك من ملف إكسل" },
+        "template": { "text": "نزّل القالب واملأه" },
+        "upload": { "text": "ارفع الملف واختبره قبل الحفظ" },
+        "preview": { "text": "راجع المعاينة قبل الحفظ" },
+        "duplicates": { "text": "الصفوف المكررة ظاهرة بوضوح" },
+        "valid": { "text": "الصفوف الصحيحة جاهزة للإضافة" },
+        "errors": { "text": "راجع الأخطاء صفًا بصف" },
+        "options": { "text": "اختر طريقة التعامل مع المكرر" },
+        "commit": { "text": "احفظ الكل بضغطة" },
+        "result": { "text": "الطلاب أضيفوا للمركز" },
+        "done": { "text": "استيراد منظم بدون إدخال يدوي" }
+      }
+    },
+    "4": {
+      "number": "٠٤",
+      "name": "الحضور والغياب",
+      "kicker": "كارت وكشف",
+      "targetSeconds": 72,
+      "clips": ["scene04-qr", "scene04-scanner", "scene04-attendance"],
+      "steps": {
+        "qrOverview": { "text": "كارت لكل طالب بكود QR" },
+        "qrPrint": { "text": "اطبع كروت الحضور بضغطة" },
+        "scanOpen": { "text": "امسح الكود أو أدخله يدويًا" },
+        "scanOk": { "text": "تم تسجيل الحضور بكود الطالب" },
+        "scanDup": { "text": "ينبّهك النظام لو الكود اتسجل قبل كده" },
+        "overview": { "text": "سجّل الحضور والغياب بضغطة" },
+        "absent": { "text": "اضغط على الكارت لتسجيل الغياب" },
+        "save": { "text": "احفظ الكشف واعتمده" },
+        "saved": { "text": "تم اعتماد الحضور فورًا" },
+        "edit": { "text": "يمكنك التعديل في أي وقت" },
+        "restore": { "text": "اضغط مرة أخرى لتصحيح الحالة" },
+        "resave": { "text": "الكشف النهائي محفوظ" },
+        "done": { "text": "كل حصة موثقة" }
+      }
+    },
+    "5": {
+      "number": "٠٥",
+      "name": "المالية",
+      "kicker": "تحصيل ومصروفات",
+      "targetSeconds": 70,
+      "clips": ["scene05-finance", "scene05-reports"],
+      "steps": {
+        "finance": { "text": "كل دفعة مسجلة باسم صاحبها" },
+        "overdue": { "text": "المتأخرون بالاسم والمبلغ" },
+        "totals": { "text": "إجمالي المتبقي أمامك" },
+        "search": { "text": "ابحث عن الطالب بالاسم" },
+        "partial": { "text": "اضغط إضافة دفعة" },
+        "amount": { "text": "سجّل دفعة جزئية في ثوانٍ" },
+        "remaining": { "text": "المتبقي يتحدث فورًا" },
+        "expenses": { "text": "مصروفاتك مصنفة ومسجلة" },
+        "net": { "text": "صافي الربح واضح" },
+        "report": { "text": "تقرير شهري للتصدير والطباعة" },
+        "done": { "text": "ماليتك تحت السيطرة" }
+      }
+    },
+    "6": {
+      "number": "٠٦",
+      "name": "الامتحانات",
+      "kicker": "أسئلة ونتائج",
+      "targetSeconds": 80,
+      "clips": ["scene06-bank", "scene06-student", "scene06-grading", "scene06-result"],
+      "steps": {
+        "bank": { "text": "بنك أسئلة جاهز لكل مادة" },
+        "questions": { "text": "اختر نوع السؤال ودرجته" },
+        "exams": { "text": "أنشئ امتحانًا إلكترونيًا" },
+        "examRow": { "text": "الامتحان جاهز في القائمة" },
+        "studentExam": { "text": "الطالب يحل الامتحان من حسابه" },
+        "attempt": { "text": "ابدأ الامتحان من هنا" },
+        "answers": { "text": "اختر الإجابة الصح" },
+        "submit": { "text": "سلّم الإجابات والتصحيح تلقائي" },
+        "results": { "text": "التصحيح التلقائي محسوب" },
+        "grade": { "text": "صحّح المقالي بنفسك" },
+        "essay": { "text": "احفظ درجة المقالي" },
+        "publish": { "text": "انشر النتائج للطلاب" },
+        "result": { "text": "النتيجة وصلت للطالب" }
+      }
+    },
+    "7": {
+      "number": "٠٧",
+      "name": "من الموبايل",
+      "kicker": "بوابة الطالب وولي الأمر",
+      "targetSeconds": 74,
+      "clips": ["scene07-student", "scene07-parent"],
+      "steps": {
+        "exams": { "text": "كل امتحاناتك في شاشة واحدة" },
+        "pending": { "text": "النتيجة تظهر بعد النشر" },
+        "result": { "text": "النتيجة ظهرت بعد التصحيح" },
+        "attendance": { "text": "حضورك وغيابك مسجل" },
+        "fees": { "text": "مدفوعاتك ومتبقي الاشتراك" },
+        "children": { "text": "تابع أبناءك من حساب واحد" },
+        "childAttendance": { "text": "حضور الابن أمامك" },
+        "childGrades": { "text": "ودرجاته في كل امتحان" },
+        "childPayments": { "text": "ومدفوعاته والمبلغ المتبقي" },
+        "notify": { "text": "غياب الابن يظهر في إشعاراته" },
+        "done": { "text": "كل ذلك من متصفح الهاتف" }
+      }
+    },
+    "8": {
+      "number": "٠٨",
+      "name": "التقارير",
+      "kicker": "تصدير وطباعة",
+      "targetSeconds": 45,
+      "clips": ["scene08-dashboard", "scene08-reports"],
+      "steps": {
+        "dashboard": { "text": "ابدأ من لوحة التحكم" },
+        "money": { "text": "الإيرادات وصافي الربح" },
+        "reports": { "text": "افتح تقارير المركز" },
+        "totals": { "text": "أرقام المركز كاملة" },
+        "finance": { "text": "المحصّل والمصروفات والصافي" },
+        "export": { "text": "صدّر التقرير كملف CSV" },
+        "print": { "text": "أو اطبعه ورقة منظمة" },
+        "dark": { "text": "وضع ليلي مريح للعين" },
+        "done": { "text": "التقارير جاهزة في أي وقت" }
+      }
+    },
+    "9": {
+      "number": "٠٩",
+      "name": "المنصة",
+      "kicker": "مراكز وصلاحيات",
+      "targetSeconds": 45,
+      "clips": ["scene09-centers", "scene09-platform", "scene09-teacher", "scene09-audit"],
+      "steps": {
+        "centers": { "text": "المنصة تدير كل المراكز" },
+        "status": { "text": "حالة كل مركز واضحة" },
+        "platform": { "text": "أرقام المنصة في مكان واحد" },
+        "teacher": { "text": "المدرس يرى مجموعاته فقط" },
+        "pages": { "text": "صفحات المدرس حسب صلاحياته" },
+        "audit": { "text": "كل إجراء في سجل المراجعة" },
+        "done": { "text": "تحكم كامل من مكان واحد" }
+      }
+    },
+    "10": {
+      "number": "١٠",
+      "name": "الختام",
+      "kicker": "ابدأ الآن",
+      "targetSeconds": 33,
+      "clips": ["scene10-closing"],
+      "steps": {
+        "recap": { "text": "طلاب وحضور ومالية" },
+        "one": { "text": "كل ذلك في نظام واحد" },
+        "browser": { "text": "افتحه من المتصفح" },
+        "start": { "text": "ابدأ بتنظيم مركزك اليوم" },
+        "end": { "text": "مركزك أوضح وأسهل" }
+      }
+    }
+  }
+}

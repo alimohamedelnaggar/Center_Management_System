@@ -1,0 +1,38 @@
+{
+  "sceneId": "10",
+  "clipId": "scene10-closing",
+  "role": "centerOwner",
+  "roleLabel": "صاحب المركز",
+  "startPath": "/adminDashboard",
+  "recordedAt": "2026-11-02T12:19:37.640Z",
+  "contextStartWall": 1793621977640,
+  "t0Wall": 1793621983743,
+  "tEndWall": 1793622011180,
+  "contextLeadInMs": 6103,
+  "durationMs": 27437,
+  "videoPath": "e2e/artifacts/marketing/raw/scene10-closing/scene10-closing.webm",
+  "steps": [
+    {
+      "id": "recap",
+      "atMs": 730
+    },
+    {
+      "id": "one",
+      "atMs": 5148
+    },
+    {
+      "id": "browser",
+      "atMs": 9945
+    },
+    {
+      "id": "start",
+      "atMs": 17251
+    },
+    {
+      "id": "end",
+      "atMs": 21890
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": []
+}

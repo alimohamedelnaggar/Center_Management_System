@@ -21,6 +21,31 @@ using System.Linq;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Safety gates run before any service resolution. They only parse the
+// configured connection string; no database connection is opened here.
+if (builder.Environment.IsEnvironment(E2ESeedSafety.RequiredEnvironment))
+{
+    var safety = E2ESeedSafety.ValidateOrThrow(
+        builder.Environment.EnvironmentName,
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        Environment.GetEnvironmentVariable(E2ESeedSafety.AllowSeedEnvironmentVariable));
+
+    // This line is the first startup proof that the process is in E2E and
+    // points at the allowed local/CI E2E database. It never includes a password.
+    Console.WriteLine(
+        $"[E2E SAFETY] PASS environment={builder.Environment.EnvironmentName} " +
+        $"server={safety.Server} database={safety.Database}");
+    Console.Out.Flush();
+}
+
+// Development-only test centers must never be seeded into a remote database.
+if (builder.Configuration.GetValue<bool>("Seed:TestCentersEnabled"))
+{
+    E2ESeedSafety.ValidateLocalServerOrThrow(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        "Seed:TestCentersEnabled");
+}
+
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
@@ -80,10 +105,13 @@ builder.Services.AddTransient<IUrlHelper>(serviceProvider =>
 builder.Services.AddTransient<AuthFilter>();
 
 // Scheduled question exam reminders
-builder.Services.AddHostedService<QuestionExamReminderService>();
+if (!builder.Environment.IsEnvironment("E2E"))
+{
+    builder.Services.AddHostedService<QuestionExamReminderService>();
 
-// Scheduled parent "overdue subscription" notifications
-builder.Services.AddHostedService<ParentOverdueReminderService>();
+    // Scheduled parent "overdue subscription" notifications
+    builder.Services.AddHostedService<ParentOverdueReminderService>();
+}
 
 // Serilog
 Log.Logger = new LoggerConfiguration()
@@ -116,12 +144,28 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
 
-    await IdentitySeeder.SeedAsync(services);
-
-    // Development-only, opt-in demo accounts (Seed:DemoEnabled + Seed:DemoPassword).
-    if (app.Environment.IsDevelopment())
+    if (app.Environment.IsEnvironment("E2E"))
     {
-        await DemoDataSeeder.SeedAsync(services);
+        // Two dedicated, fully fictional data sets. The marketing seeder is
+        // opt-in (E2E_MARKETING_SEED=1) and a separate PowerShell runner points
+        // it at CenterManagement_E2E_Marketing, so it never touches the Stage C
+        // database. Both seeders apply pending migrations and create the
+        // Identity roles.
+        if (string.Equals(
+                Environment.GetEnvironmentVariable("E2E_MARKETING_SEED"),
+                "1",
+                StringComparison.Ordinal))
+        {
+            await E2EMarketingSeeder.SeedAsync(services);
+        }
+        else
+        {
+            await E2ESeeder.SeedAsync(services);
+        }
+    }
+    else
+    {
+        await IdentitySeeder.SeedAsync(services);
     }
 }
 

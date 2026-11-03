@@ -1,0 +1,79 @@
+{
+  "at": "2026-10-31T09:19:42.834Z",
+  "billingPeriod": "2026-10",
+  "removedPayments": 1,
+  "prep": {
+    "periods": [
+      "2026-08-01",
+      "2026-09-01"
+    ],
+    "payments": [
+      {
+        "id": "023f6292-19e4-4dd9-ab15-b6fcadf81a1e",
+        "period": "2026-08-01",
+        "amount": 1300,
+        "created": true
+      },
+      {
+        "id": "00eb194a-b1e9-4608-9f11-9c114542705b",
+        "period": "2026-09-01",
+        "amount": 1300,
+        "created": true
+      }
+    ],
+    "note": "Settled off camera only to satisfy the prior-unpaid-month rule; removed after clip 1."
+  },
+  "before": {
+    "studentId": "5420869c-c75c-4b1f-8a69-80bc6c435762",
+    "studentName": "مالك سامي حسن",
+    "totalAmount": 1300,
+    "paidAmount": 0,
+    "remainingAmount": 1300,
+    "meta": {
+      "totalStudents": 12,
+      "totalDue": 11400,
+      "totalPaid": 0,
+      "totalRemaining": 11400
+    }
+  },
+  "recorded": {
+    "amount": 300,
+    "remainingAfter": 1000,
+    "delta": 300
+  },
+  "dashboard": {
+    "before": {
+      "monthlyRevenue": 61700,
+      "monthlyExpenses": 24350,
+      "monthlyAssistantSalaries": 6500,
+      "netProfit": 30850
+    },
+    "after": {
+      "monthlyRevenue": 62000,
+      "monthlyExpenses": 24350,
+      "monthlyAssistantSalaries": 6500,
+      "netProfit": 31150
+    },
+    "screen": {
+      "revenue": 62000,
+      "costs": 24350,
+      "salaries": 6500,
+      "net": 31150
+    }
+  },
+  "verified": {
+    "paymentId": "0523c42d-0ff6-400c-b53c-d54d75963513",
+    "amount": 300,
+    "remainingAmount": 1000,
+    "delta": 300,
+    "status": 1
+  },
+  "cleanup": {
+    "removedPayments": [
+      "023f6292-19e4-4dd9-ab15-b6fcadf81a1e",
+      "00eb194a-b1e9-4608-9f11-9c114542705b"
+    ],
+    "remainingAmount": 1000,
+    "monthlyPayments": 1
+  }
+}

@@ -1,0 +1,133 @@
+{
+  "sceneKey": "9",
+  "number": "٠٩",
+  "name": "المنصة",
+  "kicker": "مراكز وصلاحيات",
+  "title": "٠٩ — المنصة",
+  "targetSeconds": 45,
+  "titleMs": 2500,
+  "totalMs": 38278,
+  "fps": 25,
+  "width": 1920,
+  "height": 1080,
+  "captionBottomPx": 64,
+  "captionFadeMs": 240,
+  "titlePng": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-09\\title.png",
+  "segments": [
+    {
+      "clipId": "scene09-centers",
+      "role": "superAdmin",
+      "roleLabel": "مدير المنصة",
+      "videoAbs": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\raw\\scene09-centers\\scene09-centers.webm",
+      "videoRel": "e2e/artifacts/marketing/raw/scene09-centers/scene09-centers.webm",
+      "seekMs": 4662,
+      "preRollMs": 450,
+      "durationMs": 9630,
+      "startMs": 2500,
+      "endMs": 12130
+    },
+    {
+      "clipId": "scene09-platform",
+      "role": "superAdmin",
+      "roleLabel": "مدير المنصة",
+      "videoAbs": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\raw\\scene09-platform\\scene09-platform.webm",
+      "videoRel": "e2e/artifacts/marketing/raw/scene09-platform/scene09-platform.webm",
+      "seekMs": 4443,
+      "preRollMs": 450,
+      "durationMs": 6402,
+      "startMs": 12130,
+      "endMs": 18532
+    },
+    {
+      "clipId": "scene09-teacher",
+      "role": "teacher",
+      "roleLabel": "مدرس",
+      "videoAbs": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\raw\\scene09-teacher\\scene09-teacher.webm",
+      "videoRel": "e2e/artifacts/marketing/raw/scene09-teacher/scene09-teacher.webm",
+      "seekMs": 4505,
+      "preRollMs": 450,
+      "durationMs": 10159,
+      "startMs": 18532,
+      "endMs": 28691
+    },
+    {
+      "clipId": "scene09-audit",
+      "role": "superAdmin",
+      "roleLabel": "مدير المنصة",
+      "videoAbs": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\raw\\scene09-audit\\scene09-audit.webm",
+      "videoRel": "e2e/artifacts/marketing/raw/scene09-audit/scene09-audit.webm",
+      "seekMs": 4435,
+      "preRollMs": 450,
+      "durationMs": 9587,
+      "startMs": 28691,
+      "endMs": 38278
+    }
+  ],
+  "captions": [
+    {
+      "id": "centers",
+      "text": "المنصة تدير كل المراكز",
+      "clipId": "scene09-centers",
+      "startMs": 3663,
+      "endMs": 6763,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-09\\cap-01-centers.png"
+    },
+    {
+      "id": "status",
+      "text": "حالة كل مركز واضحة",
+      "clipId": "scene09-centers",
+      "startMs": 7244,
+      "endMs": 10344,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-09\\cap-02-status.png"
+    },
+    {
+      "id": "platform",
+      "text": "أرقام المنصة في مكان واحد",
+      "clipId": "scene09-platform",
+      "startMs": 13297,
+      "endMs": 16797,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-09\\cap-03-platform.png"
+    },
+    {
+      "id": "teacher",
+      "text": "المدرس يرى مجموعاته فقط",
+      "clipId": "scene09-teacher",
+      "startMs": 19701,
+      "endMs": 22801,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-09\\cap-04-teacher.png"
+    },
+    {
+      "id": "pages",
+      "text": "صفحات المدرس حسب صلاحياته",
+      "clipId": "scene09-teacher",
+      "startMs": 23546,
+      "endMs": 26646,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-09\\cap-05-pages.png"
+    },
+    {
+      "id": "audit",
+      "text": "كل إجراء في سجل المراجعة",
+      "clipId": "scene09-audit",
+      "startMs": 29860,
+      "endMs": 33360,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-09\\cap-06-audit.png"
+    },
+    {
+      "id": "done",
+      "text": "تحكم كامل من مكان واحد",
+      "clipId": "scene09-audit",
+      "startMs": 33667,
+      "endMs": 37167,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-09\\cap-07-done.png"
+    }
+  ],
+  "coverage": 0.598,
+  "renderedAt": "2026-11-02T12:20:33.712Z"
+}

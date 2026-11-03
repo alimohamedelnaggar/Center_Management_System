@@ -12,6 +12,10 @@ export default function ImpersonationBanner() {
 
   const targetName = useMemo(
     () =>
+      // ClaimTypes.Name is the xmlsoap 2005/05 URI, not the 2008/06 one.
+      user?.[
+        "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"
+      ] ??
       user?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/name"] ??
       user?.name ??
       "مستخدم",

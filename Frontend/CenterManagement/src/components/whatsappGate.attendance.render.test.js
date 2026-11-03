@@ -62,6 +62,22 @@ function auth(role, enabledModules) {
 const render = () =>
   renderToStaticMarkup(h(MemoryRouter, null, h(AttendanceSheet)));
 
+describe("AttendanceSheet search box", () => {
+  it("renders the student search box as a real input element", () => {
+    state.auth = auth("Assistant", [MODULES.ATTENDANCE]);
+
+    const html = render();
+    const placeholder = 'placeholder="ابحث باسم الطالب أو الهاتف..."';
+
+    expect(html).toContain(placeholder);
+    expect(html).not.toContain("inputSearch");
+    // The field must be a real <input>, not an unknown custom tag.
+    expect(html).toMatch(
+      new RegExp(`<input[^>]*${placeholder.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`),
+    );
+  });
+});
+
 describe("AttendanceSheet bulk whatsapp button honours the whatsapp module", () => {
   it("renders the action when whatsapp is enabled", () => {
     state.auth = auth("Assistant", [MODULES.ATTENDANCE, MODULES.WHATSAPP]);

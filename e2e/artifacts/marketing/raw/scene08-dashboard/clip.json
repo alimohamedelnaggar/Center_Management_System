@@ -1,0 +1,26 @@
+{
+  "sceneId": "8",
+  "clipId": "scene08-dashboard",
+  "role": "centerOwner",
+  "roleLabel": "صاحب المركز",
+  "startPath": "/adminDashboard",
+  "recordedAt": "2026-11-02T12:15:14.611Z",
+  "contextStartWall": 1793621714611,
+  "t0Wall": 1793621721449,
+  "tEndWall": 1793621731179,
+  "contextLeadInMs": 6838,
+  "durationMs": 9730,
+  "videoPath": "e2e/artifacts/marketing/raw/scene08-dashboard/scene08-dashboard.webm",
+  "steps": [
+    {
+      "id": "dashboard",
+      "atMs": 746
+    },
+    {
+      "id": "money",
+      "atMs": 4395
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": []
+}

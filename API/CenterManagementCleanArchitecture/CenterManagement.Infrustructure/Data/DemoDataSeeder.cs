@@ -23,7 +23,6 @@ namespace CenterManagement.Infrustructure.Data;
 public static class DemoDataSeeder
 {
     private const string DemoCenterName = "المركز التجريبي";
-    private const string DefaultTestCenterPassword = "TestCenter@123";
 
     public static async Task SeedAsync(IServiceProvider serviceProvider)
     {
@@ -38,10 +37,25 @@ public static class DemoDataSeeder
         // demo accounts below so they can be seeded on their own.
         if (configuration.GetValue<bool>("Seed:TestCentersEnabled"))
         {
-            var testCenterPassword =
-                configuration["Seed:TestCenterPassword"] ?? DefaultTestCenterPassword;
+            // The test-center seeder is additive but it must never write to a
+            // remote database. This mirrors the host-level guard and also
+            // protects direct seeder calls.
+            E2ESeedSafety.ValidateLocalServerOrThrow(
+                configuration.GetConnectionString("DefaultConnection"),
+                "Seed:TestCentersEnabled");
 
-            await EnsureTestCentersAsync(dbContext, userManager, logger, testCenterPassword);
+            var testCenterPassword = configuration["Seed:TestCenterPassword"];
+
+            if (string.IsNullOrWhiteSpace(testCenterPassword))
+            {
+                logger.LogWarning(
+                    "Seed:TestCentersEnabled is true but Seed:TestCenterPassword is not configured. " +
+                    "No test centers were created.");
+            }
+            else
+            {
+                await EnsureTestCentersAsync(dbContext, userManager, logger, testCenterPassword);
+            }
         }
 
         if (!configuration.GetValue<bool>("Seed:DemoEnabled"))

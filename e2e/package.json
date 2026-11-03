@@ -1,0 +1,21 @@
+{
+  "name": "center-management-e2e",
+  "private": true,
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Playwright feature tour for the Center Management System",
+  "scripts": {
+    "preflight": "node scripts/preflight.mjs",
+    "pretest": "node scripts/preflight.mjs",
+    "test": "playwright test",
+    "pretest:smoke": "node scripts/preflight.mjs",
+    "test:smoke": "playwright test tests/role-login.spec.js",
+    "pretest:video": "node scripts/preflight.mjs",
+    "test:video": "playwright test tests/feature-tour.spec.js",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.1",
+    "xlsx": "^0.18.5"
+  }
+}

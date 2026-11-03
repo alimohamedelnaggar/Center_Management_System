@@ -1,0 +1,26 @@
+{
+  "sceneId": "9",
+  "clipId": "scene09-audit",
+  "role": "superAdmin",
+  "roleLabel": "مدير المنصة",
+  "startPath": "/audit-log",
+  "recordedAt": "2026-11-02T12:17:30.447Z",
+  "contextStartWall": 1793621850447,
+  "t0Wall": 1793621855332,
+  "tEndWall": 1793621864469,
+  "contextLeadInMs": 4885,
+  "durationMs": 9137,
+  "videoPath": "e2e/artifacts/marketing/raw/scene09-audit/scene09-audit.webm",
+  "steps": [
+    {
+      "id": "audit",
+      "atMs": 719
+    },
+    {
+      "id": "done",
+      "atMs": 4526
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": []
+}

@@ -1,0 +1,50 @@
+{
+  "sceneId": "5",
+  "clipId": "scene05-finance",
+  "role": "centerOwner",
+  "roleLabel": "صاحب المركز",
+  "startPath": "/finance",
+  "recordedAt": "2026-10-31T09:19:43.398Z",
+  "contextStartWall": 1793438383398,
+  "t0Wall": 1793438388891,
+  "tEndWall": 1793438455033,
+  "contextLeadInMs": 5493,
+  "durationMs": 66142,
+  "videoPath": "e2e/artifacts/marketing/raw/scene05-finance/scene05-finance.webm",
+  "steps": [
+    {
+      "id": "finance",
+      "atMs": 735
+    },
+    {
+      "id": "overdue",
+      "atMs": 4713
+    },
+    {
+      "id": "totals",
+      "atMs": 19694
+    },
+    {
+      "id": "search",
+      "atMs": 24385
+    },
+    {
+      "id": "partial",
+      "atMs": 45212
+    },
+    {
+      "id": "amount",
+      "atMs": 50270
+    },
+    {
+      "id": "remaining",
+      "atMs": 57257
+    }
+  ],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 403 ()",
+    "Error loading prefilled group data: AxiosError: Request failed with status code 403\n    at settle (http://localhost:5173/node_modules/.vite/deps/axios.js?v=fb126726:1799:12)\n    at XMLHttpRequest.onloadend (http://localhost:5173/node_modules/.vite/deps/axios.js?v=fb126726:2329:7)\n    at Axios.request (http://localhost:5173/node_modules/.vite/deps/axios.js?v=fb126726:3340:43)\n    at async Object.getStudentsForAttendance (http://localhost:5173/src/services/attendanceService.js:19:22)\n    at async ",
+    "Failed to load resource: the server responded with a status of 403 ()"
+  ],
+  "pageErrors": []
+}

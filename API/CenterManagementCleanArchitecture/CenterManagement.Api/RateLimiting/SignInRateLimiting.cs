@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 
 namespace CenterManagement.Api.RateLimiting;
 
@@ -17,6 +18,9 @@ public sealed class SignInRateLimitedAttribute : Attribute;
 /// one keyed by the submitted phone number, so neither a single machine nor a
 /// single account can be hammered quickly. Rejections return HTTP 429 with an
 /// Arabic message and a <c>Retry-After</c> header.
+///
+/// Limits are configurable through <c>RateLimiting:SignIn</c> so the E2E
+/// environment can disable them; defaults preserve production behaviour.
 /// </summary>
 public sealed class SignInRateLimitingMiddleware
 {
@@ -27,18 +31,32 @@ public sealed class SignInRateLimitingMiddleware
     private const string UnknownPartition = "unknown";
 
     private readonly RequestDelegate _next;
-    private readonly PartitionedRateLimiter<string> _ipLimiter;
-    private readonly PartitionedRateLimiter<string> _phoneLimiter;
+    private readonly bool _enabled;
+    private readonly PartitionedRateLimiter<string>? _ipLimiter;
+    private readonly PartitionedRateLimiter<string>? _phoneLimiter;
 
-    public SignInRateLimitingMiddleware(RequestDelegate next)
+    public SignInRateLimitingMiddleware(
+        RequestDelegate next,
+        IConfiguration configuration)
     {
         _next = next;
+
+        var section = configuration.GetSection("RateLimiting:SignIn");
+        _enabled = section.GetValue("Enabled", true);
+
+        if (!_enabled)
+            return;
+
+        var ipLimit = Math.Max(1, section.GetValue("IpPermitLimit", IpPermitLimit));
+        var userLimit = Math.Max(1, section.GetValue("UserPermitLimit", UserPermitLimit));
+        var windowSeconds = Math.Max(1, section.GetValue("WindowSeconds", (int)Window.TotalSeconds));
+        var window = TimeSpan.FromSeconds(windowSeconds);
 
         _ipLimiter = PartitionedRateLimiter.Create<string, string>(key =>
             RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = IpPermitLimit,
-                Window = Window,
+                PermitLimit = ipLimit,
+                Window = window,
                 QueueLimit = 0,
                 AutoReplenishment = true
             }));
@@ -46,8 +64,8 @@ public sealed class SignInRateLimitingMiddleware
         _phoneLimiter = PartitionedRateLimiter.Create<string, string>(key =>
             RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = UserPermitLimit,
-                Window = Window,
+                PermitLimit = userLimit,
+                Window = window,
                 QueueLimit = 0,
                 AutoReplenishment = true
             }));
@@ -55,14 +73,15 @@ public sealed class SignInRateLimitingMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
-        if (context.GetEndpoint()?.Metadata.GetMetadata<SignInRateLimitedAttribute>() is null)
+        if (!_enabled ||
+            context.GetEndpoint()?.Metadata.GetMetadata<SignInRateLimitedAttribute>() is null)
         {
             await _next(context);
             return;
         }
 
         var ip = context.Connection.RemoteIpAddress?.ToString() ?? UnknownPartition;
-        using var ipLease = _ipLimiter.AttemptAcquire(ip);
+        using var ipLease = _ipLimiter!.AttemptAcquire(ip);
 
         if (!ipLease.IsAcquired)
         {
@@ -71,7 +90,7 @@ public sealed class SignInRateLimitingMiddleware
         }
 
         var phone = await GetPhoneNumberAsync(context);
-        using var phoneLease = _phoneLimiter.AttemptAcquire(phone);
+        using var phoneLease = _phoneLimiter!.AttemptAcquire(phone);
 
         if (!phoneLease.IsAcquired)
         {

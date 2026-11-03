@@ -1,0 +1,22 @@
+{
+  "sceneId": "9",
+  "clipId": "scene09-platform",
+  "role": "superAdmin",
+  "roleLabel": "مدير المنصة",
+  "startPath": "/platform",
+  "recordedAt": "2026-11-02T12:16:57.662Z",
+  "contextStartWall": 1793621817662,
+  "t0Wall": 1793621822555,
+  "tEndWall": 1793621828507,
+  "contextLeadInMs": 4893,
+  "durationMs": 5952,
+  "videoPath": "e2e/artifacts/marketing/raw/scene09-platform/scene09-platform.webm",
+  "steps": [
+    {
+      "id": "platform",
+      "atMs": 717
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": []
+}

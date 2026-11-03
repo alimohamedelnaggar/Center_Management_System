@@ -1,0 +1,62 @@
+{
+  "sceneId": "2",
+  "clipId": "scene02-add-student",
+  "role": "assistant",
+  "roleLabel": "مساعد",
+  "startPath": "/dashboard",
+  "recordedAt": "2026-10-28T17:22:14.769Z",
+  "contextStartWall": 1793208134769,
+  "t0Wall": 1793208138711,
+  "tEndWall": 1793208189248,
+  "contextLeadInMs": 3942,
+  "durationMs": 50537,
+  "videoPath": "e2e/artifacts/marketing/raw/scene02-add-student/scene02-add-student.webm",
+  "steps": [
+    {
+      "id": "overview",
+      "atMs": 725
+    },
+    {
+      "id": "openAdd",
+      "atMs": 4154
+    },
+    {
+      "id": "name",
+      "atMs": 7754
+    },
+    {
+      "id": "phones",
+      "atMs": 12502
+    },
+    {
+      "id": "group",
+      "atMs": 18488
+    },
+    {
+      "id": "save",
+      "atMs": 26731
+    },
+    {
+      "id": "search",
+      "atMs": 30375
+    },
+    {
+      "id": "found",
+      "atMs": 34699
+    },
+    {
+      "id": "actions",
+      "atMs": 38463
+    },
+    {
+      "id": "view",
+      "atMs": 42333
+    },
+    {
+      "id": "done",
+      "atMs": 46091
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": []
+}

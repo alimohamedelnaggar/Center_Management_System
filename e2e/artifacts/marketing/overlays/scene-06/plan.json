@@ -1,0 +1,187 @@
+{
+  "sceneKey": "6",
+  "number": "٠٦",
+  "name": "الامتحانات",
+  "kicker": "أسئلة ونتائج",
+  "title": "٠٦ — الامتحانات",
+  "targetSeconds": 80,
+  "titleMs": 2500,
+  "totalMs": 109702,
+  "fps": 25,
+  "width": 1920,
+  "height": 1080,
+  "captionBottomPx": 64,
+  "captionFadeMs": 240,
+  "titlePng": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-06\\title.png",
+  "segments": [
+    {
+      "clipId": "scene06-bank",
+      "role": "teacher",
+      "roleLabel": "مدرس",
+      "videoAbs": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\raw\\scene06-bank\\scene06-bank.webm",
+      "videoRel": "e2e/artifacts/marketing/raw/scene06-bank/scene06-bank.webm",
+      "seekMs": 5385,
+      "preRollMs": 450,
+      "durationMs": 34194,
+      "startMs": 2500,
+      "endMs": 36694
+    },
+    {
+      "clipId": "scene06-student",
+      "role": "student",
+      "roleLabel": "طالب",
+      "videoAbs": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\raw\\scene06-student\\scene06-student.webm",
+      "videoRel": "e2e/artifacts/marketing/raw/scene06-student/scene06-student.webm",
+      "seekMs": 5246,
+      "preRollMs": 450,
+      "durationMs": 35116,
+      "startMs": 36694,
+      "endMs": 71810
+    },
+    {
+      "clipId": "scene06-grading",
+      "role": "teacher",
+      "roleLabel": "مدرس",
+      "videoAbs": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\raw\\scene06-grading\\scene06-grading.webm",
+      "videoRel": "e2e/artifacts/marketing/raw/scene06-grading/scene06-grading.webm",
+      "seekMs": 4937,
+      "preRollMs": 450,
+      "durationMs": 30589,
+      "startMs": 71810,
+      "endMs": 102399
+    },
+    {
+      "clipId": "scene06-result",
+      "role": "student",
+      "roleLabel": "طالب",
+      "videoAbs": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\raw\\scene06-result\\scene06-result.webm",
+      "videoRel": "e2e/artifacts/marketing/raw/scene06-result/scene06-result.webm",
+      "seekMs": 5394,
+      "preRollMs": 450,
+      "durationMs": 7303,
+      "startMs": 102399,
+      "endMs": 109702
+    }
+  ],
+  "captions": [
+    {
+      "id": "bank",
+      "text": "بنك أسئلة جاهز لكل مادة",
+      "clipId": "scene06-bank",
+      "startMs": 3674,
+      "endMs": 7174,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-06\\cap-01-bank.png"
+    },
+    {
+      "id": "questions",
+      "text": "اختر نوع السؤال ودرجته",
+      "clipId": "scene06-bank",
+      "startMs": 8340,
+      "endMs": 11440,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-06\\cap-02-questions.png"
+    },
+    {
+      "id": "exams",
+      "text": "أنشئ امتحانًا إلكترونيًا",
+      "clipId": "scene06-bank",
+      "startMs": 17328,
+      "endMs": 20328,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-06\\cap-03-exams.png"
+    },
+    {
+      "id": "examRow",
+      "text": "الامتحان جاهز في القائمة",
+      "clipId": "scene06-bank",
+      "startMs": 30612,
+      "endMs": 33712,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-06\\cap-04-examRow.png"
+    },
+    {
+      "id": "studentExam",
+      "text": "الطالب يحل الامتحان من حسابه",
+      "clipId": "scene06-student",
+      "startMs": 37866,
+      "endMs": 41366,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-06\\cap-05-studentExam.png"
+    },
+    {
+      "id": "attempt",
+      "text": "ابدأ الامتحان من هنا",
+      "clipId": "scene06-student",
+      "startMs": 42404,
+      "endMs": 45504,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-06\\cap-06-attempt.png"
+    },
+    {
+      "id": "answers",
+      "text": "اختر الإجابة الصح",
+      "clipId": "scene06-student",
+      "startMs": 47800,
+      "endMs": 50800,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-06\\cap-07-answers.png"
+    },
+    {
+      "id": "submit",
+      "text": "سلّم الإجابات والتصحيح تلقائي",
+      "clipId": "scene06-student",
+      "startMs": 60934,
+      "endMs": 64034,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-06\\cap-08-submit.png"
+    },
+    {
+      "id": "results",
+      "text": "التصحيح التلقائي محسوب",
+      "clipId": "scene06-grading",
+      "startMs": 72983,
+      "endMs": 75983,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-06\\cap-09-results.png"
+    },
+    {
+      "id": "grade",
+      "text": "صحّح المقالي بنفسك",
+      "clipId": "scene06-grading",
+      "startMs": 80325,
+      "endMs": 83325,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-06\\cap-10-grade.png"
+    },
+    {
+      "id": "essay",
+      "text": "احفظ درجة المقالي",
+      "clipId": "scene06-grading",
+      "startMs": 86130,
+      "endMs": 89130,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-06\\cap-11-essay.png"
+    },
+    {
+      "id": "publish",
+      "text": "انشر النتائج للطلاب",
+      "clipId": "scene06-grading",
+      "startMs": 92856,
+      "endMs": 95856,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-06\\cap-12-publish.png"
+    },
+    {
+      "id": "result",
+      "text": "النتيجة وصلت للطالب",
+      "clipId": "scene06-result",
+      "startMs": 103596,
+      "endMs": 106596,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-06\\cap-13-result.png"
+    }
+  ],
+  "coverage": 0.368,
+  "renderedAt": "2026-10-31T09:29:36.917Z"
+}

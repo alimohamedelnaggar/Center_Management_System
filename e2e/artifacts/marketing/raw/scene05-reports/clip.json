@@ -1,0 +1,36 @@
+{
+  "sceneId": "5",
+  "clipId": "scene05-reports",
+  "role": "centerOwner",
+  "roleLabel": "صاحب المركز",
+  "startPath": "/expense",
+  "recordedAt": "2026-10-31T09:23:20.563Z",
+  "contextStartWall": 1793438600563,
+  "t0Wall": 1793438606761,
+  "tEndWall": 1793438637635,
+  "contextLeadInMs": 6198,
+  "durationMs": 30874,
+  "videoPath": "e2e/artifacts/marketing/raw/scene05-reports/scene05-reports.webm",
+  "steps": [
+    {
+      "id": "expenses",
+      "atMs": 724
+    },
+    {
+      "id": "net",
+      "atMs": 4688
+    },
+    {
+      "id": "report",
+      "atMs": 15934
+    },
+    {
+      "id": "done",
+      "atMs": 25025
+    }
+  ],
+  "consoleErrors": [
+    "`value` prop on `%s` should not be null. Consider using an empty string to clear the component or `undefined` for uncontrolled components. select"
+  ],
+  "pageErrors": []
+}

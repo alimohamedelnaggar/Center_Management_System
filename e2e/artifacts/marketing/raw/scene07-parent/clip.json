@@ -1,0 +1,42 @@
+{
+  "sceneId": "7",
+  "clipId": "scene07-parent",
+  "role": "parent",
+  "roleLabel": "ولي أمر",
+  "startPath": "/parent/dashboard",
+  "recordedAt": "2026-11-02T12:12:30.061Z",
+  "contextStartWall": 1793621550061,
+  "t0Wall": 1793621554450,
+  "tEndWall": 1793621591366,
+  "contextLeadInMs": 4389,
+  "durationMs": 36916,
+  "videoPath": "e2e/artifacts/marketing/raw/scene07-parent/scene07-parent.webm",
+  "steps": [
+    {
+      "id": "children",
+      "atMs": 727
+    },
+    {
+      "id": "childAttendance",
+      "atMs": 4554
+    },
+    {
+      "id": "childGrades",
+      "atMs": 11515
+    },
+    {
+      "id": "childPayments",
+      "atMs": 16386
+    },
+    {
+      "id": "notify",
+      "atMs": 21925
+    },
+    {
+      "id": "done",
+      "atMs": 29510
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": []
+}

@@ -1,0 +1,30 @@
+{
+  "sceneId": "4",
+  "clipId": "scene04-scanner",
+  "role": "assistant",
+  "roleLabel": "مساعد",
+  "startPath": "/scanner",
+  "recordedAt": "2026-10-28T18:15:12.607Z",
+  "contextStartWall": 1793211312607,
+  "t0Wall": 1793211317267,
+  "tEndWall": 1793211338998,
+  "contextLeadInMs": 4660,
+  "durationMs": 21731,
+  "videoPath": "e2e/artifacts/marketing/raw/scene04-scanner/scene04-scanner.webm",
+  "steps": [
+    {
+      "id": "scanOpen",
+      "atMs": 711
+    },
+    {
+      "id": "scanOk",
+      "atMs": 6319
+    },
+    {
+      "id": "scanDup",
+      "atMs": 12059
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": []
+}

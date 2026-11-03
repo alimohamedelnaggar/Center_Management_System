@@ -29,6 +29,9 @@ bin/
 obj/
 .vs/
 
+# Runtime study-note uploads created by the E2E seed
+API/CenterManagementCleanArchitecture/CenterManagement.Api/wwwroot/notes/
+
 # IDE
 .idea/
 

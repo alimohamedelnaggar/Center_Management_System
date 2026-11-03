@@ -1,0 +1,17 @@
+{
+  "at": "2026-10-31T08:35:47.338Z",
+  "file": "طلاب_جدد.xlsx",
+  "rows": 6,
+  "preview": {
+    "total": 6,
+    "valid": 2,
+    "duplicate": 2,
+    "error": 2
+  },
+  "commit": {
+    "created": 2,
+    "updated": 0,
+    "skipped": 1,
+    "failed": 3
+  }
+}

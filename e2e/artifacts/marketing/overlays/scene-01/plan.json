@@ -1,0 +1,115 @@
+{
+  "sceneKey": "1",
+  "number": "٠١",
+  "name": "لوحة التحكم",
+  "kicker": "نظرة شاملة",
+  "title": "٠١ — لوحة التحكم",
+  "targetSeconds": 45,
+  "titleMs": 2500,
+  "totalMs": 51426,
+  "fps": 25,
+  "width": 1920,
+  "height": 1080,
+  "captionBottomPx": 64,
+  "captionFadeMs": 240,
+  "titlePng": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-01\\title.png",
+  "segments": [
+    {
+      "clipId": "scene01-overview",
+      "role": "centerOwner",
+      "roleLabel": "صاحب المركز",
+      "videoAbs": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\raw\\scene01-overview\\scene01-overview.webm",
+      "videoRel": "e2e/artifacts/marketing/raw/scene01-overview/scene01-overview.webm",
+      "seekMs": 3432,
+      "preRollMs": 450,
+      "durationMs": 48926,
+      "startMs": 2500,
+      "endMs": 51426
+    }
+  ],
+  "captions": [
+    {
+      "id": "arrive",
+      "text": "لوحة واحدة لكل أرقام المركز",
+      "clipId": "scene01-overview",
+      "startMs": 3690,
+      "endMs": 7190,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-01\\cap-01-arrive.png"
+    },
+    {
+      "id": "students",
+      "text": "الطلاب والمجموعات في لمحة",
+      "clipId": "scene01-overview",
+      "startMs": 8050,
+      "endMs": 11150,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-01\\cap-02-students.png"
+    },
+    {
+      "id": "movement",
+      "text": "حركة الطلاب هذا الشهر",
+      "clipId": "scene01-overview",
+      "startMs": 12517,
+      "endMs": 15617,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-01\\cap-03-movement.png"
+    },
+    {
+      "id": "finance",
+      "text": "إيرادات الشهر وصافي الربح",
+      "clipId": "scene01-overview",
+      "startMs": 17999,
+      "endMs": 21099,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-01\\cap-04-finance.png"
+    },
+    {
+      "id": "revenue",
+      "text": "تابع نمو إيراداتك شهر بعد شهر",
+      "clipId": "scene01-overview",
+      "startMs": 23461,
+      "endMs": 27361,
+      "durationMs": 3900,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-01\\cap-05-revenue.png"
+    },
+    {
+      "id": "attendance",
+      "text": "نسبة الحضور محسوبة تلقائيًا",
+      "clipId": "scene01-overview",
+      "startMs": 28876,
+      "endMs": 31976,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-01\\cap-06-attendance.png"
+    },
+    {
+      "id": "groups",
+      "text": "أفضل المجموعات بأدائها",
+      "clipId": "scene01-overview",
+      "startMs": 34335,
+      "endMs": 37335,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-01\\cap-07-groups.png"
+    },
+    {
+      "id": "topGroup",
+      "text": "المجموعة الأعلى في الحضور",
+      "clipId": "scene01-overview",
+      "startMs": 39779,
+      "endMs": 42879,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-01\\cap-08-topGroup.png"
+    },
+    {
+      "id": "done",
+      "text": "قرارات مبنية على أرقام حقيقية",
+      "clipId": "scene01-overview",
+      "startMs": 45435,
+      "endMs": 48935,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-01\\cap-09-done.png"
+    }
+  ],
+  "coverage": 0.572,
+  "renderedAt": "2026-10-28T17:35:30.898Z"
+}

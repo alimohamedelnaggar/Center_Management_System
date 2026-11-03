@@ -1,0 +1,22 @@
+{
+  "sceneId": "6",
+  "clipId": "scene06-result",
+  "role": "student",
+  "roleLabel": "طالب",
+  "startPath": "/student/results",
+  "recordedAt": "2026-10-31T09:26:32.042Z",
+  "contextStartWall": 1793438792042,
+  "t0Wall": 1793438797886,
+  "tEndWall": 1793438804739,
+  "contextLeadInMs": 5844,
+  "durationMs": 6853,
+  "videoPath": "e2e/artifacts/marketing/raw/scene06-result/scene06-result.webm",
+  "steps": [
+    {
+      "id": "result",
+      "atMs": 747
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": []
+}

@@ -1,0 +1,37 @@
+{
+  "password": "E2e!Pass#2026",
+  "studentPassword": "Student!2026",
+  "accounts": {
+    "centerOwner": {
+      "label": "صاحب المركز",
+      "phone": "01055500001",
+      "landing": "/teachers"
+    },
+    "assistant": {
+      "label": "مساعد",
+      "phone": "01055500003",
+      "landing": "/dashboard"
+    },
+    "teacher": {
+      "label": "مدرس",
+      "phone": "01055501001",
+      "landing": "/dashboard"
+    },
+    "superAdmin": {
+      "label": "مدير المنصة",
+      "phone": "01055500099",
+      "landing": "/centers"
+    },
+    "parent": {
+      "label": "ولي أمر",
+      "phone": "01055500005",
+      "landing": "/parent/dashboard"
+    },
+    "student": {
+      "label": "طالب",
+      "phone": "01155500001",
+      "landing": "/student/dashboard",
+      "password": "Student!2026"
+    }
+  }
+}

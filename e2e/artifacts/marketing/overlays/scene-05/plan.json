@@ -1,0 +1,145 @@
+{
+  "sceneKey": "5",
+  "number": "٠٥",
+  "name": "المالية",
+  "kicker": "تحصيل ومصروفات",
+  "title": "٠٥ — المالية",
+  "targetSeconds": 70,
+  "titleMs": 2500,
+  "totalMs": 100416,
+  "fps": 25,
+  "width": 1920,
+  "height": 1080,
+  "captionBottomPx": 64,
+  "captionFadeMs": 240,
+  "titlePng": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-05\\title.png",
+  "segments": [
+    {
+      "clipId": "scene05-finance",
+      "role": "centerOwner",
+      "roleLabel": "صاحب المركز",
+      "videoAbs": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\raw\\scene05-finance\\scene05-finance.webm",
+      "videoRel": "e2e/artifacts/marketing/raw/scene05-finance/scene05-finance.webm",
+      "seekMs": 5043,
+      "preRollMs": 450,
+      "durationMs": 66592,
+      "startMs": 2500,
+      "endMs": 69092
+    },
+    {
+      "clipId": "scene05-reports",
+      "role": "centerOwner",
+      "roleLabel": "صاحب المركز",
+      "videoAbs": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\raw\\scene05-reports\\scene05-reports.webm",
+      "videoRel": "e2e/artifacts/marketing/raw/scene05-reports/scene05-reports.webm",
+      "seekMs": 5748,
+      "preRollMs": 450,
+      "durationMs": 31324,
+      "startMs": 69092,
+      "endMs": 100416
+    }
+  ],
+  "captions": [
+    {
+      "id": "finance",
+      "text": "كل دفعة مسجلة باسم صاحبها",
+      "clipId": "scene05-finance",
+      "startMs": 3685,
+      "endMs": 7185,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-05\\cap-01-finance.png"
+    },
+    {
+      "id": "overdue",
+      "text": "المتأخرون بالاسم والمبلغ",
+      "clipId": "scene05-finance",
+      "startMs": 7663,
+      "endMs": 10663,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-05\\cap-02-overdue.png"
+    },
+    {
+      "id": "totals",
+      "text": "إجمالي المتبقي أمامك",
+      "clipId": "scene05-finance",
+      "startMs": 22644,
+      "endMs": 25644,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-05\\cap-03-totals.png"
+    },
+    {
+      "id": "search",
+      "text": "ابحث عن الطالب بالاسم",
+      "clipId": "scene05-finance",
+      "startMs": 27335,
+      "endMs": 30435,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-05\\cap-04-search.png"
+    },
+    {
+      "id": "partial",
+      "text": "اضغط إضافة دفعة",
+      "clipId": "scene05-finance",
+      "startMs": 48162,
+      "endMs": 51162,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-05\\cap-05-partial.png"
+    },
+    {
+      "id": "amount",
+      "text": "سجّل دفعة جزئية في ثوانٍ",
+      "clipId": "scene05-finance",
+      "startMs": 53220,
+      "endMs": 56720,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-05\\cap-06-amount.png"
+    },
+    {
+      "id": "remaining",
+      "text": "المتبقي يتحدث فورًا",
+      "clipId": "scene05-finance",
+      "startMs": 60207,
+      "endMs": 63207,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-05\\cap-07-remaining.png"
+    },
+    {
+      "id": "expenses",
+      "text": "مصروفاتك مصنفة ومسجلة",
+      "clipId": "scene05-reports",
+      "startMs": 70266,
+      "endMs": 73266,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-05\\cap-08-expenses.png"
+    },
+    {
+      "id": "net",
+      "text": "صافي الربح واضح",
+      "clipId": "scene05-reports",
+      "startMs": 74230,
+      "endMs": 77230,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-05\\cap-09-net.png"
+    },
+    {
+      "id": "report",
+      "text": "تقرير شهري للتصدير والطباعة",
+      "clipId": "scene05-reports",
+      "startMs": 85476,
+      "endMs": 88576,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-05\\cap-10-report.png"
+    },
+    {
+      "id": "done",
+      "text": "ماليتك تحت السيطرة",
+      "clipId": "scene05-reports",
+      "startMs": 94567,
+      "endMs": 97567,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-05\\cap-11-done.png"
+    }
+  ],
+  "coverage": 0.341,
+  "renderedAt": "2026-10-31T09:29:32.952Z"
+}

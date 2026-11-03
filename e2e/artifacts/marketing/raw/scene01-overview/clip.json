@@ -1,0 +1,54 @@
+{
+  "sceneId": "1",
+  "clipId": "scene01-overview",
+  "role": "centerOwner",
+  "roleLabel": "صاحب المركز",
+  "startPath": "/adminDashboard",
+  "recordedAt": "2026-10-28T17:24:44.015Z",
+  "contextStartWall": 1793208284015,
+  "t0Wall": 1793208287897,
+  "tEndWall": 1793208336373,
+  "contextLeadInMs": 3882,
+  "durationMs": 48476,
+  "videoPath": "e2e/artifacts/marketing/raw/scene01-overview/scene01-overview.webm",
+  "steps": [
+    {
+      "id": "arrive",
+      "atMs": 740
+    },
+    {
+      "id": "students",
+      "atMs": 5100
+    },
+    {
+      "id": "movement",
+      "atMs": 9567
+    },
+    {
+      "id": "finance",
+      "atMs": 15049
+    },
+    {
+      "id": "revenue",
+      "atMs": 20511
+    },
+    {
+      "id": "attendance",
+      "atMs": 25926
+    },
+    {
+      "id": "groups",
+      "atMs": 31385
+    },
+    {
+      "id": "topGroup",
+      "atMs": 36829
+    },
+    {
+      "id": "done",
+      "atMs": 42485
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": []
+}

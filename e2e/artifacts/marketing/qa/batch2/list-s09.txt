@@ -1,0 +1,7 @@
+file 'E:/New folder (15)/Center_Management_SystemV02/e2e/artifacts/marketing/qa/batch2/s09-audit.png'
+file 'E:/New folder (15)/Center_Management_SystemV02/e2e/artifacts/marketing/qa/batch2/s09-centers.png'
+file 'E:/New folder (15)/Center_Management_SystemV02/e2e/artifacts/marketing/qa/batch2/s09-done.png'
+file 'E:/New folder (15)/Center_Management_SystemV02/e2e/artifacts/marketing/qa/batch2/s09-pages.png'
+file 'E:/New folder (15)/Center_Management_SystemV02/e2e/artifacts/marketing/qa/batch2/s09-platform.png'
+file 'E:/New folder (15)/Center_Management_SystemV02/e2e/artifacts/marketing/qa/batch2/s09-status.png'
+file 'E:/New folder (15)/Center_Management_SystemV02/e2e/artifacts/marketing/qa/batch2/s09-teacher.png'

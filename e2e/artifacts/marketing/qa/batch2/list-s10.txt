@@ -1,0 +1,5 @@
+file 'E:/New folder (15)/Center_Management_SystemV02/e2e/artifacts/marketing/qa/batch2/s10-browser.png'
+file 'E:/New folder (15)/Center_Management_SystemV02/e2e/artifacts/marketing/qa/batch2/s10-end.png'
+file 'E:/New folder (15)/Center_Management_SystemV02/e2e/artifacts/marketing/qa/batch2/s10-one.png'
+file 'E:/New folder (15)/Center_Management_SystemV02/e2e/artifacts/marketing/qa/batch2/s10-recap.png'
+file 'E:/New folder (15)/Center_Management_SystemV02/e2e/artifacts/marketing/qa/batch2/s10-start.png'

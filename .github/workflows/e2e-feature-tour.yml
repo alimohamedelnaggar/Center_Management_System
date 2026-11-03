@@ -1,0 +1,222 @@
+name: E2E feature tour
+
+# This workflow is intentionally self-contained: it uses an ephemeral SQL Server
+# service container and a password generated for each run. It never reads a
+# production database, SMTP, or JWT secret.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'e2e/**'
+      - 'docs/e2e-safety.md'
+      - 'Frontend/CenterManagement/**'
+      - 'API/**'
+      - '.github/workflows/e2e-feature-tour.yml'
+  pull_request:
+    paths:
+      - 'e2e/**'
+      - 'docs/e2e-safety.md'
+      - 'Frontend/CenterManagement/**'
+      - 'API/**'
+      - '.github/workflows/e2e-feature-tour.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-feature-tour-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prepare:
+    name: Generate ephemeral database password
+    runs-on: ubuntu-latest
+    outputs:
+      sa_password: ${{ steps.password.outputs.sa_password }}
+    steps:
+      - name: Generate random test-only SA password
+        id: password
+        shell: bash
+        run: |
+          password="E2e!$(openssl rand -hex 18)"
+          echo "::add-mask::$password"
+          echo "sa_password=$password" >> "$GITHUB_OUTPUT"
+
+  e2e:
+    name: Run isolated E2E tour
+    needs: prepare
+    runs-on: ubuntu-latest
+    # The seven Role parts add up to ~3h 56m of recorded video, and a recording
+    # run takes at least as long as the video it produces. 75 minutes could
+    # never finish it; 330 keeps us under GitHub's 360-minute job ceiling.
+    timeout-minutes: 330
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        env:
+          ACCEPT_EULA: Y
+          MSSQL_SA_PASSWORD: ${{ needs.prepare.outputs.sa_password }}
+          MSSQL_PID: Developer
+        ports:
+          - 1433:1433
+    env:
+      ASPNETCORE_ENVIRONMENT: E2E
+      E2E_ALLOW_SEED: '1'
+      E2E_ALLOW_RUN: '1'
+      E2E_BASE_URL: http://localhost:5173
+      E2E_API_BASE_URL: http://localhost:7091
+      Seed__E2EReset: 'false'
+      ConnectionStrings__DefaultConnection: Server=sqlserver,1433;Database=CenterManagement_E2E;User Id=sa;Password=${{ needs.prepare.outputs.sa_password }};Encrypt=False;TrustServerCertificate=True;MultipleActiveResultSets=True
+      VITE_API_BASE_URL: http://localhost:7091/api/V1
+      VITE_HUB_API_URL: http://localhost:7091/
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            e2e/package-lock.json
+            Frontend/CenterManagement/package-lock.json
+
+      - name: Restore and build API
+        run: dotnet build API/CenterManagementCleanArchitecture/CenterManagement.Api/CenterManagement.Api.csproj -c Release --nologo
+
+      - name: Install frontend and E2E dependencies
+        run: |
+          npm ci --prefix Frontend/CenterManagement
+          npm ci --prefix e2e
+
+      - name: Install Chromium for Playwright
+        working-directory: e2e
+        run: npx playwright install --with-deps chromium
+
+      # render-part.ps1 and merge-tour.ps1 are PowerShell scripts that shell out
+      # to ffmpeg/ffprobe. The ubuntu-latest image ships pwsh, but not always a
+      # known ffmpeg build, so install it explicitly and print both versions.
+      - name: Install ffmpeg and ffprobe
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ffmpeg
+          fi
+          command -v pwsh
+          pwsh -NoProfile -Command '$PSVersionTable.PSVersion.ToString()'
+          ffmpeg -hide_banner -version | head -n 1
+          ffprobe -hide_banner -version | head -n 1
+
+      # A six-second synthetic clip exercises both PowerShell scripts end to end
+      # (trim, chapter anchoring, 1280x720/H.264/yuv420p/25 fps encode, concat,
+      # chapter offsets, docs generation) before spending an hour on a part.
+      - name: Smoke-test the render and merge scripts
+        shell: pwsh
+        run: ./e2e/scripts/smoke-render.ps1
+
+      - name: Wait for the ephemeral SQL Server port
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 60); do
+            if (echo > /dev/tcp/sqlserver/1433) >/dev/null 2>&1; then
+              echo "SQL Server is accepting connections."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "SQL Server did not open port 1433 in time." >&2
+          exit 1
+
+      - name: Start API against the ephemeral E2E database
+        shell: bash
+        run: |
+          set -euo pipefail
+          dotnet API/CenterManagementCleanArchitecture/CenterManagement.Api/bin/Release/net10.0/CenterManagement.Api.dll \
+            --urls http://localhost:7091 > api.log 2>&1 &
+          echo $! > api.pid
+
+          for attempt in $(seq 1 90); do
+            if grep -q '^\[E2E SAFETY\] PASS ' api.log; then
+              grep '^\[E2E SAFETY\] PASS ' api.log
+              exit 0
+            fi
+            if ! kill -0 "$(cat api.pid)" 2>/dev/null; then
+              echo "API exited before becoming ready." >&2
+              cat api.log >&2
+              exit 1
+            fi
+            sleep 2
+          done
+
+          echo "API did not emit the E2E safety proof line in time." >&2
+          cat api.log >&2
+          exit 1
+
+      - name: Start Vite
+        shell: bash
+        run: |
+          set -euo pipefail
+          (cd Frontend/CenterManagement && npm run dev -- --host localhost --port 5173 --strictPort) > frontend.log 2>&1 &
+          echo $! > frontend.pid
+
+          for attempt in $(seq 1 60); do
+            if curl -fsS http://localhost:5173 >/dev/null; then
+              echo "Vite is ready."
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "Vite did not become ready in time." >&2
+          cat frontend.log >&2
+          exit 1
+
+      - name: Wait for API health endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 60); do
+            if curl -fsS http://localhost:7091/swagger/index.html >/dev/null; then
+              echo "API is ready."
+              exit 0
+            fi
+            sleep 2
+          done
+
+          echo "API did not become ready in time." >&2
+          cat api.log >&2
+          exit 1
+
+      - name: Run the guarded E2E tour
+        working-directory: e2e
+        run: npm run test:video
+
+      - name: Upload E2E report, video, and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-feature-tour-${{ github.run_id }}
+          path: |
+            e2e/test-results
+            e2e/playwright-report
+            e2e/artifacts
+            api.log
+            frontend.log
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Stop local processes
+        if: always()
+        shell: bash
+        run: |
+          for file in api.pid frontend.pid; do
+            if [ -f "$file" ]; then
+              kill "$(cat "$file")" 2>/dev/null || true
+            fi
+          done

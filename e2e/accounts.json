@@ -1,0 +1,75 @@
+{
+  "password": "E2e!Pass#2026",
+  "studentPassword": "Student!2026",
+  "roleOrder": [
+    "superAdmin",
+    "centerOwner",
+    "teacher",
+    "assistant",
+    "student",
+    "parent",
+    "soloTeacher"
+  ],
+  "accounts": {
+    "superAdmin": {
+      "label": "مدير المنصة",
+      "phone": "01000000001",
+      "path": "/centers",
+      "heading": "إدارة المراكز"
+    },
+    "centerOwner": {
+      "label": "صاحب المركز",
+      "phone": "01000000002",
+      "path": "/teachers",
+      "heading": "إدارة المدرسين",
+      "brand": "مركز النور"
+    },
+    "teacher": {
+      "label": "مدرس",
+      "phone": "01000000003",
+      "path": "/dashboard",
+      "heading": "الطلاب",
+      "brand": "مركز النور"
+    },
+    "assistant": {
+      "label": "مساعد",
+      "phone": "01000000005",
+      "path": "/dashboard",
+      "heading": "الطلاب",
+      "brand": "مركز النور"
+    },
+    "student": {
+      "label": "طالب",
+      "phone": "01110000001",
+      "path": "/student/dashboard",
+      "heading": "أهلاً، يوسف أحمد محمود"
+    },
+    "parent": {
+      "label": "ولي أمر",
+      "phone": "01000000006",
+      "path": "/parent/dashboard",
+      "heading": "أبنائي"
+    },
+    "soloTeacher": {
+      "label": "مدرس فردي",
+      "phone": "01000000007",
+      "path": "/dashboard",
+      "heading": "الطلاب",
+      "brand": "مركز المدرس الفردي"
+    },
+    "graceOwner": {
+      "label": "صاحب مركز في فترة السماح",
+      "phone": "01000000008",
+      "path": "/teachers",
+      "heading": "إدارة المدرسين",
+      "brand": "مركز الفجر التعليمي"
+    },
+    "limitedOwner": {
+      "label": "صاحب مركز بوحدات معطلة",
+      "phone": "01000000009",
+      "path": "/teachers",
+      "heading": "إدارة المدرسين",
+      "brand": "مركز الأمل"
+    }
+  }
+}

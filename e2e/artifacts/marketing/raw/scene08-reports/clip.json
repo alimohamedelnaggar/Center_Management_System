@@ -1,0 +1,46 @@
+{
+  "sceneId": "8",
+  "clipId": "scene08-reports",
+  "role": "centerOwner",
+  "roleLabel": "صاحب المركز",
+  "startPath": "/center-reports",
+  "recordedAt": "2026-11-02T12:15:35.712Z",
+  "contextStartWall": 1793621735712,
+  "t0Wall": 1793621742588,
+  "tEndWall": 1793621784123,
+  "contextLeadInMs": 6876,
+  "durationMs": 41535,
+  "videoPath": "e2e/artifacts/marketing/raw/scene08-reports/scene08-reports.webm",
+  "steps": [
+    {
+      "id": "reports",
+      "atMs": 738
+    },
+    {
+      "id": "totals",
+      "atMs": 4399
+    },
+    {
+      "id": "finance",
+      "atMs": 9201
+    },
+    {
+      "id": "export",
+      "atMs": 14011
+    },
+    {
+      "id": "print",
+      "atMs": 20721
+    },
+    {
+      "id": "dark",
+      "atMs": 28008
+    },
+    {
+      "id": "done",
+      "atMs": 34423
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": []
+}

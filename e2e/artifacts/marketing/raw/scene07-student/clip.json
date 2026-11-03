@@ -1,0 +1,38 @@
+{
+  "sceneId": "7",
+  "clipId": "scene07-student",
+  "role": "student",
+  "roleLabel": "طالب",
+  "startPath": "/student/exams",
+  "recordedAt": "2026-11-02T12:11:50.993Z",
+  "contextStartWall": 1793621510993,
+  "t0Wall": 1793621515685,
+  "tEndWall": 1793621546483,
+  "contextLeadInMs": 4692,
+  "durationMs": 30798,
+  "videoPath": "e2e/artifacts/marketing/raw/scene07-student/scene07-student.webm",
+  "steps": [
+    {
+      "id": "exams",
+      "atMs": 728
+    },
+    {
+      "id": "pending",
+      "atMs": 4603
+    },
+    {
+      "id": "result",
+      "atMs": 11444
+    },
+    {
+      "id": "attendance",
+      "atMs": 18161
+    },
+    {
+      "id": "fees",
+      "atMs": 24007
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": []
+}

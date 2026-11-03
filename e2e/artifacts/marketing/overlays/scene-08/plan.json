@@ -1,0 +1,127 @@
+{
+  "sceneKey": "8",
+  "number": "٠٨",
+  "name": "التقارير",
+  "kicker": "تصدير وطباعة",
+  "title": "٠٨ — التقارير",
+  "targetSeconds": 45,
+  "titleMs": 2500,
+  "totalMs": 54665,
+  "fps": 25,
+  "width": 1920,
+  "height": 1080,
+  "captionBottomPx": 64,
+  "captionFadeMs": 240,
+  "titlePng": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-08\\title.png",
+  "segments": [
+    {
+      "clipId": "scene08-dashboard",
+      "role": "centerOwner",
+      "roleLabel": "صاحب المركز",
+      "videoAbs": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\raw\\scene08-dashboard\\scene08-dashboard.webm",
+      "videoRel": "e2e/artifacts/marketing/raw/scene08-dashboard/scene08-dashboard.webm",
+      "seekMs": 6388,
+      "preRollMs": 450,
+      "durationMs": 10180,
+      "startMs": 2500,
+      "endMs": 12680
+    },
+    {
+      "clipId": "scene08-reports",
+      "role": "centerOwner",
+      "roleLabel": "صاحب المركز",
+      "videoAbs": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\raw\\scene08-reports\\scene08-reports.webm",
+      "videoRel": "e2e/artifacts/marketing/raw/scene08-reports/scene08-reports.webm",
+      "seekMs": 6426,
+      "preRollMs": 450,
+      "durationMs": 41985,
+      "startMs": 12680,
+      "endMs": 54665
+    }
+  ],
+  "captions": [
+    {
+      "id": "dashboard",
+      "text": "ابدأ من لوحة التحكم",
+      "clipId": "scene08-dashboard",
+      "startMs": 3696,
+      "endMs": 6796,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-08\\cap-01-dashboard.png"
+    },
+    {
+      "id": "money",
+      "text": "الإيرادات وصافي الربح",
+      "clipId": "scene08-dashboard",
+      "startMs": 7345,
+      "endMs": 10345,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-08\\cap-02-money.png"
+    },
+    {
+      "id": "reports",
+      "text": "افتح تقارير المركز",
+      "clipId": "scene08-reports",
+      "startMs": 13868,
+      "endMs": 16868,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-08\\cap-03-reports.png"
+    },
+    {
+      "id": "totals",
+      "text": "أرقام المركز كاملة",
+      "clipId": "scene08-reports",
+      "startMs": 17529,
+      "endMs": 20529,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-08\\cap-04-totals.png"
+    },
+    {
+      "id": "finance",
+      "text": "المحصّل والمصروفات والصافي",
+      "clipId": "scene08-reports",
+      "startMs": 22331,
+      "endMs": 25331,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-08\\cap-05-finance.png"
+    },
+    {
+      "id": "export",
+      "text": "صدّر التقرير كملف CSV",
+      "clipId": "scene08-reports",
+      "startMs": 27141,
+      "endMs": 30241,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-08\\cap-06-export.png"
+    },
+    {
+      "id": "print",
+      "text": "أو اطبعه ورقة منظمة",
+      "clipId": "scene08-reports",
+      "startMs": 33851,
+      "endMs": 36951,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-08\\cap-07-print.png"
+    },
+    {
+      "id": "dark",
+      "text": "وضع ليلي مريح للعين",
+      "clipId": "scene08-reports",
+      "startMs": 41138,
+      "endMs": 44238,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-08\\cap-08-dark.png"
+    },
+    {
+      "id": "done",
+      "text": "التقارير جاهزة في أي وقت",
+      "clipId": "scene08-reports",
+      "startMs": 47553,
+      "endMs": 51053,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-08\\cap-09-done.png"
+    }
+  ],
+  "coverage": 0.51,
+  "renderedAt": "2026-11-02T12:20:31.616Z"
+}

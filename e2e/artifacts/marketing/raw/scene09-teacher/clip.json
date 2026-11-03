@@ -1,0 +1,26 @@
+{
+  "sceneId": "9",
+  "clipId": "scene09-teacher",
+  "role": "teacher",
+  "roleLabel": "مدرس",
+  "startPath": "/dashboard",
+  "recordedAt": "2026-11-02T12:17:11.549Z",
+  "contextStartWall": 1793621831549,
+  "t0Wall": 1793621836504,
+  "tEndWall": 1793621846213,
+  "contextLeadInMs": 4955,
+  "durationMs": 9709,
+  "videoPath": "e2e/artifacts/marketing/raw/scene09-teacher/scene09-teacher.webm",
+  "steps": [
+    {
+      "id": "teacher",
+      "atMs": 719
+    },
+    {
+      "id": "pages",
+      "atMs": 4564
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": []
+}

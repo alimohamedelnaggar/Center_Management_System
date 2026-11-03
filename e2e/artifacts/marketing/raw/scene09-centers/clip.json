@@ -1,0 +1,26 @@
+{
+  "sceneId": "9",
+  "clipId": "scene09-centers",
+  "role": "superAdmin",
+  "roleLabel": "مدير المنصة",
+  "startPath": "/centers",
+  "recordedAt": "2026-11-02T12:16:39.894Z",
+  "contextStartWall": 1793621799894,
+  "t0Wall": 1793621805006,
+  "tEndWall": 1793621814186,
+  "contextLeadInMs": 5112,
+  "durationMs": 9180,
+  "videoPath": "e2e/artifacts/marketing/raw/scene09-centers/scene09-centers.webm",
+  "steps": [
+    {
+      "id": "centers",
+      "atMs": 713
+    },
+    {
+      "id": "status",
+      "atMs": 4294
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": []
+}

@@ -1,0 +1,66 @@
+{
+  "sceneId": "3",
+  "clipId": "scene03-import",
+  "role": "teacher",
+  "roleLabel": "مدرس",
+  "startPath": "/dashboard",
+  "recordedAt": "2026-10-31T08:34:01.796Z",
+  "contextStartWall": 1793435641796,
+  "t0Wall": 1793435664598,
+  "tEndWall": 1793435743254,
+  "contextLeadInMs": 22802,
+  "durationMs": 78656,
+  "videoPath": "e2e/artifacts/marketing/raw/scene03-import/scene03-import.webm",
+  "steps": [
+    {
+      "id": "students",
+      "atMs": 1
+    },
+    {
+      "id": "open",
+      "atMs": 4111
+    },
+    {
+      "id": "template",
+      "atMs": 10200
+    },
+    {
+      "id": "upload",
+      "atMs": 22779
+    },
+    {
+      "id": "preview",
+      "atMs": 31714
+    },
+    {
+      "id": "duplicates",
+      "atMs": 35362
+    },
+    {
+      "id": "valid",
+      "atMs": 39904
+    },
+    {
+      "id": "errors",
+      "atMs": 44470
+    },
+    {
+      "id": "options",
+      "atMs": 49160
+    },
+    {
+      "id": "commit",
+      "atMs": 54460
+    },
+    {
+      "id": "result",
+      "atMs": 61062
+    },
+    {
+      "id": "done",
+      "atMs": 66485
+    }
+  ],
+  "consoleErrors": [],
+  "pageErrors": []
+}

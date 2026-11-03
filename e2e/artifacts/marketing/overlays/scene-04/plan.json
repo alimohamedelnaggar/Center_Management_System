@@ -1,0 +1,175 @@
+{
+  "sceneKey": "4",
+  "number": "٠٤",
+  "name": "الحضور والغياب",
+  "kicker": "كارت وكشف",
+  "title": "٠٤ — الحضور والغياب",
+  "targetSeconds": 72,
+  "titleMs": 2500,
+  "totalMs": 74531,
+  "fps": 25,
+  "width": 1920,
+  "height": 1080,
+  "captionBottomPx": 64,
+  "captionFadeMs": 240,
+  "titlePng": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-04\\title.png",
+  "segments": [
+    {
+      "clipId": "scene04-qr",
+      "role": "assistant",
+      "roleLabel": "مساعد",
+      "videoAbs": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\raw\\scene04-qr\\scene04-qr.webm",
+      "videoRel": "e2e/artifacts/marketing/raw/scene04-qr/scene04-qr.webm",
+      "seekMs": 13441,
+      "preRollMs": 450,
+      "durationMs": 13260,
+      "startMs": 2500,
+      "endMs": 15760
+    },
+    {
+      "clipId": "scene04-scanner",
+      "role": "assistant",
+      "roleLabel": "مساعد",
+      "videoAbs": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\raw\\scene04-scanner\\scene04-scanner.webm",
+      "videoRel": "e2e/artifacts/marketing/raw/scene04-scanner/scene04-scanner.webm",
+      "seekMs": 4210,
+      "preRollMs": 450,
+      "durationMs": 22181,
+      "startMs": 15760,
+      "endMs": 37941
+    },
+    {
+      "clipId": "scene04-attendance",
+      "role": "assistant",
+      "roleLabel": "مساعد",
+      "videoAbs": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\raw\\scene04-attendance\\scene04-attendance.webm",
+      "videoRel": "e2e/artifacts/marketing/raw/scene04-attendance/scene04-attendance.webm",
+      "seekMs": 3387,
+      "preRollMs": 450,
+      "durationMs": 36590,
+      "startMs": 37941,
+      "endMs": 74531
+    }
+  ],
+  "captions": [
+    {
+      "id": "qrOverview",
+      "text": "كارت لكل طالب بكود QR",
+      "clipId": "scene04-qr",
+      "startMs": 3711,
+      "endMs": 7211,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-04\\cap-01-qrOverview.png"
+    },
+    {
+      "id": "qrPrint",
+      "text": "اطبع كروت الحضور بضغطة",
+      "clipId": "scene04-qr",
+      "startMs": 8057,
+      "endMs": 11157,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-04\\cap-02-qrPrint.png"
+    },
+    {
+      "id": "scanOpen",
+      "text": "امسح الكود أو أدخله يدويًا",
+      "clipId": "scene04-scanner",
+      "startMs": 16921,
+      "endMs": 20421,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-04\\cap-03-scanOpen.png"
+    },
+    {
+      "id": "scanOk",
+      "text": "تم تسجيل الحضور بكود الطالب",
+      "clipId": "scene04-scanner",
+      "startMs": 22529,
+      "endMs": 26029,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-04\\cap-04-scanOk.png"
+    },
+    {
+      "id": "scanDup",
+      "text": "ينبّهك النظام لو الكود اتسجل قبل كده",
+      "clipId": "scene04-scanner",
+      "startMs": 28269,
+      "endMs": 32269,
+      "durationMs": 4000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-04\\cap-05-scanDup.png"
+    },
+    {
+      "id": "overview",
+      "text": "سجّل الحضور والغياب بضغطة",
+      "clipId": "scene04-attendance",
+      "startMs": 39126,
+      "endMs": 42226,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-04\\cap-06-overview.png"
+    },
+    {
+      "id": "absent",
+      "text": "اضغط على الكارت لتسجيل الغياب",
+      "clipId": "scene04-attendance",
+      "startMs": 43203,
+      "endMs": 46703,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-04\\cap-07-absent.png"
+    },
+    {
+      "id": "save",
+      "text": "احفظ الكشف واعتمده",
+      "clipId": "scene04-attendance",
+      "startMs": 47626,
+      "endMs": 50626,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-04\\cap-08-save.png"
+    },
+    {
+      "id": "saved",
+      "text": "تم اعتماد الحضور فورًا",
+      "clipId": "scene04-attendance",
+      "startMs": 52406,
+      "endMs": 55506,
+      "durationMs": 3100,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-04\\cap-09-saved.png"
+    },
+    {
+      "id": "edit",
+      "text": "يمكنك التعديل في أي وقت",
+      "clipId": "scene04-attendance",
+      "startMs": 56086,
+      "endMs": 59586,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-04\\cap-10-edit.png"
+    },
+    {
+      "id": "restore",
+      "text": "اضغط مرة أخرى لتصحيح الحالة",
+      "clipId": "scene04-attendance",
+      "startMs": 60539,
+      "endMs": 64039,
+      "durationMs": 3500,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-04\\cap-11-restore.png"
+    },
+    {
+      "id": "resave",
+      "text": "الكشف النهائي محفوظ",
+      "clipId": "scene04-attendance",
+      "startMs": 64946,
+      "endMs": 67946,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-04\\cap-12-resave.png"
+    },
+    {
+      "id": "done",
+      "text": "كل حصة موثقة",
+      "clipId": "scene04-attendance",
+      "startMs": 69612,
+      "endMs": 72612,
+      "durationMs": 3000,
+      "png": "E:\\New folder (15)\\Center_Management_SystemV02\\e2e\\artifacts\\marketing\\overlays\\scene-04\\cap-13-done.png"
+    }
+  ],
+  "coverage": 0.581,
+  "renderedAt": "2026-10-28T18:17:01.198Z"
+}
