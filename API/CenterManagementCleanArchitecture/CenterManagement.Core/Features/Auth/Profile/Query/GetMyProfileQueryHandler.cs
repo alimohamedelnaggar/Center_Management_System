@@ -54,11 +54,20 @@ public class GetMyProfileQueryHandler
         if (user == null)
             return NotFound<GetMyProfileDto>();
 
+        // Students and parents do not own a recovery address; hide it from the
+        // payload as well as from their screens so it cannot leak through the
+        // API. Staff (owner, solo teacher, teacher, assistant, platform admin)
+        // still receive it.
+        var roles = await _userManager.GetRolesAsync(user);
+        var emailVisible = !roles.Contains(CenterManagement.Data.AppMetaData.AppRoles.Student)
+                           && !roles.Contains(CenterManagement.Data.AppMetaData.AppRoles.Parent);
+
         var dto = new GetMyProfileDto
         {
             Id = user.Id,
             FullName = user.FullName,
-            Email = user.Email,
+            Email = emailVisible ? user.Email : null,
+            PendingEmail = emailVisible ? user.PendingEmail : null,
             PhoneNumber = user.PhoneNumber,
             UserName = user.UserName,
             Address = user.Address,

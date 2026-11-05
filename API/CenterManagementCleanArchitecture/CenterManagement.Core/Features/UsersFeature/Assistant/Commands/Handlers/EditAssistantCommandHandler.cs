@@ -1,4 +1,5 @@
 ﻿using CenterManagement.Core.Bases;
+using CenterManagement.Core.Helpers;
 using CenterManagement.Data.Entities.Identity;
 using CenterManagement.Data.Entities.Users;
 using Microsoft.AspNetCore.Identity;
@@ -58,6 +59,22 @@ public sealed class EditAssistantCommandHandler
         assistant.PhoneNumber = request.PhoneNumber.Trim();
         assistant.UserName = request.PhoneNumber.Trim();
 
+        if (request.Email is not null)
+        {
+            var email = UserEmailHelper.Normalize(request.Email);
+
+            if (email is not null)
+            {
+                var emailOwner = await _userManager.FindByEmailAsync(email);
+
+                if (emailOwner is not null && emailOwner.Id != assistant.Id)
+                    return BadRequest<string>(UserEmailHelper.DuplicateMessage);
+            }
+
+            // null leaves the address untouched; an empty string clears it.
+            UserEmailHelper.ApplyConfirmed(assistant, request.Email);
+        }
+
         assistant.Salary = request.Salary;
         assistant.WorkingHoursPerWeek = request.WorkingHoursPerWeek;
         assistant.HireDate = request.HireDate;
@@ -71,6 +88,9 @@ public sealed class EditAssistantCommandHandler
 
         if (!result.Succeeded)
         {
+            if (UserEmailHelper.IsDuplicateEmail(result))
+                return BadRequest<string>(UserEmailHelper.DuplicateMessage);
+
             return BadRequest<string>(
                 string.Join(Environment.NewLine,
                     result.Errors.Select(x => x.Description)));

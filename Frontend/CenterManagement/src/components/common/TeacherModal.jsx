@@ -3,10 +3,15 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
 import { groupsService } from "../../services/groupsService";
+import {
+  STAFF_EMAIL_HELPER_TEXT,
+  validateStaffEmail,
+} from "../../utils/staffEmail";
 
 const emptyForm = {
   fullName: "",
   phoneNumber: "",
+  email: "",
   subject: "",
   password: "",
   confirmPassword: "",
@@ -25,6 +30,7 @@ export default function TeacherModal({ isOpen, onClose, onSubmit, initialData })
       setFormData({
         fullName: initialData.fullName || "",
         phoneNumber: initialData.phoneNumber || "",
+        email: initialData.email || "",
         subject: initialData.subject || "",
         password: "",
         confirmPassword: "",
@@ -84,6 +90,22 @@ export default function TeacherModal({ isOpen, onClose, onSubmit, initialData })
       return;
     }
 
+    const email = validateStaffEmail(formData.email);
+    if (!email.valid) {
+      toast.error(email.message);
+      return;
+    }
+
+    if (
+      initialData?.email &&
+      !email.value &&
+      !window.confirm(
+        "سيتم حذف البريد الإلكتروني لهذا الحساب، ولن يستطيع صاحب الحساب استعادة كلمة المرور بنفسه. هل تريد المتابعة؟",
+      )
+    ) {
+      return;
+    }
+
     if (!initialData) {
       if (!formData.password) {
         toast.error("يرجى إدخال كلمة المرور!");
@@ -102,6 +124,7 @@ export default function TeacherModal({ isOpen, onClose, onSubmit, initialData })
     const payload = {
       fullName: formData.fullName.trim(),
       phoneNumber: formData.phoneNumber.trim(),
+      email: email.value ?? "",
       subject: formData.subject?.trim() || null,
       groupIds,
     };
@@ -165,6 +188,23 @@ export default function TeacherModal({ isOpen, onClose, onSubmit, initialData })
                 setFormData({ ...formData, phoneNumber: e.target.value })
               }
             />
+          </div>
+
+          <div>
+            <label className={labelClass}>البريد الإلكتروني (اختياري)</label>
+            <input
+              type="email"
+              dir="ltr"
+              placeholder="name@example.com"
+              className={inputClass}
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+            />
+            <p className="mt-1 text-xs text-text-muted">
+              {STAFF_EMAIL_HELPER_TEXT}
+            </p>
           </div>
 
           <div>

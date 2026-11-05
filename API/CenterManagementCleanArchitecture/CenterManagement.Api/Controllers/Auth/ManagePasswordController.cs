@@ -12,7 +12,7 @@ public class ManagePasswordController : AppControllerBase
     /// </summary>
     [HttpPost(Routing.Authentication.SendResetCode)]
     [AllowAnonymous]
-    [SignInRateLimited]
+    [RecoveryRateLimited]
     public async Task<IActionResult> SendResetCode([FromBody] SendResetCodeCommand command)
     {
         var response = await _mediator.Send(command);
@@ -24,6 +24,7 @@ public class ManagePasswordController : AppControllerBase
     /// </summary>
     [HttpPost(Routing.Authentication.ResetPassword)]
     [AllowAnonymous]
+    [RecoveryRateLimited]
     public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordCommand command)
     {
         var response = await _mediator.Send(command);

@@ -6,6 +6,10 @@ import {
   isTrialPlan,
   planByNumber,
 } from "../../constants/planTypes";
+import {
+  STAFF_EMAIL_HELPER_TEXT,
+  validateStaffEmail,
+} from "../../utils/staffEmail";
 
 const DEFAULT_COLOR = "#1e3a8a";
 
@@ -100,6 +104,8 @@ const makeInitialForm = (accountType) => ({
   ownerFullName: "",
   ownerPhone: "",
   ownerPassword: "",
+  // Optional recovery address; when supplied it is stored confirmed.
+  ownerEmail: "",
   // Required when accountType === "Teacher" (a solo teacher's subject).
   subject: "",
   centerName: "",
@@ -200,6 +206,13 @@ export default function AddTeacherModal({
       toast.error("يرجى إدخال المادة التي يدرّسها المدرس!");
       return;
     }
+
+    const email = validateStaffEmail(formData.ownerEmail);
+    if (!email.valid) {
+      toast.error(email.message);
+      return;
+    }
+
     if (!formData.centerName.trim()) {
       toast.error("يرجى إدخال اسم المركز!");
       return;
@@ -221,6 +234,7 @@ export default function AddTeacherModal({
         ownerFullName: formData.ownerFullName.trim(),
         ownerPhone: formData.ownerPhone.trim(),
         ownerPassword: formData.ownerPassword.trim() || null,
+        ownerEmail: email.value ?? "",
         // Only meaningful for a solo teacher account.
         subject:
           formData.accountType === "Teacher" ? formData.subject.trim() : null,
@@ -347,6 +361,21 @@ export default function AddTeacherModal({
                 onChange={(e) => setField("ownerPassword", e.target.value)}
               />
             </div>
+          </div>
+
+          <div>
+            <label className={labelClass}>البريد الإلكتروني (اختياري)</label>
+            <input
+              type="email"
+              dir="ltr"
+              placeholder="name@example.com"
+              className={inputClass}
+              value={formData.ownerEmail}
+              onChange={(e) => setField("ownerEmail", e.target.value)}
+            />
+            <p className="mt-1 text-xs text-text-muted">
+              {STAFF_EMAIL_HELPER_TEXT}
+            </p>
           </div>
 
           <h3 className="pt-2 text-sm font-bold text-primary">بيانات المركز</h3>

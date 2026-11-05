@@ -14,6 +14,10 @@ import {
   BookOpen,
 } from "@/components/icons";
 import { useAuth } from "../context/useAuth";
+import {
+  STAFF_EMAIL_HELPER_TEXT,
+  validateStaffEmail,
+} from "../utils/staffEmail";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -26,6 +30,9 @@ export default function Profile() {
   } = useAuth();
 
   const isTeacher = role === "Teacher";
+  // Students and parents never see an email; their accounts are managed by the
+  // center and the API already hides the field for them.
+  const hideEmail = role === "Student" || role === "Parent";
 
   const [profile, setProfile] = useState(null);
 
@@ -33,6 +40,11 @@ export default function Profile() {
   const [changingPassword, setChangingPassword] = useState(false);
   const [savingSubject, setSavingSubject] = useState(false);
   const [subjectValue, setSubjectValue] = useState("");
+
+  const [emailValue, setEmailValue] = useState("");
+  const [savingEmail, setSavingEmail] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [emailNotice, setEmailNotice] = useState(null);
 
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
@@ -307,6 +319,86 @@ export default function Profile() {
   };
 
   // =========================
+  // Request Email Change
+  // =========================
+
+  const handleEmailChangeRequest = async (e) => {
+    e.preventDefault();
+
+    setEmailError("");
+    setEmailNotice(null);
+
+    const validation = validateStaffEmail(emailValue);
+
+    if (!validation.valid) {
+      setEmailError(validation.message);
+      return;
+    }
+
+    if (!validation.value) {
+      setEmailError("يرجى إدخال البريد الإلكتروني.");
+      return;
+    }
+
+    if (
+      profile?.email &&
+      validation.value === profile.email.toLowerCase()
+    ) {
+      setEmailError("البريد الإلكتروني الجديد مطابق للبريد الحالي.");
+      return;
+    }
+
+    try {
+      setSavingEmail(true);
+
+      const response = await fetch(
+        `${API_BASE_URL}/Profile/RequestEmailChange`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: validation.value }),
+        }
+      );
+
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          result?.message ||
+            "تعذر إرسال رابط التأكيد. حاول مرة أخرى."
+        );
+      }
+
+      // The API only stages the address. The old one stays active until the
+      // link sent to the new address is opened.
+      setProfile((prev) => ({
+        ...prev,
+        pendingEmail: validation.value,
+      }));
+
+      setEmailValue("");
+      setEmailNotice({
+        type: "success",
+        text:
+          result?.message ||
+          "أرسلنا رابط تأكيد إلى بريدك الجديد. سيبقى بريدك الحالي فعالاً حتى التأكيد.",
+      });
+    } catch (error) {
+      setEmailNotice({
+        type: "error",
+        text:
+          error.message ||
+          "حدث خطأ أثناء طلب تغيير البريد الإلكتروني",
+      });
+    } finally {
+      setSavingEmail(false);
+    }
+  };
+
+  // =========================
   // Loading
   // =========================
 
@@ -397,11 +489,13 @@ export default function Profile() {
                 value={profile?.fullName}
               />
 
-              <InfoItem
-                icon={<Mail size={19} />}
-                label="البريد الإلكتروني"
-                value={profile?.email}
-              />
+              {!hideEmail && (
+                <InfoItem
+                  icon={<Mail size={19} />}
+                  label="البريد الإلكتروني"
+                  value={profile?.email}
+                />
+              )}
 
               <InfoItem
                 icon={<Phone size={19} />}
@@ -435,6 +529,140 @@ export default function Profile() {
 
             </div>
           </div>
+
+          {/* ========================= */}
+          {/* Email (staff only) */}
+          {/* ========================= */}
+
+          {!hideEmail && (
+            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm lg:col-span-3">
+              <div className="border-b border-slate-100 p-6">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
+                    <Mail size={27} />
+                  </div>
+
+                  <div>
+                    <h2 className="text-xl font-bold text-slate-800">
+                      البريد الإلكتروني
+                    </h2>
+
+                    <p className="text-sm text-slate-500">
+                      يُستخدم لاستعادة كلمة المرور الخاصة بحسابك
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4 p-6">
+                {!profile?.email && (
+                  <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-700">
+                    <AlertCircle size={22} className="shrink-0" />
+                    <span>أضف بريدك لتتمكن من استعادة كلمة المرور.</span>
+                  </div>
+                )}
+
+                <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-sm">
+                  <p className="text-slate-500">البريد الحالي</p>
+                  <p className="mt-1 font-semibold text-slate-800" dir="ltr">
+                    {profile?.email || "غير متوفر"}
+                  </p>
+
+                  {profile?.pendingEmail && (
+                    <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50 p-3 text-blue-700">
+                      <p>
+                        بانتظار التأكيد:{" "}
+                        <span className="font-semibold" dir="ltr">
+                          {profile.pendingEmail}
+                        </span>
+                      </p>
+                      <p className="mt-1 text-xs">
+                        سيبقى بريدك الحالي فعالاً حتى تأكيد البريد الجديد.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {emailNotice && (
+                  <div
+                    role={emailNotice.type === "error" ? "alert" : "status"}
+                    className={`flex items-center gap-3 rounded-xl border p-4 text-sm ${
+                      emailNotice.type === "error"
+                        ? "border-red-200 bg-red-50 text-red-700"
+                        : "border-green-200 bg-green-50 text-green-700"
+                    }`}
+                  >
+                    {emailNotice.type === "error" ? (
+                      <AlertCircle size={20} className="shrink-0" />
+                    ) : (
+                      <CheckCircle2 size={20} className="shrink-0" />
+                    )}
+                    <span>{emailNotice.text}</span>
+                  </div>
+                )}
+
+                <form
+                  onSubmit={handleEmailChangeRequest}
+                  className="space-y-3"
+                  noValidate
+                >
+                  <div>
+                    <label
+                      htmlFor="profile-email"
+                      className="mb-2 block text-sm font-semibold text-slate-700"
+                    >
+                      البريد الإلكتروني الجديد
+                    </label>
+
+                    <input
+                      id="profile-email"
+                      name="email"
+                      type="email"
+                      dir="ltr"
+                      autoComplete="email"
+                      value={emailValue}
+                      onChange={(e) => {
+                        setEmailValue(e.target.value);
+                        setEmailError("");
+                      }}
+                      placeholder="name@example.com"
+                      className={`w-full rounded-xl border bg-white px-4 py-3 text-left outline-none transition ${
+                        emailError
+                          ? "border-red-400 focus:ring-2 focus:ring-red-100"
+                          : "border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                      }`}
+                    />
+
+                    <p className="mt-1.5 text-xs leading-5 text-slate-500">
+                      {STAFF_EMAIL_HELPER_TEXT}
+                    </p>
+
+                    {emailError && (
+                      <p className="mt-1 text-xs text-red-500">{emailError}</p>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={savingEmail || !accessToken}
+                    className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {savingEmail ? (
+                      <>
+                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        جاري الإرسال...
+                      </>
+                    ) : (
+                      <>
+                        <Mail size={19} />
+                        إرسال رابط التأكيد
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
 
           {/* ========================= */}
           {/* Subject (teachers only) */}

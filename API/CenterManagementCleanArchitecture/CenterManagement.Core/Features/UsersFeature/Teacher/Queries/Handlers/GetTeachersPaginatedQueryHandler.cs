@@ -68,6 +68,7 @@ public class GetTeachersPaginatedQueryHandler
                 Id = u.Id,
                 FullName = u.FullName,
                 PhoneNumber = u.PhoneNumber,
+                Email = u.Email,
                 CenterId = u.CenterId,
                 CreatedAt = u.CreatedAt
             })

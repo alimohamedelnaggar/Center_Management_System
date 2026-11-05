@@ -4,6 +4,10 @@ import toast from "react-hot-toast";
 
 import { teacherService } from "../../services/teacherService";
 import { useAuth } from "../../context/useAuth";
+import {
+  STAFF_EMAIL_HELPER_TEXT,
+  validateStaffEmail,
+} from "../../utils/staffEmail";
 
 export default function AssistantModal({
   isOpen,
@@ -18,6 +22,7 @@ export default function AssistantModal({
   const [formData, setFormData] = useState({
     fullName: "",
     phoneNumber: "",
+    email: "",
     password: "",
     confirmPassword: "",
     salary: 0,
@@ -34,6 +39,7 @@ export default function AssistantModal({
         setFormData({
           fullName: initialData.fullName || "",
           phoneNumber: initialData.phoneNumber || "",
+          email: initialData.email || "",
           password: "",
           confirmPassword: "",
           salary: initialData.salary || 0,
@@ -46,6 +52,7 @@ export default function AssistantModal({
         setFormData({
           fullName: "",
           phoneNumber: "",
+          email: "",
           password: "",
           confirmPassword: "",
           salary: 0,
@@ -102,6 +109,22 @@ export default function AssistantModal({
       return;
     }
 
+    const email = validateStaffEmail(formData.email);
+    if (!email.valid) {
+      toast.error(email.message);
+      return;
+    }
+
+    if (
+      initialData?.email &&
+      !email.value &&
+      !window.confirm(
+        "سيتم حذف البريد الإلكتروني لهذا الحساب، ولن يستطيع صاحب الحساب استعادة كلمة المرور بنفسه. هل تريد المتابعة؟",
+      )
+    ) {
+      return;
+    }
+
     if (!initialData) {
       if (!formData.password || !formData.confirmPassword) {
         toast.error("يرجى إدخال وتأكيد كلمة المرور!");
@@ -122,6 +145,7 @@ export default function AssistantModal({
     if (initialData) {
       onSubmit({
         ...formData,
+        email: email.value ?? "",
         id: initialData.id,
         // Solo centers link the assistant to the whole center (null).
         teacherId: showTeacherField ? teacherId || null : null,
@@ -135,6 +159,7 @@ export default function AssistantModal({
     } else {
       onSubmit({
         ...formData,
+        email: email.value ?? "",
         teacherId: showTeacherField ? teacherId || null : null,
       });
     }
@@ -185,6 +210,25 @@ export default function AssistantModal({
                 setFormData({ ...formData, phoneNumber: e.target.value })
               }
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1 text-text-main">
+              البريد الإلكتروني (اختياري)
+            </label>
+            <input
+              type="email"
+              dir="ltr"
+              placeholder="name@example.com"
+              className="w-full p-2.5 rounded-xl border border-surface-border bg-surface-muted text-text-main focus:outline-none focus:border-primary"
+              value={formData.email}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
+            />
+            <p className="mt-1 text-xs text-text-muted">
+              {STAFF_EMAIL_HELPER_TEXT}
+            </p>
           </div>
 
           {showTeacherField && (

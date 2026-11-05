@@ -1,5 +1,6 @@
 using CenterManagement.Core.Bases;
 using CenterManagement.Core.Features.Centers.Commands.Models;
+using CenterManagement.Core.Helpers;
 using CenterManagement.Data.Entities.Abstractions;
 using CenterManagement.Data.Enums;
 using CenterManagement.Infrustructure.Data;
@@ -23,16 +24,19 @@ public class CenterLifecycleCommandHandler : ResponseHandler,
     private readonly AppDbContext _context;
     private readonly ITenantContext _tenantContext;
     private readonly IAuditLogService _auditLog;
+    private readonly UserManager<User> _userManager;
 
     public CenterLifecycleCommandHandler(
         IStringLocalizer<SharedResources> localizer,
         AppDbContext context,
         ITenantContext tenantContext,
-        IAuditLogService auditLog) : base(localizer)
+        IAuditLogService auditLog,
+        UserManager<User> userManager) : base(localizer)
     {
         _context = context;
         _tenantContext = tenantContext;
         _auditLog = auditLog;
+        _userManager = userManager;
     }
 
     public async Task<Response<string>> Handle(
@@ -58,6 +62,38 @@ public class CenterLifecycleCommandHandler : ResponseHandler,
         center.SubscriptionStart = request.SubscriptionStart;
         center.SubscriptionEnd = request.SubscriptionEnd;
         center.UpdatedAt = DateTime.UtcNow;
+
+        if (request.OwnerEmail is not null && center.OwnerId is { } ownerId)
+        {
+            var owner = await _userManager.FindByIdAsync(ownerId.ToString());
+
+            if (owner is null)
+                return NotFound<string>("صاحب المركز غير موجود");
+
+            var ownerEmail = UserEmailHelper.Normalize(request.OwnerEmail);
+
+            if (ownerEmail is not null)
+            {
+                var emailOwner = await _userManager.FindByEmailAsync(ownerEmail);
+
+                if (emailOwner is not null && emailOwner.Id != owner.Id)
+                    return BadRequest<string>(UserEmailHelper.DuplicateMessage);
+            }
+
+            UserEmailHelper.ApplyConfirmed(owner, request.OwnerEmail);
+
+            var emailResult = await _userManager.UpdateAsync(owner);
+
+            if (!emailResult.Succeeded)
+            {
+                if (UserEmailHelper.IsDuplicateEmail(emailResult))
+                    return BadRequest<string>(UserEmailHelper.DuplicateMessage);
+
+                return BadRequest<string>(
+                    string.Join(Environment.NewLine,
+                        emailResult.Errors.Select(error => error.Description)));
+            }
+        }
 
         // Keep the status consistent with the new subscription window: extending
         // into the future reactivates an expired center, moving the end into the

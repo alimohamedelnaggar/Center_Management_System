@@ -56,6 +56,7 @@ public static class Routing
         public const string GetMyProfile = Prefix + "/GetMyProfile";
         public const string EditMyProfile = Prefix + "/EditMyProfile";
         public const string ChangePassword = Prefix + "/ChangePassword";
+        public const string RequestEmailChange = Prefix + "/RequestEmailChange";
     }
     #region ExpenseRouting
     public static class ExpenseRouting
@@ -147,6 +148,7 @@ public static class Routing
         public const string ValidateToken = Prefix + "/Validate-Token";
         //public const string ConfirmEmail = "/Api/Authentication/ConfirmEmail";
         public const string ConfirmEmail = Prefix + "ConfirmEmail";
+        public const string ConfirmEmailChange = Prefix + "/Confirm-Email-Change";
         public const string SendResetCode = Prefix + "/Send-Reset-Code";
         public const string ResetPassword = Prefix + "/Reset-Password";
 

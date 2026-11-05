@@ -1,6 +1,8 @@
 ﻿
 using CenterManagement.Data.AppMetaData;
+using CenterManagement.Infrustructure.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.OpenApi;
 using System.Security.Claims;
 
@@ -105,7 +107,9 @@ public static class SerivesCollection
             option.Password.RequireUppercase = false;
             option.Password.RequiredLength = 6;
 
-            option.User.RequireUniqueEmail = false;
+            // Email is optional (students/parents and staff may not have one),
+            // but when an account has one it must be unique system-wide.
+            option.User.RequireUniqueEmail = true;
 
 
             // Lockout settings.
@@ -118,6 +122,12 @@ public static class SerivesCollection
                         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
 
         }).AddEntityFrameworkStores<AppDbContext>().AddDefaultTokenProviders();
+
+        // Identity 10 turns a missing email into an empty string and then
+        // rejects it once RequireUniqueEmail is on. Email is optional here, so
+        // swap in a validator that skips blank addresses but still rejects a
+        // duplicate real address.
+        services.Replace(ServiceDescriptor.Scoped<IUserValidator<User>, OptionalEmailUserValidator>());
 
         //JWT Authentication
         var jwtSettings = new JwtSettings();

@@ -273,6 +273,11 @@ export default function CentersManagement() {
                         <div className="text-xs" dir="ltr">
                           {center.ownerPhone || ""}
                         </div>
+                        {center.ownerEmail && (
+                          <div className="text-xs" dir="ltr">
+                            {center.ownerEmail}
+                          </div>
+                        )}
                       </td>
                       <td className="p-4 text-text-muted">
                         {typeLabels[center.type] ?? center.type}

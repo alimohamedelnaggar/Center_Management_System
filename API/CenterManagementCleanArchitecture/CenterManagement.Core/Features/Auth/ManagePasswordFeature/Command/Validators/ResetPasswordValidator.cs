@@ -1,4 +1,5 @@
 ﻿using CenterManagement.Core.Features.Auth.ManagePasswordFeature.Command.Models;
+using CenterManagement.Core.Helpers;
 
 namespace CenterManagement.Core.Features.Auth.ManagePasswordFeature.Command.Validators;
 
@@ -20,9 +21,16 @@ public class ResetPasswordValidator : AbstractValidator<ResetPasswordCommand>
     #region Handle Functions
     public void ApplyValidationsRules()
     {
-        RuleFor(x => x.PhoneNumber)
-             .NotEmpty().WithMessage(_localizer[SharedResourcesKeys.NotEmpty])
-             .NotNull().WithMessage(_localizer[SharedResourcesKeys.Required]);
+        RuleFor(x => x)
+            .Must(x => !string.IsNullOrWhiteSpace(x.Identifier)
+                       || !string.IsNullOrWhiteSpace(x.PhoneNumber))
+            .WithMessage(_localizer[SharedResourcesKeys.NotEmpty]);
+
+        RuleFor(x => x)
+            .Must(x => AccountRecoveryHelper.IsValid(
+                AccountRecoveryHelper.EffectiveIdentifier(x.Identifier, x.PhoneNumber)))
+            .WithMessage("رقم الهاتف أو البريد الإلكتروني غير صحيح");
+
         RuleFor(x => x.Code)
              .NotEmpty().WithMessage(_localizer[SharedResourcesKeys.NotEmpty])
              .NotNull().WithMessage(_localizer[SharedResourcesKeys.Required])

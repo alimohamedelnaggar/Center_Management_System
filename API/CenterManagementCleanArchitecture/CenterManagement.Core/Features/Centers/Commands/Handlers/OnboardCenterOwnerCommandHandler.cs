@@ -1,4 +1,5 @@
 using CenterManagement.Core.Bases;
+using CenterManagement.Core.Helpers;
 using CenterManagement.Core.Features.Centers.Commands.Models;
 using CenterManagement.Core.Features.Subscriptions.Commands.Handlers;
 using CenterManagement.Data.AppMetaData;
@@ -55,6 +56,11 @@ public class OnboardCenterOwnerCommandHandler
         if (phoneExists)
             return BadRequest<OnboardCenterOwnerResult>("رقم الهاتف مستخدم بالفعل.");
 
+        var ownerEmail = UserEmailHelper.Normalize(request.OwnerEmail);
+
+        if (ownerEmail is not null && await _userManager.FindByEmailAsync(ownerEmail) is not null)
+            return BadRequest<OnboardCenterOwnerResult>(UserEmailHelper.DuplicateMessage);
+
         if (!await _roleManager.RoleExistsAsync(accountType))
             await _roleManager.CreateAsync(new Role { Name = accountType });
 
@@ -108,7 +114,9 @@ public class OnboardCenterOwnerCommandHandler
                 UserName = phone,
                 PhoneNumber = phone,
                 FullName = request.OwnerFullName.Trim(),
-                EmailConfirmed = true,
+                Email = ownerEmail,
+                NormalizedEmail = ownerEmail?.ToUpperInvariant(),
+                EmailConfirmed = ownerEmail is not null,
                 CenterId = center.Id,
                 IsCenterAdmin = isSoloTeacher,
                 MustChangePassword = true,
@@ -201,6 +209,10 @@ public class OnboardCenterOwnerCommandHandler
         catch (Exception ex)
         {
             await transaction.RollbackAsync();
+
+            if (UserEmailHelper.IsDuplicateEmail(ex))
+                return BadRequest<OnboardCenterOwnerResult>(UserEmailHelper.DuplicateMessage);
+
             return BadRequest<OnboardCenterOwnerResult>(
                 ex.InnerException?.Message ?? ex.Message);
         }

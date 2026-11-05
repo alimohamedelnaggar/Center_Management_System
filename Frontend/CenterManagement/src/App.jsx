@@ -1,5 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import LoginPage from "./components/Auth/LoginComponent/Login";
+import ForgotPasswordPage from "./pages/ForgotPasswordPage";
+import EmailConfirmedPage from "./pages/EmailConfirmedPage";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import Spinner from "./components/common/Spinner";
 import ModuleGuard from "./components/common/ModuleGuard";
@@ -112,6 +114,11 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+
+      {/* Public account recovery. Deliberately outside every auth, module and
+          subscription guard: a locked-out user has no session yet. */}
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/email-confirmed" element={<EmailConfirmedPage />} />
 
       {/* Public: a parent scans the card QR with the phone camera. */}
       <Route path="/student-card/:code" element={<StudentCardLookupPage />} />

@@ -253,11 +253,7 @@ export default function CenterLoginPage() {
                   </label>
                   <button
                     type="button"
-                    onClick={() =>
-                      toast("سيتم توفير استعادة كلمة المرور قريباً", {
-                        icon: "🔑",
-                      })
-                    }
+                    onClick={() => navigate("/forgot-password")}
                     className="text-xs font-semibold text-primary transition-opacity hover:opacity-70"
                   >
                     نسيت كلمة المرور؟

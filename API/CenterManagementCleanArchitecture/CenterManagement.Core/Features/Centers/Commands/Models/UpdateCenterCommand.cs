@@ -19,6 +19,13 @@ public class UpdateCenterCommand : IRequest<Response<string>>
     public string? Description { get; set; }
     public string? Notes { get; set; }
 
+    /// <summary>
+    /// Optional email for the center's owner account. <c>null</c> leaves the
+    /// address untouched; an empty string clears it. Admin-entered addresses
+    /// are stored confirmed.
+    /// </summary>
+    public string? OwnerEmail { get; set; }
+
     public CenterType? Type { get; set; }
 
     // ---- Subscription ----

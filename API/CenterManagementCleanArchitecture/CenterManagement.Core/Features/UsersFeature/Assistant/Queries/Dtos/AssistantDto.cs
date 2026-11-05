@@ -6,6 +6,8 @@
 
     public string PhoneNumber { get; set; } = default!;
 
+    public string? Email { get; set; }
+
     public decimal Salary { get; set; }
 
     public int? WorkingHoursPerWeek { get; set; }

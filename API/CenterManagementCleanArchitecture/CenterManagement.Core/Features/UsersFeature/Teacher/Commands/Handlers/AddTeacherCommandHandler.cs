@@ -1,4 +1,5 @@
 using CenterManagement.Core.Features.UsersFeature.Teacher.Commands.Models;
+using CenterManagement.Core.Helpers;
 using CenterManagement.Data.AppMetaData;
 using CenterManagement.Data.Entities.Abstractions;
 using CenterManagement.Data.Entities.Groups;
@@ -61,6 +62,11 @@ public class AddTeacherCommandHandler
         if (await _userManager.Users.AnyAsync(x => x.PhoneNumber == phone, cancellationToken))
             return BadRequest<string>("رقم الهاتف مستخدم بالفعل.");
 
+        var email = UserEmailHelper.Normalize(request.Email);
+
+        if (email is not null && await _userManager.FindByEmailAsync(email) is not null)
+            return BadRequest<string>(UserEmailHelper.DuplicateMessage);
+
         if (!await _roleManager.RoleExistsAsync(AppRoles.Teacher))
             await _roleManager.CreateAsync(new Role { Name = AppRoles.Teacher });
 
@@ -74,7 +80,9 @@ public class AddTeacherCommandHandler
                 FullName = request.FullName.Trim(),
                 UserName = phone,
                 PhoneNumber = phone,
-                EmailConfirmed = true,
+                Email = email,
+                NormalizedEmail = email?.ToUpperInvariant(),
+                EmailConfirmed = email is not null,
                 CenterId = centerId,
                 CreatedAt = DateTime.UtcNow
             };
@@ -131,6 +139,10 @@ public class AddTeacherCommandHandler
         catch (Exception ex)
         {
             await transaction.RollbackAsync();
+
+            if (UserEmailHelper.IsDuplicateEmail(ex))
+                return BadRequest<string>(UserEmailHelper.DuplicateMessage);
+
             return BadRequest<string>(ex.InnerException?.Message ?? ex.Message);
         }
     }

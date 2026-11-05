@@ -1,10 +1,15 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { X } from "@/components/icons";
+import {
+  STAFF_EMAIL_HELPER_TEXT,
+  validateStaffEmail,
+} from "../../utils/staffEmail";
 
 const emptyForm = {
   name: "",
   phone: "",
+  ownerEmail: "",
   address: "",
   description: "",
   notes: "",
@@ -33,6 +38,7 @@ export default function CenterEditModal({ isOpen, center, onClose, onSubmit }) {
       setForm({
         name: center.name ?? "",
         phone: center.phone ?? "",
+        ownerEmail: center.ownerEmail ?? "",
         address: center.address ?? "",
         description: center.description ?? "",
         notes: center.notes ?? "",
@@ -57,6 +63,22 @@ export default function CenterEditModal({ isOpen, center, onClose, onSubmit }) {
       return;
     }
 
+    const email = validateStaffEmail(form.ownerEmail);
+    if (!email.valid) {
+      toast.error(email.message);
+      return;
+    }
+
+    if (
+      center.ownerEmail &&
+      !email.value &&
+      !window.confirm(
+        "سيتم حذف البريد الإلكتروني لمالك المركز، ولن يستطيع استعادة كلمة المرور بنفسه. هل تريد المتابعة؟",
+      )
+    ) {
+      return;
+    }
+
     if (
       form.subscriptionStart &&
       form.subscriptionEnd &&
@@ -70,6 +92,7 @@ export default function CenterEditModal({ isOpen, center, onClose, onSubmit }) {
       id: center.id,
       name: form.name.trim(),
       phone: form.phone.trim() || null,
+      ownerEmail: email.value ?? "",
       address: form.address.trim() || null,
       description: form.description.trim() || null,
       notes: form.notes.trim() || null,
@@ -99,7 +122,7 @@ export default function CenterEditModal({ isOpen, center, onClose, onSubmit }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <form onSubmit={handleSubmit} noValidate className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="md:col-span-2">
             <label className={labelClass}>اسم المركز</label>
             <input className={inputClass} value={form.name} onChange={setField("name")} />
@@ -108,6 +131,21 @@ export default function CenterEditModal({ isOpen, center, onClose, onSubmit }) {
           <div>
             <label className={labelClass}>الهاتف</label>
             <input dir="ltr" className={inputClass} value={form.phone} onChange={setField("phone")} />
+          </div>
+
+          <div>
+            <label className={labelClass}>البريد الإلكتروني للمالك (اختياري)</label>
+            <input
+              type="email"
+              dir="ltr"
+              placeholder="name@example.com"
+              className={inputClass}
+              value={form.ownerEmail}
+              onChange={setField("ownerEmail")}
+            />
+            <p className="mt-1 text-xs text-text-muted">
+              {STAFF_EMAIL_HELPER_TEXT}
+            </p>
           </div>
 
           <div>

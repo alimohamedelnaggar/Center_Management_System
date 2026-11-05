@@ -8,6 +8,9 @@ public class GetMyProfileDto
 
     public string? Email { get; set; }
 
+    /// <summary>New address awaiting confirmation; null when nothing is staged.</summary>
+    public string? PendingEmail { get; set; }
+
     public string? PhoneNumber { get; set; }
 
     public string? UserName { get; set; }

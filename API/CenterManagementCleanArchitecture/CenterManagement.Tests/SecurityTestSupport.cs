@@ -5,7 +5,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
-using CenterManagement.Core.Features.Shared.EmailFeature.Commands.Models;
+using CenterManagement.Core.Features.Shared.EmailFeature.Senders;
 using CenterManagement.Data.AppMetaData;
 using CenterManagement.Data.Entities.Abstractions;
 using CenterManagement.Data.Entities.Identity;
@@ -207,14 +207,14 @@ public static class SecurityTestSupport
     }
 
     /// <summary>Pulls the 6-digit code out of the captured reset email.</summary>
-    public static string ExtractResetCode(SendEmailCommand email)
+    public static string ExtractResetCode(FakeEmailSender.CapturedEmail email)
     {
         var match = Regex.Match(email.Message ?? string.Empty, @"\b\d{6}\b");
         Assert.True(match.Success, $"No 6-digit code found in email body: {email.Message}");
         return match.Value;
     }
 
-    public static async Task<SendEmailCommand> WaitForEmailAsync(string toEmail, TimeSpan? timeout = null)
+    public static async Task<FakeEmailSender.CapturedEmail> WaitForEmailAsync(string toEmail, TimeSpan? timeout = null)
     {
         var deadline = DateTime.UtcNow + (timeout ?? TimeSpan.FromSeconds(5));
 

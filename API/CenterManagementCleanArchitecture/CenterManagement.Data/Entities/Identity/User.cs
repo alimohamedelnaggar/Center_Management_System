@@ -23,6 +23,12 @@ public class User : IdentityUser<Guid>
     public int ResetCodeAttempts { get; set; }
     public DateTime? ResetCodeSentAt { get; set; }
 
+    // A self-service email change is staged here until the account holder
+    // proves ownership. The current Email stays active (and usable for
+    // recovery) until the new address is confirmed.
+    public string? PendingEmail { get; set; }
+    public DateTime? PendingEmailRequestedAt { get; set; }
+
     public bool IsActive { get; set; } = true;
     public bool MustChangePassword { get; set; }
     public bool IsCenterAdmin { get; set; }

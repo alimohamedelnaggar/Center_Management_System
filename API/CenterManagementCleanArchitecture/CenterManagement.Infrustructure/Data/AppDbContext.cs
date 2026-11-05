@@ -169,6 +169,16 @@ public class AppDbContext : IdentityDbContext<User, Role, Guid, IdentityUserClai
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
 
+        // Email is optional, but when present it must be unique across every
+        // account. The filtered index keeps the many NULL rows valid on SQL
+        // Server and closes the race between two simultaneous forms that both
+        // pass the application-level check.
+        modelBuilder.Entity<User>()
+            .HasIndex(user => user.NormalizedEmail)
+            .HasDatabaseName("EmailIndex")
+            .IsUnique()
+            .HasFilter("[NormalizedEmail] IS NOT NULL");
+
         // Apply global query filters for soft delete and multi-tenancy (center isolation).
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {

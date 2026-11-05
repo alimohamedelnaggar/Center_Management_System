@@ -691,6 +691,48 @@ talks about. The table header is not claimed. The defect is recorded here and le
 
 ---
 
+## F-014 — Malformed request payloads escape as unhandled exceptions instead of an error response
+
+**Severity:** Medium (clients get an aborted request or a generic 500 instead of the validation message)
+
+**Found:** 2026-11-04 while adding the optional staff email field and testing that a malformed
+address is rejected before it reaches the database.
+
+**Symptom**
+
+When a FluentValidation validator rejects a command (for example an onboarding request with
+`ownerEmail = "not-an-email"`), the `ValidationException` is not converted into a response. The
+request never returns a `400`/`422` body carrying the field message; under the real host the
+exception surfaces as a 500 and the user only sees a generic failure.
+
+**Evidence**
+
+- `API/.../CenterManagement.Tests/StaffEmailPhaseOneTests.cs:122-145` — the only way to observe the
+  rejection is `Assert.ThrowsAsync<FluentValidation.ValidationException>(...)`: the exception
+  propagates through the test server rather than coming back as a status code.
+- The same behaviour is pre-existing and asserted by `UpdateMySubjectTests.Empty_Subject_IsRejected`.
+- `API/.../CenterManagement.Core/MiddleWare/ErrorHandlerMiddleware.cs:41-46` already maps
+  `ValidationException` to `422 UnprocessableEntity`, but the middleware is never registered.
+
+**Root cause**
+
+`CenterManagement.Api/Program.cs` (middleware section, near lines 196-205) registers the sign-in
+rate limiter, center-access enforcement and password-change enforcement middleware only. No
+exception-handling middleware is added to the pipeline, so `ErrorHandlerMiddleware` is dead code.
+
+**Why it was not fixed in this phase**
+
+Registering `ErrorHandlerMiddleware` changes the status code of every failing validation across the
+API. `UpdateMySubjectTests.Empty_Subject_IsRejected` currently relies on the exception propagating,
+so enabling the middleware is a behaviour change that needs its own pass and updated assertions
+rather than being slipped into the email feature. The email work therefore asserts the thrown
+exception (matching the existing baseline) and keeps the product behaviour unchanged.
+
+**Status: OPEN — logged, not fixed.** Phase 2 should decide whether to register the middleware and
+update the affected tests, or to return explicit validation results from the handlers.
+
+---
+
 ## Harness failures during the Stage C dry runs (not product defects)
 
 These stopped recordings before Stage C started. None of them is a product bug, and none of

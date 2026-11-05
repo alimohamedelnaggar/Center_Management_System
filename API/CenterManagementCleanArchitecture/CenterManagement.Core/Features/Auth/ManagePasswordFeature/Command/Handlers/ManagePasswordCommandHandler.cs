@@ -1,4 +1,6 @@
 ﻿using CenterManagement.Core.Features.Auth.ManagePasswordFeature.Command.Models;
+using CenterManagement.Core.Features.Shared.EmailFeature.Commands.Models;
+using CenterManagement.Core.Helpers;
 using CenterManagement.Infrustructure.InfrastructureBases.Bases;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -9,8 +11,9 @@ namespace CenterManagement.Core.Features.Auth.ManagePasswordFeature.Command.Hand
 /// Self-service password reset. A one-time, expiring, attempt-limited code is
 /// sent out-of-band (email) and exchanged for a new password. The response to
 /// <see cref="SendResetCodeCommand"/> never reveals whether the account exists,
-/// and the exchange for <see cref="ResetPasswordCommand"/> returns the same
-/// generic failure for unknown accounts, wrong codes and expired codes.
+/// owns an email, or is even eligible for self-service recovery, and the exchange
+/// for <see cref="ResetPasswordCommand"/> returns the same generic failure for
+/// unknown accounts, wrong codes, expired codes and exhausted attempts.
 /// </summary>
 public class ManagePasswordCommandHandler : ResponseHandler,
     IRequestHandler<SendResetCodeCommand, Response<string>>,
@@ -19,7 +22,6 @@ public class ManagePasswordCommandHandler : ResponseHandler,
     private const int CodeLength = 6;
     private static readonly TimeSpan CodeLifetime = TimeSpan.FromMinutes(12);
     private const int MaxAttempts = 5;
-    private const string GenericFailure = "الرمز غير صحيح أو منتهي الصلاحية.";
 
     #region Fields
     private readonly IStringLocalizer<SharedResources> _stringLocalizer;
@@ -51,76 +53,80 @@ public class ManagePasswordCommandHandler : ResponseHandler,
 
     public async Task<Response<string>> Handle(SendResetCodeCommand request, CancellationToken cancellationToken)
     {
-        var phoneNumber = request.PhoneNumber.Trim();
-        var user = await _userManager.Users
-            .FirstOrDefaultAsync(u => u.PhoneNumber == phoneNumber, cancellationToken);
+        var identifier = AccountRecoveryHelper.EffectiveIdentifier(request.Identifier, request.PhoneNumber);
+        var user = await FindByIdentifierAsync(identifier, cancellationToken);
 
-        // Never disclose whether the account exists: always answer with the same
-        // success response and the same amount of work on the hot path.
-        if (user is null)
-            return Success<string>("");
-
+        // Always do the expensive parts (code generation + hashing) so the
+        // response time cannot be used to fingerprint known identifiers.
         var code = RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6");
+        var codeHash = _userManager.PasswordHasher.HashPassword(user ?? new User(), code);
+        var now = DateTime.UtcNow;
 
-        user.ResetCodeHash = _userManager.PasswordHasher.HashPassword(user, code);
-        user.ResetCodeExpiresAt = DateTime.UtcNow.Add(CodeLifetime);
+        if (user is null)
+            return Success<string>(AccountRecoveryHelper.SendCodeMessage);
+
+        var roles = await _userManager.GetRolesAsync(user);
+
+        if (!AccountRecoveryHelper.CanReceiveCode(roles, user.Email, user.EmailConfirmed))
+        {
+            // Students/parents and accounts without a confirmed address get the
+            // exact same answer and no email. The center owns their recovery.
+            return Success<string>(AccountRecoveryHelper.SendCodeMessage);
+        }
+
+        user.ResetCodeHash = codeHash;
+        user.ResetCodeExpiresAt = now.Add(CodeLifetime);
         user.ResetCodeAttempts = 0;
-        user.ResetCodeSentAt = DateTime.UtcNow;
+        user.ResetCodeSentAt = now;
         user.Code = null; // retire the legacy plaintext column
 
         var updateResult = await _userManager.UpdateAsync(user);
 
         if (!updateResult.Succeeded)
         {
+            // Still uniform: a persistence hiccup must not reveal the account.
             _logger.LogWarning("Failed to persist reset code for user {UserId}", user.Id);
-            return BadRequest<string>(_stringLocalizer[SharedResourcesKeys.TryAgainInAnotherTime]);
+            return Success<string>(AccountRecoveryHelper.SendCodeMessage);
         }
 
-        var email = user.Email;
         var message = $"رمز إعادة تعيين كلمة المرور: {code}. صالح لمدة {CodeLifetime.TotalMinutes:0} دقيقة.";
 
         // Fire-and-forget so the response time does not depend on the SMTP
         // round-trip (and therefore cannot be used to fingerprint accounts).
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                using var scope = _scopeFactory.CreateScope();
-                var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+        QueueEmail(user.Email!, message, "Reset Password", user.Id);
 
-                await mediator.Send(new SendEmailCommand
-                {
-                    Email = email,
-                    Message = message,
-                    Subject = "Reset Password"
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to send reset code email for user {UserId}", user.Id);
-            }
-        }, CancellationToken.None);
-
-        return Success<string>("");
+        return Success<string>(AccountRecoveryHelper.SendCodeMessage);
     }
 
     public async Task<Response<string>> Handle(ResetPasswordCommand request, CancellationToken cancellationToken)
     {
-        var phoneNumber = request.PhoneNumber.Trim();
-        var user = await _userManager.Users
-            .FirstOrDefaultAsync(u => u.PhoneNumber == phoneNumber, cancellationToken);
+        var identifier = AccountRecoveryHelper.EffectiveIdentifier(request.Identifier, request.PhoneNumber);
+        var user = await FindByIdentifierAsync(identifier, cancellationToken);
 
-        if (user is null
+        if (user is null)
+        {
+            // Burn a comparable amount of work on an unknown identifier.
+            _userManager.PasswordHasher.VerifyHashedPassword(
+                new User(),
+                _userManager.PasswordHasher.HashPassword(new User(), "000000"),
+                request.Code);
+
+            return BadRequest<string>(AccountRecoveryHelper.ResetFailedMessage);
+        }
+
+        var roles = await _userManager.GetRolesAsync(user);
+
+        if (!AccountRecoveryHelper.CanRecover(roles)
             || user.ResetCodeHash is null
             || user.ResetCodeExpiresAt is null)
         {
-            return BadRequest<string>(GenericFailure);
+            return BadRequest<string>(AccountRecoveryHelper.ResetFailedMessage);
         }
 
         if (user.ResetCodeExpiresAt < DateTime.UtcNow || user.ResetCodeAttempts >= MaxAttempts)
         {
             await InvalidateCodeAsync(user);
-            return BadRequest<string>(GenericFailure);
+            return BadRequest<string>(AccountRecoveryHelper.ResetFailedMessage);
         }
 
         var verification = _userManager.PasswordHasher.VerifyHashedPassword(
@@ -134,7 +140,7 @@ public class ManagePasswordCommandHandler : ResponseHandler,
                 user.ResetCodeHash = null;
 
             await _userManager.UpdateAsync(user);
-            return BadRequest<string>(GenericFailure);
+            return BadRequest<string>(AccountRecoveryHelper.ResetFailedMessage);
         }
 
         var token = await _userManager.GeneratePasswordResetTokenAsync(user);
@@ -157,12 +163,64 @@ public class ManagePasswordCommandHandler : ResponseHandler,
 
         await RevokeRefreshTokensAsync(user.Id, cancellationToken);
 
+        // Tell the account holder that the password changed. Sent to the address
+        // that was already active, never to a pending one.
+        if (!string.IsNullOrWhiteSpace(user.Email))
+        {
+            QueueEmail(
+                user.Email,
+                "تم تغيير كلمة المرور الخاصة بحسابك. إذا لم تقم بهذا التغيير، تواصل مع المركز فوراً.",
+                "Password Changed",
+                user.Id);
+        }
+
         return Success<string>("");
     }
 
     #endregion
 
     #region Helper Methods
+
+    private Task<User?> FindByIdentifierAsync(string identifier, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrEmpty(identifier))
+            return Task.FromResult<User?>(null);
+
+        if (AccountRecoveryHelper.IsEmail(identifier))
+        {
+            var normalized = identifier.ToUpperInvariant();
+            return _userManager.Users
+                .FirstOrDefaultAsync(u => u.NormalizedEmail == normalized, cancellationToken);
+        }
+
+        return _userManager.Users
+            .FirstOrDefaultAsync(u => u.PhoneNumber == identifier, cancellationToken);
+    }
+
+    private void QueueEmail(string email, string message, string subject, Guid userId)
+    {
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                using var scope = _scopeFactory.CreateScope();
+                var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
+
+                await mediator.Send(new SendEmailCommand
+                {
+                    Email = email,
+                    Message = message,
+                    Subject = subject
+                });
+            }
+            catch (Exception ex)
+            {
+                // Never log the address or the message body (which can contain a
+                // reset code) — only the failure and the internal user id.
+                _logger.LogError(ex, "Failed to send account email for user {UserId}", userId);
+            }
+        }, CancellationToken.None);
+    }
 
     private async Task InvalidateCodeAsync(User user)
     {

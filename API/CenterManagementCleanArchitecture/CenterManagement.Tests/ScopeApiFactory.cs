@@ -1,17 +1,16 @@
 using System.Collections.Concurrent;
 using CenterManagement.Api.BackgroundServices;
-using CenterManagement.Core.Bases;
-using CenterManagement.Core.Features.Shared.EmailFeature.Commands.Models;
+using CenterManagement.Core.Features.Shared.EmailFeature.Senders;
 using CenterManagement.Data.Entities.Abstractions;
 using CenterManagement.Infrustructure.Data;
 using CenterManagement.Infrustructure.Interceptors;
-using MediatR;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 
 namespace CenterManagement.Tests;
@@ -27,16 +26,15 @@ public class ScopeApiFactory : WebApplicationFactory<Program>
     public const string JwtSecret = "CenterManagementCleanArchitectureKey";
 
     /// <summary>
-    /// Every email the application tries to send through MediatR during a test
-    /// is captured here instead of hitting a real SMTP server.
+    /// Every email the application sends during a test is captured by the
+    /// in-memory <see cref="FakeEmailSender"/>, so no run can reach SMTP.
     /// </summary>
-    public static readonly ConcurrentQueue<SendEmailCommand> SentEmails = new();
+    public static IReadOnlyCollection<FakeEmailSender.CapturedEmail> SentEmails =>
+        FakeEmailSender.Sent;
 
     public static void ClearSentEmails()
     {
-        while (SentEmails.TryDequeue(out _))
-        {
-        }
+        FakeEmailSender.Clear();
     }
 
     private readonly string _databasePath =
@@ -101,20 +99,12 @@ public class ScopeApiFactory : WebApplicationFactory<Program>
                 services.Remove(descriptor);
             }
 
-            ReplaceEmailSender(services);
+            // Tests must never reach a real SMTP server, regardless of how the
+            // host environment is resolved. The fake captures every message in
+            // memory for assertions.
+            services.RemoveAll<IEmailSender>();
+            services.AddScoped<IEmailSender, FakeEmailSender>();
         });
-    }
-
-    private static void ReplaceEmailSender(IServiceCollection services)
-    {
-        var obsolete = services
-            .Where(d => d.ServiceType == typeof(IRequestHandler<SendEmailCommand, Response<string>>))
-            .ToList();
-
-        foreach (var descriptor in obsolete)
-            services.Remove(descriptor);
-
-        services.AddTransient<IRequestHandler<SendEmailCommand, Response<string>>, CapturingEmailSender>();
     }
 
     private void ReplaceDatabase(IServiceCollection services)
@@ -173,19 +163,3 @@ public class ScopeApiFactory : WebApplicationFactory<Program>
     }
 }
 
-/// <summary>
-/// Test double that captures outgoing mail instead of connecting to SMTP.
-/// </summary>
-public sealed class CapturingEmailSender : IRequestHandler<SendEmailCommand, Response<string>>
-{
-    public Task<Response<string>> Handle(SendEmailCommand request, CancellationToken cancellationToken)
-    {
-        ScopeApiFactory.SentEmails.Enqueue(request);
-
-        return Task.FromResult(new Response<string>("captured", true)
-        {
-            Succeeded = true,
-            StatusCode = System.Net.HttpStatusCode.OK
-        });
-    }
-}

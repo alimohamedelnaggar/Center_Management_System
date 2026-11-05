@@ -1,6 +1,7 @@
 ﻿import { Outlet } from "react-router-dom";
 import AppSidebar from "../components/AppSidebar.jsx";
 import ImpersonationBanner from "../components/ImpersonationBanner.jsx";
+import OwnerEmailWarning from "../components/OwnerEmailWarning.jsx";
 import SubscriptionBanner from "../components/common/SubscriptionBanner.jsx";
 
 export default function SidebarLayout() {
@@ -11,6 +12,7 @@ export default function SidebarLayout() {
       <main className="min-w-0 flex-1">
         <ImpersonationBanner />
         <SubscriptionBanner />
+        <OwnerEmailWarning />
         <Outlet />
       </main>
     </div>

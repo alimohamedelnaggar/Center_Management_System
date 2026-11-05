@@ -6,6 +6,12 @@ public class EditTeacherCommand : IRequest<Response<string>>
     public string FullName { get; set; } = default!;
     public string? PhoneNumber { get; set; }
 
+    /// <summary>
+    /// Optional email. <c>null</c> leaves the address untouched, while an empty
+    /// string clears it (the UI warns before doing that).
+    /// </summary>
+    public string? Email { get; set; }
+
     /// <summary>Subject/material taught by the teacher (optional).</summary>
     public string? Subject { get; set; }
 

@@ -1,5 +1,6 @@
 ﻿
 
+using CenterManagement.Core.Helpers;
 using CenterManagement.Infrustructure.InfrastructureBases.Bases;
 
 namespace CenterManagement.Core.Features.UsersFeature.Assistant.Commands.Handlers;
@@ -36,6 +37,11 @@ public sealed class AddAssistantCommandHandler
 
             return BadRequest<string>("رقم الهاتف مستخدم بالفعل.");
 
+        var email = UserEmailHelper.Normalize(request.Email);
+
+        if (email is not null && await _userManager.FindByEmailAsync(email) is not null)
+            return BadRequest<string>(UserEmailHelper.DuplicateMessage);
+
         if (request.Password != request.ConfirmPassword) return BadRequest<string>("كلمه المرور غير متطابقة");
 
         var assistant = new Assistent
@@ -43,7 +49,9 @@ public sealed class AddAssistantCommandHandler
             FullName = fullName,
             UserName = phoneNumber,
             PhoneNumber = phoneNumber,
-            EmailConfirmed = true,
+            Email = email,
+            NormalizedEmail = email?.ToUpperInvariant(),
+            EmailConfirmed = email is not null,
 
             Salary = request.Salary,
             HireDate = request.HireDate,
@@ -95,6 +103,9 @@ public sealed class AddAssistantCommandHandler
         catch (Exception ex)
         {
             await transaction.RollbackAsync();
+
+            if (UserEmailHelper.IsDuplicateEmail(ex))
+                return BadRequest<string>(UserEmailHelper.DuplicateMessage);
 
             return BadRequest<string>(
                 ex.InnerException?.Message ?? ex.Message);

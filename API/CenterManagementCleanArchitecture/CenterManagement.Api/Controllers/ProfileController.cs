@@ -54,4 +54,13 @@ public class ProfileController : AppControllerBase
 
         return NewResult(response);
     }
+
+    [HttpPut(Routing.ProfileRouting.RequestEmailChange)]
+    public async Task<IActionResult> RequestEmailChange(
+        [FromBody] RequestEmailChangeCommand command)
+    {
+        var response = await _mediator.Send(command);
+
+        return NewResult(response);
+    }
 }

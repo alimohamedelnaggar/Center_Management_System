@@ -3,6 +3,10 @@
     public string FullName { get; set; } = default!;
 
     public string PhoneNumber { get; set; } = default!;
+
+    /// <summary>Optional email; admin-entered addresses are stored confirmed.</summary>
+    public string? Email { get; set; }
+
     public string Password { get; set; } = default!;
     public string ConfirmPassword { get; set; } = default!;
 

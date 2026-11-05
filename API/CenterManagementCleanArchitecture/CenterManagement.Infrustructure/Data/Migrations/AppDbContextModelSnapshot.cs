@@ -800,6 +800,15 @@ namespace CenterManagement.Infrustructure.Data.Migrations
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("PendingEmail")
+
+                        .HasMaxLength(256)
+
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTime?>("PendingEmailRequestedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
 
@@ -839,7 +848,9 @@ namespace CenterManagement.Infrustructure.Data.Migrations
                     b.HasIndex("CenterId");
 
                     b.HasIndex("NormalizedEmail")
-                        .HasDatabaseName("EmailIndex");
+                        .IsUnique()
+                        .HasDatabaseName("EmailIndex")
+                        .HasFilter("[NormalizedEmail] IS NOT NULL");
 
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()

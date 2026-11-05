@@ -6,6 +6,12 @@
 
     public string PhoneNumber { get; set; } = default!;
 
+    /// <summary>
+    /// Optional email. <c>null</c> leaves the address untouched, while an empty
+    /// string clears it (the UI warns before doing that).
+    /// </summary>
+    public string? Email { get; set; }
+
     public decimal Salary { get; set; }
 
     public int? WorkingHoursPerWeek { get; set; }

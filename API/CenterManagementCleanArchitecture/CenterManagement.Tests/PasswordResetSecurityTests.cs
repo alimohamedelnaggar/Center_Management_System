@@ -35,7 +35,7 @@ public sealed class PasswordResetSecurityTests
             var seed = factory.EnsureSeeded();
             var phone = "0109" + SecurityTestSupport.RandomDigits(7);
             var userId = await SecurityTestSupport.CreateUserAsync(factory, phone, $"{phone}@test.local",
-                centerId: seed.CenterA);
+                role: AppRoles.Teacher, centerId: seed.CenterA);
 
             var response = await client.PostAsJsonAsync(SecurityTestSupport.OldResetPasswordRoute, new
             {
@@ -60,7 +60,7 @@ public sealed class PasswordResetSecurityTests
         {
             var seed = factory.EnsureSeeded();
             var phone = "0109" + SecurityTestSupport.RandomDigits(7);
-            await SecurityTestSupport.CreateUserAsync(factory, phone, $"{phone}@test.local", centerId: seed.CenterA);
+            await SecurityTestSupport.CreateUserAsync(factory, phone, $"{phone}@test.local", role: AppRoles.Teacher, centerId: seed.CenterA);
 
             var response = await client.PostAsJsonAsync(SecurityTestSupport.ResetPasswordRoute, new
             {
@@ -84,7 +84,7 @@ public sealed class PasswordResetSecurityTests
             var seed = factory.EnsureSeeded();
             var phone = "0109" + SecurityTestSupport.RandomDigits(7);
             var email = $"{phone}@test.local";
-            var userId = await SecurityTestSupport.CreateUserAsync(factory, phone, email, centerId: seed.CenterA);
+            var userId = await SecurityTestSupport.CreateUserAsync(factory, phone, email, role: AppRoles.Teacher, centerId: seed.CenterA);
 
             var code = await SecurityTestSupport.SendCodeAndReadAsync(client, factory, phone, email);
             var wrong = code == "000000" ? "111111" : "000000";
@@ -111,7 +111,7 @@ public sealed class PasswordResetSecurityTests
             var seed = factory.EnsureSeeded();
             var phone = "0109" + SecurityTestSupport.RandomDigits(7);
             var email = $"{phone}@test.local";
-            var userId = await SecurityTestSupport.CreateUserAsync(factory, phone, email, centerId: seed.CenterA);
+            var userId = await SecurityTestSupport.CreateUserAsync(factory, phone, email, role: AppRoles.Teacher, centerId: seed.CenterA);
 
             var code = await SecurityTestSupport.SendCodeAndReadAsync(client, factory, phone, email);
             await ExpireCodeAsync(factory, userId);
@@ -138,7 +138,7 @@ public sealed class PasswordResetSecurityTests
             var seed = factory.EnsureSeeded();
             var phone = "0109" + SecurityTestSupport.RandomDigits(7);
             var email = $"{phone}@test.local";
-            await SecurityTestSupport.CreateUserAsync(factory, phone, email, centerId: seed.CenterA);
+            await SecurityTestSupport.CreateUserAsync(factory, phone, email, role: AppRoles.Teacher, centerId: seed.CenterA);
 
             var code = await SecurityTestSupport.SendCodeAndReadAsync(client, factory, phone, email);
 
@@ -204,7 +204,7 @@ public sealed class PasswordResetSecurityTests
             var seed = factory.EnsureSeeded();
             var phone = "0109" + SecurityTestSupport.RandomDigits(7);
             var email = $"{phone}@test.local";
-            var userId = await SecurityTestSupport.CreateUserAsync(factory, phone, email, centerId: seed.CenterA);
+            var userId = await SecurityTestSupport.CreateUserAsync(factory, phone, email, role: AppRoles.Teacher, centerId: seed.CenterA);
 
             var code = await SecurityTestSupport.SendCodeAndReadAsync(client, factory, phone, email);
             var wrong = code == "000000" ? "111111" : "000000";
@@ -243,7 +243,7 @@ public sealed class PasswordResetSecurityTests
             var seed = factory.EnsureSeeded();
             var phone = "0109" + SecurityTestSupport.RandomDigits(7);
             var email = $"{phone}@test.local";
-            var userId = await SecurityTestSupport.CreateUserAsync(factory, phone, email, centerId: seed.CenterA);
+            var userId = await SecurityTestSupport.CreateUserAsync(factory, phone, email, role: AppRoles.Teacher, centerId: seed.CenterA);
             await SecurityTestSupport.AddActiveRefreshTokenAsync(factory, userId);
 
             var code = await SecurityTestSupport.SendCodeAndReadAsync(client, factory, phone, email);
@@ -304,7 +304,7 @@ public sealed class PasswordResetSecurityTests
             var seed = factory.EnsureSeeded();
             var phone = "0109" + SecurityTestSupport.RandomDigits(7);
             var email = $"{phone}@test.local";
-            var userId = await SecurityTestSupport.CreateUserAsync(factory, phone, email, centerId: seed.CenterA);
+            var userId = await SecurityTestSupport.CreateUserAsync(factory, phone, email, role: AppRoles.Teacher, centerId: seed.CenterA);
 
             var code = await SecurityTestSupport.SendCodeAndReadAsync(client, factory, phone, email);
 
@@ -327,7 +327,7 @@ public sealed class PasswordResetSecurityTests
         {
             var seed = factory.EnsureSeeded();
             var phone = "0109" + SecurityTestSupport.RandomDigits(7);
-            await SecurityTestSupport.CreateUserAsync(factory, phone, $"{phone}@test.local", centerId: seed.CenterA);
+            await SecurityTestSupport.CreateUserAsync(factory, phone, $"{phone}@test.local", role: AppRoles.Teacher, centerId: seed.CenterA);
 
             var sawTooMany = false;
             for (var i = 0; i < 25 && !sawTooMany; i++)

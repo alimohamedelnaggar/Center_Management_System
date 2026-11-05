@@ -35,6 +35,7 @@ public sealed class GetAssistantByIdQueryHandler
                 Id = x.Id,
                 FullName = x.FullName,
                 PhoneNumber = x.PhoneNumber,
+                Email = x.Email,
                 Salary = x.Salary,
                 WorkingHoursPerWeek = x.WorkingHoursPerWeek,
                 HireDate = x.HireDate,

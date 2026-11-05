@@ -1,4 +1,5 @@
 using CenterManagement.Core.Features.Centers.Commands.Models;
+using CenterManagement.Core.Helpers;
 using CenterManagement.Data.AppMetaData;
 using CenterManagement.Data.Enums;
 using FluentValidation;
@@ -22,6 +23,11 @@ public class OnboardCenterOwnerCommandValidator : AbstractValidator<OnboardCente
         RuleFor(x => x.OwnerPhone)
             .NotEmpty().WithMessage("رقم الهاتف مطلوب")
             .Matches(@"^01[0-2,5]\d{8}$").WithMessage("رقم الهاتف غير صحيح");
+
+        RuleFor(x => x.OwnerEmail)
+            .MaximumLength(254).WithMessage("البريد الإلكتروني طويل جدًا")
+            .Must(UserEmailHelper.IsValidOptional).WithMessage(UserEmailHelper.InvalidMessage)
+            .When(x => !string.IsNullOrWhiteSpace(x.OwnerEmail));
 
         // Empty means "generate a temporary password"; when supplied it must be
         // strong enough for the Identity password policy.

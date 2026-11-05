@@ -22,6 +22,12 @@ public class OnboardCenterOwnerCommand : IRequest<Response<OnboardCenterOwnerRes
     public string OwnerPhone { get; set; } = default!;
 
     /// <summary>
+    /// Optional login email. Admin-entered addresses are trusted, so they are
+    /// stored already confirmed and can be used for self-service recovery.
+    /// </summary>
+    public string? OwnerEmail { get; set; }
+
+    /// <summary>
     /// Initial password for the account. Leave empty to let the platform
     /// generate a temporary password. In both cases the user is forced to
     /// choose a new password on first sign-in.

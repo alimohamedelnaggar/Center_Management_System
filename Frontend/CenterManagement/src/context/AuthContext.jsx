@@ -66,6 +66,9 @@ export function AuthProvider({ children }) {
   const [profileLoaded, setProfileLoaded] = useState(false);
   // The caller's own teacher subject (null for non-teachers / unset).
   const [subject, setSubject] = useState(null);
+  // The caller's own confirmed email (null when unset / hidden for students).
+  // Used by the owner warning banner without an extra /me request.
+  const [email, setEmail] = useState(null);
 
   // The operator's own token, kept aside while an impersonation session runs.
   const originalTokenRef = useRef(null);
@@ -160,6 +163,7 @@ export function AuthProvider({ children }) {
 
     if ("centerType" in payload) setCenterType(payload.centerType ?? null);
     if ("subject" in payload) setSubject(payload.subject ?? null);
+    if ("email" in payload) setEmail(payload.email ?? null);
     setProfileLoaded(true);
 
     if ("enabledModules" in payload) {
@@ -234,6 +238,7 @@ export function AuthProvider({ children }) {
       setCenterType(null);
       setProfileLoaded(false);
       setSubject(null);
+      setEmail(null);
     } finally {
       setLoading(false);
     }
@@ -278,6 +283,7 @@ export function AuthProvider({ children }) {
       setCenterType(null);
       setProfileLoaded(false);
       setSubject(null);
+      setEmail(null);
       applyToken(null);
     }
   }
@@ -300,6 +306,7 @@ export function AuthProvider({ children }) {
     setProfileLoaded(false);
     setCenterType(null);
     setSubject(null);
+    setEmail(null);
     if (response.data.enabledModules !== undefined) {
       applyAuthExtras(response.data);
     }
@@ -327,6 +334,7 @@ export function AuthProvider({ children }) {
     setCenterType(null);
     setProfileLoaded(false);
     setSubject(null);
+    setEmail(null);
   }
 
   return (
@@ -361,6 +369,8 @@ export function AuthProvider({ children }) {
         profileLoaded,
         // The caller's own teacher subject (null when unset / not a teacher).
         subject,
+        // The caller's own confirmed email (null when unset / hidden).
+        email,
         hasModule,
         hasCenterModule,
         refreshModules,

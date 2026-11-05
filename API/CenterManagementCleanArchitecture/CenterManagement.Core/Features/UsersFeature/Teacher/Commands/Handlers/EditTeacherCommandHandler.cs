@@ -1,4 +1,5 @@
 using CenterManagement.Core.Features.UsersFeature.Teacher.Commands.Models;
+using CenterManagement.Core.Helpers;
 using CenterManagement.Data.AppMetaData;
 using CenterManagement.Data.Entities.Abstractions;
 using CenterManagement.Data.Entities.Groups;
@@ -53,11 +54,32 @@ public class EditTeacherCommandHandler
         user.FullName = request.FullName.Trim();
         user.UpdatedAt = DateTime.UtcNow;
 
+        if (request.Email is not null)
+        {
+            var email = UserEmailHelper.Normalize(request.Email);
+
+            if (email is not null)
+            {
+                var emailOwner = await _userManager.FindByEmailAsync(email);
+
+                if (emailOwner is not null && emailOwner.Id != user.Id)
+                    return BadRequest<string>(UserEmailHelper.DuplicateMessage);
+            }
+
+            // null leaves the address untouched; an empty string clears it.
+            UserEmailHelper.ApplyConfirmed(user, request.Email);
+        }
+
         var result = await _userManager.UpdateAsync(user);
 
         if (!result.Succeeded)
+        {
+            if (UserEmailHelper.IsDuplicateEmail(result))
+                return BadRequest<string>(UserEmailHelper.DuplicateMessage);
+
             return BadRequest<string>(
                 string.Join(Environment.NewLine, result.Errors.Select(e => e.Description)));
+        }
 
         var subject = request.Subject?.Trim();
 

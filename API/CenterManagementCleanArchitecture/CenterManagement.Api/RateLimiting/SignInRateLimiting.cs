@@ -13,11 +13,21 @@ namespace CenterManagement.Api.RateLimiting;
 public sealed class SignInRateLimitedAttribute : Attribute;
 
 /// <summary>
-/// Brute-force protection for the sign-in endpoint. Every attempt passes two
-/// independent fixed-window limiters: one keyed by the caller's IP address and
-/// one keyed by the submitted phone number, so neither a single machine nor a
-/// single account can be hammered quickly. Rejections return HTTP 429 with an
-/// Arabic message and a <c>Retry-After</c> header.
+/// Marks an account-recovery endpoint (send code / reset password) as protected
+/// by <see cref="SignInRateLimitingMiddleware"/>. Recovery gets its own budget so
+/// the five-attempt code rule can be exercised through the same identifier
+/// without the transport limiter firing first.
+/// </summary>
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+public sealed class RecoveryRateLimitedAttribute : Attribute;
+
+/// <summary>
+/// Brute-force protection for the sign-in and account-recovery endpoints. Every
+/// attempt passes two independent fixed-window limiters: one keyed by the
+/// caller's IP address and one keyed by the submitted account identifier
+/// (email or phone), so neither a single machine nor a single account can be
+/// hammered quickly. Rejections return HTTP 429 with an Arabic message and a
+/// <c>Retry-After</c> header.
 ///
 /// Limits are configurable through <c>RateLimiting:SignIn</c> so the E2E
 /// environment can disable them; defaults preserve production behaviour.
@@ -26,6 +36,8 @@ public sealed class SignInRateLimitingMiddleware
 {
     public const int IpPermitLimit = 20;
     public const int UserPermitLimit = 5;
+    public const int RecoveryIpPermitLimit = 20;
+    public const int RecoveryUserPermitLimit = 10;
     public static readonly TimeSpan Window = TimeSpan.FromMinutes(1);
 
     private const string UnknownPartition = "unknown";
@@ -34,6 +46,8 @@ public sealed class SignInRateLimitingMiddleware
     private readonly bool _enabled;
     private readonly PartitionedRateLimiter<string>? _ipLimiter;
     private readonly PartitionedRateLimiter<string>? _phoneLimiter;
+    private readonly PartitionedRateLimiter<string>? _recoveryIpLimiter;
+    private readonly PartitionedRateLimiter<string>? _recoveryIdentifierLimiter;
 
     public SignInRateLimitingMiddleware(
         RequestDelegate next,
@@ -47,12 +61,30 @@ public sealed class SignInRateLimitingMiddleware
         if (!_enabled)
             return;
 
-        var ipLimit = Math.Max(1, section.GetValue("IpPermitLimit", IpPermitLimit));
-        var userLimit = Math.Max(1, section.GetValue("UserPermitLimit", UserPermitLimit));
+        (_ipLimiter, _phoneLimiter) = CreateLimiters(
+            section,
+            IpPermitLimit,
+            UserPermitLimit);
+
+        (_recoveryIpLimiter, _recoveryIdentifierLimiter) = CreateLimiters(
+            configuration.GetSection("RateLimiting:Recovery"),
+            RecoveryIpPermitLimit,
+            RecoveryUserPermitLimit);
+    }
+
+    private static (
+        PartitionedRateLimiter<string> Ip,
+        PartitionedRateLimiter<string> Identifier) CreateLimiters(
+        IConfigurationSection section,
+        int defaultIpLimit,
+        int defaultUserLimit)
+    {
+        var ipLimit = Math.Max(1, section.GetValue("IpPermitLimit", defaultIpLimit));
+        var userLimit = Math.Max(1, section.GetValue("UserPermitLimit", defaultUserLimit));
         var windowSeconds = Math.Max(1, section.GetValue("WindowSeconds", (int)Window.TotalSeconds));
         var window = TimeSpan.FromSeconds(windowSeconds);
 
-        _ipLimiter = PartitionedRateLimiter.Create<string, string>(key =>
+        var ip = PartitionedRateLimiter.Create<string, string>(key =>
             RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
             {
                 PermitLimit = ipLimit,
@@ -61,7 +93,7 @@ public sealed class SignInRateLimitingMiddleware
                 AutoReplenishment = true
             }));
 
-        _phoneLimiter = PartitionedRateLimiter.Create<string, string>(key =>
+        var identifier = PartitionedRateLimiter.Create<string, string>(key =>
             RateLimitPartition.GetFixedWindowLimiter(key, _ => new FixedWindowRateLimiterOptions
             {
                 PermitLimit = userLimit,
@@ -69,19 +101,33 @@ public sealed class SignInRateLimitingMiddleware
                 QueueLimit = 0,
                 AutoReplenishment = true
             }));
+
+        return (ip, identifier);
     }
 
     public async Task InvokeAsync(HttpContext context)
     {
-        if (!_enabled ||
-            context.GetEndpoint()?.Metadata.GetMetadata<SignInRateLimitedAttribute>() is null)
+        if (!_enabled)
         {
             await _next(context);
             return;
         }
 
+        var endpoint = context.GetEndpoint();
+        var isSignIn = endpoint?.Metadata.GetMetadata<SignInRateLimitedAttribute>() is not null;
+        var isRecovery = endpoint?.Metadata.GetMetadata<RecoveryRateLimitedAttribute>() is not null;
+
+        if (!isSignIn && !isRecovery)
+        {
+            await _next(context);
+            return;
+        }
+
+        var ipLimiter = isRecovery ? _recoveryIpLimiter! : _ipLimiter!;
+        var identifierLimiter = isRecovery ? _recoveryIdentifierLimiter! : _phoneLimiter!;
+
         var ip = context.Connection.RemoteIpAddress?.ToString() ?? UnknownPartition;
-        using var ipLease = _ipLimiter!.AttemptAcquire(ip);
+        using var ipLease = ipLimiter.AttemptAcquire(ip);
 
         if (!ipLease.IsAcquired)
         {
@@ -89,8 +135,8 @@ public sealed class SignInRateLimitingMiddleware
             return;
         }
 
-        var phone = await GetPhoneNumberAsync(context);
-        using var phoneLease = _phoneLimiter!.AttemptAcquire(phone);
+        var phone = await GetPartitionKeyAsync(context);
+        using var phoneLease = identifierLimiter.AttemptAcquire(phone);
 
         if (!phoneLease.IsAcquired)
         {
@@ -122,13 +168,22 @@ public sealed class SignInRateLimitingMiddleware
     }
 
     /// <summary>
-    /// Reads the phone number from the JSON request body without consuming it
-    /// (the body is buffered and rewound so MVC can still bind the command).
+    /// Reads the account identifier (email or phone) from the JSON request body
+    /// or the query string without consuming the body (the body is buffered and
+    /// rewound so MVC can still bind the command). Recovery endpoints accept an
+    /// email or a phone, so both names are honoured.
     /// </summary>
-    private static async Task<string> GetPhoneNumberAsync(HttpContext context)
+    private static async Task<string> GetPartitionKeyAsync(HttpContext context)
     {
         try
         {
+            var fromQuery = context.Request.Query["identifier"].FirstOrDefault()
+                            ?? context.Request.Query["email"].FirstOrDefault()
+                            ?? context.Request.Query["phoneNumber"].FirstOrDefault();
+
+            if (!string.IsNullOrWhiteSpace(fromQuery))
+                return fromQuery.Trim();
+
             if (!context.Request.Body.CanRead)
                 return UnknownPartition;
 
@@ -149,12 +204,18 @@ public sealed class SignInRateLimitingMiddleware
 
             using var document = JsonDocument.Parse(body);
 
-            if (document.RootElement.ValueKind == JsonValueKind.Object &&
-                document.RootElement.TryGetProperty("phoneNumber", out var phone) &&
-                phone.ValueKind == JsonValueKind.String)
+            if (document.RootElement.ValueKind != JsonValueKind.Object)
+                return UnknownPartition;
+
+            foreach (var name in new[] { "identifier", "email", "phoneNumber" })
             {
-                var value = phone.GetString();
-                return string.IsNullOrWhiteSpace(value) ? UnknownPartition : value.Trim();
+                if (document.RootElement.TryGetProperty(name, out var value) &&
+                    value.ValueKind == JsonValueKind.String)
+                {
+                    var candidate = value.GetString();
+                    if (!string.IsNullOrWhiteSpace(candidate))
+                        return candidate.Trim();
+                }
             }
         }
         catch
