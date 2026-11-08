@@ -4,6 +4,7 @@ using CenterManagement.Core.Resources;
 using CenterManagement.Data.AppMetaData;
 using CenterManagement.Data.Entities.Abstractions;
 using CenterManagement.Data.Enums;
+using CenterManagement.Data.Results;
 using CenterManagement.Infrustructure.Data;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -110,7 +111,8 @@ public sealed class GetCenterReportsQueryHandler
             .ToDictionary(x => x.GroupId, x => x.Count);
 
         // =========================================================
-        // Attendance rate per group (Present / total) for the range
+        // Attendance rate per group for the range:
+        // (Present + Late) / (Total - Excused)
         // =========================================================
 
         var attendanceByGroup = (await _context.Attendances
@@ -120,7 +122,10 @@ public sealed class GetCenterReportsQueryHandler
                 {
                     GroupId = g.Key,
                     Total = g.Count(),
-                    Present = g.Count(x => x.Status == AttendanceStatus.Present)
+                    Present = g.Count(x => x.Status == AttendanceStatus.Present),
+                    Absent = g.Count(x => x.Status == AttendanceStatus.Absent),
+                    Late = g.Count(x => x.Status == AttendanceStatus.Late),
+                    Excused = g.Count(x => x.Status == AttendanceStatus.Excused)
                 })
                 .ToListAsync(cancellationToken))
             .ToDictionary(x => x.GroupId, x => x);
@@ -185,12 +190,18 @@ public sealed class GetCenterReportsQueryHandler
 
             var total = 0;
             var present = 0;
+            var absent = 0;
+            var late = 0;
+            var excused = 0;
             foreach (var gid in teacherGroups)
             {
                 if (attendanceByGroup.TryGetValue(gid, out var attendance))
                 {
                     total += attendance.Total;
                     present += attendance.Present;
+                    absent += attendance.Absent;
+                    late += attendance.Late;
+                    excused += attendance.Excused;
                 }
             }
 
@@ -201,7 +212,16 @@ public sealed class GetCenterReportsQueryHandler
                 GroupsCount = teacherGroups.Distinct().Count(),
                 StudentsCount = studentsCount,
                 CollectedInRange = collected,
-                AttendanceRate = Rate(present, total)
+                TotalSessions = total,
+                PresentCount = present,
+                AbsentCount = absent,
+                LateCount = late,
+                ExcusedCount = excused,
+                AttendanceRate = AttendanceRateCalculator.Calculate(
+                    present,
+                    late,
+                    excused,
+                    total)
             });
         }
 
@@ -240,15 +260,26 @@ public sealed class GetCenterReportsQueryHandler
             attendanceByGroup.TryGetValue(group.Id, out var attendance);
             dueByGroup.TryGetValue(group.Id, out var due);
 
+            var total = attendance?.Total ?? 0;
+            var present = attendance?.Present ?? 0;
+            var absent = attendance?.Absent ?? 0;
+            var late = attendance?.Late ?? 0;
+            var excused = attendance?.Excused ?? 0;
+
             groupDtos.Add(new CenterReportGroupDto
             {
                 GroupId = group.Id,
                 GroupName = group.Name,
                 TeacherName = teacherNameByGroup.GetValueOrDefault(group.Id, string.Empty),
                 StudentsCount = studentsByGroup.GetValueOrDefault(group.Id),
+                TotalSessions = total,
+                PresentCount = present,
+                AbsentCount = absent,
+                LateCount = late,
+                ExcusedCount = excused,
                 AttendanceRate = attendance is null
-                    ? 0
-                    : Rate(attendance.Present, attendance.Total),
+                    ? null
+                    : AttendanceRateCalculator.Calculate(present, late, excused, total),
                 Expected = due?.Expected ?? 0,
                 Collected = due?.Collected ?? 0,
                 Outstanding = due?.Outstanding ?? 0
@@ -366,9 +397,24 @@ public sealed class GetCenterReportsQueryHandler
         if (!attendanceOn)
         {
             foreach (var t in dto.Teachers)
-                t.AttendanceRate = 0;
+            {
+                t.TotalSessions = 0;
+                t.PresentCount = 0;
+                t.AbsentCount = 0;
+                t.LateCount = 0;
+                t.ExcusedCount = 0;
+                t.AttendanceRate = null;
+            }
+
             foreach (var g in dto.Groups)
-                g.AttendanceRate = 0;
+            {
+                g.TotalSessions = 0;
+                g.PresentCount = 0;
+                g.AbsentCount = 0;
+                g.LateCount = 0;
+                g.ExcusedCount = 0;
+                g.AttendanceRate = null;
+            }
         }
 
         if (!paymentsOn)
@@ -451,7 +497,4 @@ public sealed class GetCenterReportsQueryHandler
 
     private static DateOnly NormalizeMonth(DateOnly value) =>
         new(value.Year, value.Month, 1);
-
-    private static double Rate(int present, int total) =>
-        total == 0 ? 0 : Math.Round(present * 100.0 / total, 2);
 }

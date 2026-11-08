@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  SCAN_OUTCOME_LABELS,
   SCAN_OUTCOME_STATUS,
   buildScanErrorOutcome,
   isLateScan,
@@ -56,6 +57,48 @@ describe("outcomeFromApiResponse", () => {
     );
 
     expect(outcome.status).toBe(SCAN_OUTCOME_STATUS.LATE);
+  });
+
+  it("trusts the status the API stored", () => {
+    const late = outcomeFromApiResponse(
+      {
+        succeeded: true,
+        message: "تم تسجيل تأخر أحمد.",
+        data: { fullName: "أحمد", status: 3 },
+      },
+      { code: "STU00000001" },
+    );
+    const excused = outcomeFromApiResponse(
+      {
+        succeeded: true,
+        message: "تم",
+        data: { fullName: "أحمد", status: 4 },
+      },
+      { code: "STU00000001" },
+    );
+
+    expect(late.status).toBe(SCAN_OUTCOME_STATUS.LATE);
+    expect(excused.status).toBe(SCAN_OUTCOME_STATUS.EXCUSED);
+  });
+
+  it("prefers the stored status over the old isLate fallback", () => {
+    const outcome = outcomeFromApiResponse(
+      { succeeded: true, message: "تم", data: { fullName: "أحمد", status: 1 } },
+      { code: "STU00000001", isLate: true },
+    );
+
+    expect(outcome.status).toBe(SCAN_OUTCOME_STATUS.PRESENT);
+  });
+
+  it("marks a repeated scan as already recorded even when it carries a status", () => {
+    const outcome = outcomeFromApiResponse({
+      succeeded: true,
+      message: "أحمد متسجل بالفعل.",
+      data: { fullName: "أحمد", status: 3, alreadyRecorded: true },
+    });
+
+    expect(outcome.status).toBe(SCAN_OUTCOME_STATUS.ALREADY);
+    expect(SCAN_OUTCOME_LABELS[outcome.status]).toBe("متسجل بالفعل");
   });
 
   it("maps a repeated card to already recorded", () => {

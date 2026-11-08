@@ -413,6 +413,15 @@ public static class Routing
         public const string Stop = Prefix + "/Stop";
     }
 
+    public static class MessageTemplateRouting
+    {
+        public const string Prefix = Rule + "MessageTemplate";
+        public const string List = Prefix + "/List";
+        public const string Update = Prefix + "/Update";
+        public const string Reset = Prefix + "/{key}/Reset";
+        public const string Preview = Prefix + "/Preview";
+    }
+
 }
 
 

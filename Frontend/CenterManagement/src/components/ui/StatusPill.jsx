@@ -42,6 +42,7 @@ export const ATTENDANCE_STATUS = {
   present: "success",
   absent: "danger",
   late: "warning",
+  excused: "info",
 };
 
 export const PAYMENT_STATUS = {

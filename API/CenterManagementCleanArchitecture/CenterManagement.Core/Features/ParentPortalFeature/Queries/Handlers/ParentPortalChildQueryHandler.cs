@@ -4,6 +4,7 @@ using CenterManagement.Core.Features.ParentPortalFeature.Queries.Models;
 using CenterManagement.Data.Entities;
 using CenterManagement.Data.Entities.Exams;
 using CenterManagement.Data.Entities.QuestionBank;
+using CenterManagement.Data.Results;
 using CenterManagement.Infrustructure.InfrastructureBases.Bases;
 
 namespace CenterManagement.Core.Features.ParentPortalFeature.Queries.Handlers;
@@ -112,9 +113,11 @@ public class ParentPortalChildQueryHandler : ResponseHandler,
         var excused = records.Count(x => x.Status == AttendanceStatus.Excused);
         var total = records.Count;
 
-        var percentage = total == 0
-            ? 0
-            : Math.Round((decimal)(present + late) / total * 100, 1);
+        var percentage = (decimal?)AttendanceRateCalculator.Calculate(
+            present,
+            late,
+            excused,
+            total);
 
         return Success(new ParentChildAttendanceDTO
         {

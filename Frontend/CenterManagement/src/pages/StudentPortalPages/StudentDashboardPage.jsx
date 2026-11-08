@@ -24,6 +24,7 @@ import {
 } from "recharts";
 import toast from "react-hot-toast";
 import { studentPortalService } from "../../services/studentPortalService";
+import { formatAttendanceRate } from "../../utils/attendance";
 import { useAuth } from "../../context/useAuth";
 
 function formatDateTime(value) {
@@ -165,7 +166,7 @@ export default function StudentDashboardPage() {
     {
       key: "attendance",
       label: "نسبة الحضور",
-      value: `${attendance?.attendancePercentage ?? 0}%`,
+      value: formatAttendanceRate(attendance?.attendancePercentage),
       icon: CalendarCheck,
       tone: "bg-status-info-bg text-status-info",
       to: "/student/attendance",

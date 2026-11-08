@@ -106,13 +106,36 @@ describe("NAV_ITEMS is the single source for sidebar and router", () => {
     }
   });
 
-  it("whatsapp/student_portal have no staff nav entry", () => {
-    for (const key of [
-      MODULES.WHATSAPP,
-      MODULES.STUDENT_PORTAL,
-    ]) {
-      expect(NAV_ITEMS.some((i) => i.module === key)).toBe(false);
-    }
+  it("whatsapp has exactly one staff entry: the owner-only template editor", () => {
+    const items = NAV_ITEMS.filter((i) => i.module === MODULES.WHATSAPP);
+
+    expect(items).toHaveLength(1);
+    expect(items[0].path).toBe("/message-templates");
+    expect(items[0].roles).toEqual(["owner", "solo"]);
+
+    // The editor is not a tool for assistants/teachers: they use the templates
+    // from the attendance/exam/overdue screens but never edit them.
+    expect(
+      canSeeNavItem(items[0], navRoleContext({ role: "CenterOwner" })),
+    ).toBe(true);
+    expect(
+      canSeeNavItem(
+        items[0],
+        navRoleContext({ role: "Teacher", isCenterAdmin: true }),
+      ),
+    ).toBe(true);
+    expect(canSeeNavItem(items[0], navRoleContext({ role: "Teacher" }))).toBe(
+      false,
+    );
+    expect(
+      canSeeNavItem(items[0], navRoleContext({ role: "Assistant" })),
+    ).toBe(false);
+  });
+
+  it("student_portal has no staff nav entry", () => {
+    expect(
+      NAV_ITEMS.some((i) => i.module === MODULES.STUDENT_PORTAL),
+    ).toBe(false);
   });
 });
 

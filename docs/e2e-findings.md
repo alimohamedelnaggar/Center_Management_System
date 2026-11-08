@@ -733,6 +733,43 @@ update the affected tests, or to return explicit validation results from the han
 
 ---
 
+## F-015 — The overdue WhatsApp reminder button never opened WhatsApp
+
+**Severity:** High (the reminder feature on `/overdue` was dead: clicking the button did nothing)
+
+**Found:** 2026-11-07 while wiring the shared message templates into the overdue page.
+
+**Symptom**
+
+On `/overdue`, pressing `تذكير واتساب` never opened a `wa.me` link and never showed an error. The
+button appeared enabled but the click handler ran during render instead of on click.
+
+**Root cause**
+
+`Frontend/CenterManagement/src/pages/OverduePage.jsx` passed the result of calling the handler:
+
+```jsx
+<button onClick={handleRemind(row)}>…</button>
+```
+
+`handleRemind(row)` executes on every render and its return value (`undefined`) becomes the click
+handler. The link was built (and discarded) during render, so no popup ever opened.
+
+**Fix applied**
+
+```jsx
+<button onClick={() => handleRemind(row)}>…</button>
+```
+
+**Status: FIXED (2026-11-07, in scope — it blocked the message-template feature).**
+
+- Fixed while wiring the saved `feesReminder` body into the page.
+- `src/pages/messageTemplates.integration.test.jsx` now saves a custom template in the editor and
+  asserts the overdue button opens `wa.me` with that exact body (render → edit → save → open link).
+- Other WhatsApp buttons were checked for the same pattern; none call the handler during render.
+
+---
+
 ## Harness failures during the Stage C dry runs (not product defects)
 
 These stopped recordings before Stage C started. None of them is a product bug, and none of

@@ -8,6 +8,6 @@ namespace CenterManagement.Core.Features.DashboardReports.Responses
     {
         public string DayName { get; set; } = default!;
 
-        public double AttendanceRate { get; set; }
+        public double? AttendanceRate { get; set; }
     }
 }

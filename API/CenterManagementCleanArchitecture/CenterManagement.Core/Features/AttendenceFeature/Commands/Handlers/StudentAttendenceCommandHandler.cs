@@ -278,8 +278,11 @@ public class StudentAttendenceCommandHandler : ResponseHandler,
 
     /// <summary>
     /// Emits one in-app notification per parent of every student whose
-    /// attendance was recorded or changed. A notification failure is isolated:
-    /// the attendance save has already been committed, so it is only logged.
+    /// attendance was recorded or changed to <see cref="AttendanceStatus.Absent"/>.
+    /// Late and Excused are attendance states, not absence alerts, so they stay
+    /// in reports/portals without notifying anyone. A notification failure is
+    /// isolated: the attendance save has already been committed, so it is only
+    /// logged.
     /// </summary>
     private async Task NotifyParentsAsync(
         SaveStudentAttendanceCommand request,
@@ -296,9 +299,7 @@ public class StudentAttendenceCommandHandler : ResponseHandler,
 
         foreach (var (studentId, status) in changedStatuses)
         {
-            if (status is not (AttendanceStatus.Present
-                or AttendanceStatus.Absent
-                or AttendanceStatus.Late))
+            if (status is not AttendanceStatus.Absent)
                 continue;
 
             var referenceType =

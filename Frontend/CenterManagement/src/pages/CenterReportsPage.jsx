@@ -24,6 +24,7 @@ import {
 
 import { reportsService } from "../services/reportsService";
 import { formatCurrency } from "../utils/formatCurrency";
+import { formatAttendanceRate } from "../utils/attendance";
 import { getMonthLabel } from "../utils/months";
 import { useAuth } from "../context/useAuth";
 
@@ -56,52 +57,74 @@ const CURRENT_MONTH = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}`;
 // Row builders (pure, so the print view and the CSV export can
 // share exactly the same headers as the tables on screen).
 // ------------------------------------------------------------
-const TEACHER_HEADERS = [
+const buildTeacherHeaders = (includeAttendance = true) => [
   "م",
   "المدرس",
   "عدد المجموعات",
   "عدد الطلاب",
   "المحصّل في الفترة",
-  "نسبة الحضور",
+  ...(includeAttendance
+    ? ["حضور", "غياب", "تأخر", "بعذر", "نسبة الحضور"]
+    : []),
 ];
 
-const GROUP_HEADERS = [
+const buildGroupHeaders = (includeAttendance = true) => [
   "م",
   "المجموعة",
   "المدرس",
   "الطلاب",
-  "نسبة الحضور",
+  ...(includeAttendance
+    ? ["حضور", "غياب", "تأخر", "بعذر", "نسبة الحضور"]
+    : []),
   "المتوقع للشهر",
   "المحصّل للشهر",
   "المتبقي للشهر",
 ];
 
-const toTeacherRow = (t, i) => [
+const toTeacherRow = (t, i, includeAttendance = true) => [
   i + 1,
   t.teacherName,
   t.groupsCount,
   t.studentsCount,
   Number(t.collectedInRange).toFixed(2),
-  `${Number(t.attendanceRate).toFixed(2)}%`,
+  ...(includeAttendance
+    ? [
+        t.presentCount ?? 0,
+        t.absentCount ?? 0,
+        t.lateCount ?? 0,
+        t.excusedCount ?? 0,
+        formatAttendanceRate(t.attendanceRate),
+      ]
+    : []),
 ];
 
-const GROUP_HEADERS_SOLO = [
+const buildGroupHeadersSolo = (includeAttendance = true) => [
   "م",
   "المجموعة",
   "المادة",
   "الطلاب",
-  "نسبة الحضور",
+  ...(includeAttendance
+    ? ["حضور", "غياب", "تأخر", "بعذر", "نسبة الحضور"]
+    : []),
   "المتوقع للشهر",
   "المحصّل للشهر",
   "المتبقي للشهر",
 ];
 
-const toGroupRow = (g, i, subject = null) => [
+const toGroupRow = (g, i, subject = null, includeAttendance = true) => [
   i + 1,
   g.groupName,
   subject ?? (g.teacherName || "—"),
   g.studentsCount,
-  `${Number(g.attendanceRate).toFixed(2)}%`,
+  ...(includeAttendance
+    ? [
+        g.presentCount ?? 0,
+        g.absentCount ?? 0,
+        g.lateCount ?? 0,
+        g.excusedCount ?? 0,
+        formatAttendanceRate(g.attendanceRate),
+      ]
+    : []),
   Number(g.expected).toFixed(2),
   Number(g.collected).toFixed(2),
   Number(g.outstanding).toFixed(2),
@@ -233,13 +256,25 @@ export default function CenterReportsPage() {
         ? []
         : [
             [csvEscape("بالمدرسون"), csvEscape(`(المحصّل من ${fromYm} إلى ${toYm})`)].join(","),
-            tableToCsv(TEACHER_HEADERS, teachers.map(toTeacherRow)),
+            tableToCsv(
+              buildTeacherHeaders(showAttendance),
+              teachers.map((t, i) => toTeacherRow(t, i, showAttendance)),
+            ),
             "",
           ]),
       [csvEscape("بالمجموعات"), csvEscape(`(شهر الفوترة ${billingYm})`)].join(","),
       tableToCsv(
-        isSoloReport ? GROUP_HEADERS_SOLO : GROUP_HEADERS,
-        groups.map((g, i) => toGroupRow(g, i, isSoloReport ? soloTeacherSubject : null)),
+        isSoloReport
+          ? buildGroupHeadersSolo(showAttendance)
+          : buildGroupHeaders(showAttendance),
+        groups.map((g, i) =>
+          toGroupRow(
+            g,
+            i,
+            isSoloReport ? soloTeacherSubject : null,
+            showAttendance,
+          ),
+        ),
       ),
     ].join("\n");
 
@@ -531,7 +566,13 @@ export default function CenterReportsPage() {
                         </th>
                       )}
                       {showAttendance && (
-                        <th className="px-3 py-3 text-right font-semibold">نسبة الحضور</th>
+                        <>
+                          <th className="px-3 py-3 text-right font-semibold">حضور</th>
+                          <th className="px-3 py-3 text-right font-semibold">غياب</th>
+                          <th className="px-3 py-3 text-right font-semibold">تأخر</th>
+                          <th className="px-3 py-3 text-right font-semibold">بعذر</th>
+                          <th className="px-3 py-3 text-right font-semibold">نسبة الحضور</th>
+                        </>
                       )}
                     </tr>
                   </thead>
@@ -550,9 +591,23 @@ export default function CenterReportsPage() {
                           </td>
                         )}
                         {showAttendance && (
-                          <td className="px-3 py-3 text-text-main">
-                            {Number(t.attendanceRate).toFixed(2)}%
-                          </td>
+                          <>
+                            <td className="px-3 py-3 text-text-main">
+                              {t.presentCount ?? 0}
+                            </td>
+                            <td className="px-3 py-3 text-text-main">
+                              {t.absentCount ?? 0}
+                            </td>
+                            <td className="px-3 py-3 text-text-main">
+                              {t.lateCount ?? 0}
+                            </td>
+                            <td className="px-3 py-3 text-text-main">
+                              {t.excusedCount ?? 0}
+                            </td>
+                            <td className="px-3 py-3 text-text-main">
+                              {formatAttendanceRate(t.attendanceRate)}
+                            </td>
+                          </>
                         )}
                       </tr>
                     ))}
@@ -589,7 +644,13 @@ export default function CenterReportsPage() {
                       </th>
                       <th className="px-3 py-3 text-right font-semibold">الطلاب</th>
                       {showAttendance && (
-                        <th className="px-3 py-3 text-right font-semibold">نسبة الحضور</th>
+                        <>
+                          <th className="px-3 py-3 text-right font-semibold">حضور</th>
+                          <th className="px-3 py-3 text-right font-semibold">غياب</th>
+                          <th className="px-3 py-3 text-right font-semibold">تأخر</th>
+                          <th className="px-3 py-3 text-right font-semibold">بعذر</th>
+                          <th className="px-3 py-3 text-right font-semibold">نسبة الحضور</th>
+                        </>
                       )}
                       {showPayments && (
                         <>
@@ -613,9 +674,23 @@ export default function CenterReportsPage() {
                         </td>
                         <td className="px-3 py-3 text-text-main">{g.studentsCount}</td>
                         {showAttendance && (
-                          <td className="px-3 py-3 text-text-main">
-                            {Number(g.attendanceRate).toFixed(2)}%
-                          </td>
+                          <>
+                            <td className="px-3 py-3 text-text-main">
+                              {g.presentCount ?? 0}
+                            </td>
+                            <td className="px-3 py-3 text-text-main">
+                              {g.absentCount ?? 0}
+                            </td>
+                            <td className="px-3 py-3 text-text-main">
+                              {g.lateCount ?? 0}
+                            </td>
+                            <td className="px-3 py-3 text-text-main">
+                              {g.excusedCount ?? 0}
+                            </td>
+                            <td className="px-3 py-3 text-text-main">
+                              {formatAttendanceRate(g.attendanceRate)}
+                            </td>
+                          </>
                         )}
                         {showPayments && (
                           <>
@@ -645,7 +720,7 @@ export default function CenterReportsPage() {
                   </tbody>
                   <tfoot>
                     <tr className="border-t border-surface-border bg-surface-muted text-xs font-bold">
-                      <td className="px-3 py-3" colSpan={4 + (showAttendance ? 1 : 0)}>
+                      <td className="px-3 py-3" colSpan={4 + (showAttendance ? 5 : 0)}>
                         الإجمالي (كل المجموعات)
                       </td>
                       {showPayments && (

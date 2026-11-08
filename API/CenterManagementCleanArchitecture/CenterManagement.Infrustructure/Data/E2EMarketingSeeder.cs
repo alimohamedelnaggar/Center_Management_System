@@ -934,26 +934,6 @@ public static class E2EMarketingSeeder
                 CreatedAt = now.AddHours(-4)
             });
 
-        db.CenterMessageTemplates.AddRange(
-            new CenterMessageTemplate
-            {
-                CenterId = primary.Id,
-                Type = MessageTemplateType.Absence,
-                Body = "عزيزي ولي الأمر، تم تسجيل غياب الطالب عن حصة اليوم. برجاء التواصل مع المركز."
-            },
-            new CenterMessageTemplate
-            {
-                CenterId = primary.Id,
-                Type = MessageTemplateType.ExamResult,
-                Body = "عزيزي ولي الأمر، تم نشر نتيجة اختبار الطالب. يمكنكم متابعة التفاصيل من بوابة ولي الأمر."
-            },
-            new CenterMessageTemplate
-            {
-                CenterId = primary.Id,
-                Type = MessageTemplateType.FeesReminder,
-                Body = "عزيزي ولي الأمر، نود تذكيركم بسداد الاشتراك الشهري. شكراً لتعاونكم."
-            });
-
         // ------------------------------------------------------------------
         // Audit log
         // ------------------------------------------------------------------

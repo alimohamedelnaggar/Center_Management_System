@@ -22,8 +22,10 @@ import { teacherService } from "../services/teacherService";
 
 import { formatCurrency } from "../utils/formatCurrency";
 import { normalizeEgyptianPhone } from "../utils/phone";
+import { useMessageTemplates } from "../hooks/useMessageTemplates";
 import {
   buildTemplateWhatsAppLink,
+  hasMessageTemplate,
   MESSAGE_TEMPLATE_KEYS,
 } from "../utils/whatsappTemplates";
 
@@ -52,6 +54,7 @@ export default function OverduePage() {
   const showTeacherColumn = centerTypeLoaded && !isSoloCenter;
   const branding = useBranding();
   const centerName = branding?.center?.name || "";
+  const { bodies: templateBodies } = useMessageTemplates();
 
   // =========================================================
   // Filters. `groupId` / `month` / `year` may arrive from a deep
@@ -229,6 +232,11 @@ export default function OverduePage() {
   };
 
   const handleRemind = (row) => {
+    if (!hasMessageTemplate(MESSAGE_TEMPLATE_KEYS.feesReminder, templateBodies)) {
+      toast.error("تعذر تحميل قالب الرسالة، حاول مرة أخرى");
+      return;
+    }
+
     const link = buildTemplateWhatsAppLink(
       row.parentPhoneNumber,
       MESSAGE_TEMPLATE_KEYS.feesReminder,
@@ -238,6 +246,7 @@ export default function OverduePage() {
         amount: formatCurrency(row.remainingAmount),
         month: billingPeriodLabel,
       },
+      templateBodies,
     );
 
     if (!link) {
@@ -493,7 +502,7 @@ export default function OverduePage() {
 
       <ModuleOnly moduleKey="whatsapp">
       <button
-        onClick={handleRemind(row)}
+        onClick={() => handleRemind(row)}
         disabled={!hasPhone}
         title={
           hasPhone

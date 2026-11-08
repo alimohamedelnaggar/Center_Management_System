@@ -3,6 +3,7 @@ using CenterManagement.Core.Features.UsersFeature.Students.Queries.Models;
 using CenterManagement.Data.AppMetaData;
 using CenterManagement.Data.Entities.Abstractions;
 using CenterManagement.Data.Enums;
+using CenterManagement.Data.Results;
 using CenterManagement.Infrustructure.InfrastructureBases.Bases;
 
 namespace CenterManagement.Core.Features.UsersFeature.Students.Queries.Handlers;
@@ -270,18 +271,20 @@ public class GetStudentCardQueryHandler : ResponseHandler,
         var absent = attendances.Count(a => a.Status == (int)AttendanceStatus.Absent);
         var late = attendances.Count(a => a.Status == (int)AttendanceStatus.Late);
         var excused = attendances.Count(a => a.Status == (int)AttendanceStatus.Excused);
-        var graded = present + absent;
+        var total = attendances.Count;
 
         return new StudentCardAttendanceSummaryDTO
         {
-            TotalSessions = attendances.Count,
+            TotalSessions = total,
             PresentSessions = present,
             AbsentSessions = absent,
             LateSessions = late,
             ExcusedSessions = excused,
-            AttendanceRate = graded == 0
-                ? 0
-                : Math.Round(present / (decimal)graded * 100, 1)
+            AttendanceRate = (decimal?)AttendanceRateCalculator.Calculate(
+                present,
+                late,
+                excused,
+                total)
         };
     }
 

@@ -1,14 +1,16 @@
 import { buildWhatsAppLink } from "./phone";
 
 /**
- * Shared WhatsApp message templates.
+ * Shared WhatsApp message-template helpers.
  *
- * A single place for the parent-facing messages so every screen (attendance,
- * grades, overdue) builds the same text, and so a center can later override the
- * wording (STEP 4) without touching the screens.
+ * The message *text* is never defined here: the backend is the single source of
+ * truth (`GET Api/V1/MessageTemplate/List`) and every screen passes the saved
+ * body to these helpers. That way editing a template changes the attendance,
+ * exam-result and overdue reminders together.
  *
- * Templates are plain strings containing {placeholder} tokens. The known tokens
- * are listed per template so the editor UI can advertise them.
+ * These are manual wa.me links: the operator clicks the button and WhatsApp
+ * opens with the text prefilled. Nothing is sent automatically and these are
+ * not Meta message templates.
  */
 
 export const MESSAGE_TEMPLATE_KEYS = {
@@ -17,38 +19,11 @@ export const MESSAGE_TEMPLATE_KEYS = {
   feesReminder: "feesReminder",
 };
 
-export const MESSAGE_PLACEHOLDERS = {
-  [MESSAGE_TEMPLATE_KEYS.absence]: [
-    "parent",
-    "student",
-    "group",
-    "center",
-    "date",
-  ],
-  [MESSAGE_TEMPLATE_KEYS.examResult]: [
-    "parent",
-    "student",
-    "center",
-    "exam",
-    "score",
-    "total",
-  ],
-  [MESSAGE_TEMPLATE_KEYS.feesReminder]: [
-    "parent",
-    "student",
-    "center",
-    "amount",
-    "month",
-  ],
-};
-
-export const DEFAULT_MESSAGE_TEMPLATES = {
-  [MESSAGE_TEMPLATE_KEYS.absence]:
-    "السلام عليكم، نحيطكم علماً بأن الطالب {student} تغيّب عن حصة {group} بتاريخ {date}.\nمع تحيات {center}.",
-  [MESSAGE_TEMPLATE_KEYS.examResult]:
-    "السلام عليكم، حصل الطالب {student} على {score} من {total} في {exam}.\nمع تحيات {center}.",
-  [MESSAGE_TEMPLATE_KEYS.feesReminder]:
-    "مرحباً، نود تذكيركم بسداد اشتراك شهر {month} للطالب {student}. المتبقي: {amount}.\nمع تحيات {center}.",
+/** Arabic labels for the fixed template types (server keys stay English). */
+export const MESSAGE_TEMPLATE_LABELS = {
+  [MESSAGE_TEMPLATE_KEYS.absence]: "غياب طالب",
+  [MESSAGE_TEMPLATE_KEYS.examResult]: "نتيجة امتحان",
+  [MESSAGE_TEMPLATE_KEYS.feesReminder]: "تذكير بالرسوم",
 };
 
 /**
@@ -93,19 +68,24 @@ export function fillTemplate(template, values = {}) {
   });
 }
 
-/** Returns the template for a key, preferring a caller-supplied override. */
-export function getMessageTemplate(key, overrides = null) {
-  const override = overrides?.[key];
-  if (typeof override === "string" && override.trim() !== "") {
-    return override;
-  }
-
-  return DEFAULT_MESSAGE_TEMPLATES[key] ?? "";
+/**
+ * Returns the saved body for a key. `bodies` is the `{ key: body }` map built
+ * from the backend response; when it is missing the body is empty (the caller
+ * must not fall back to a hardcoded message).
+ */
+export function getMessageTemplate(key, bodies = null) {
+  const body = bodies?.[key];
+  return typeof body === "string" ? body : "";
 }
 
-/** Fills the (possibly overridden) template for a key with the given values. */
-export function buildMessageFromTemplate(key, values = {}, overrides = null) {
-  const template = getMessageTemplate(key, overrides);
+/** True once the backend body for a key has been loaded. */
+export function hasMessageTemplate(key, bodies = null) {
+  return getMessageTemplate(key, bodies).trim() !== "";
+}
+
+/** Fills the saved template for a key with the given values. */
+export function buildMessageFromTemplate(key, values = {}, bodies = null) {
+  const template = getMessageTemplate(key, bodies);
 
   // A blank center name must drop the signature line, not render "مع تحيات .".
   const normalized = { ...values };
@@ -123,9 +103,13 @@ export function buildMessageFromTemplate(key, values = {}, overrides = null) {
 
 /**
  * Builds a wa.me link from a template key + values. Returns null when the phone
- * number cannot be normalized, so callers can disable the button.
+ * number cannot be normalized or the template body has not loaded yet, so
+ * callers can disable the button.
  */
-export function buildTemplateWhatsAppLink(rawPhone, key, values, overrides = null) {
-  const message = buildMessageFromTemplate(key, values, overrides);
+export function buildTemplateWhatsAppLink(rawPhone, key, values, bodies = null) {
+  const message = buildMessageFromTemplate(key, values, bodies);
+
+  if (!message.trim()) return null;
+
   return buildWhatsAppLink(rawPhone, message);
 }

@@ -2,15 +2,21 @@
  * Shared helpers that turn an attendance scan response into a small,
  * display ready outcome used by the scanner tab of the attendance modal.
  *
- * The attendance API always records a scan as "Present" (the `Late` value of
- * the enum is never produced by `POST /Attendance/scan`), so lateness is
- * derived on the client from the session start time. It is a display rule
- * only - it never changes what gets stored.
+ * The API now resolves the stored status itself (Present inside the grace
+ * window, Late after it) and returns it in `data.status`, so we trust the
+ * server value. `isLate` stays as a fallback for older responses (and mocks)
+ * that do not carry a status yet.
  */
+
+import {
+  ATTENDANCE_STATUS,
+  normalizeAttendanceStatus,
+} from "./attendance";
 
 export const SCAN_OUTCOME_STATUS = {
   PRESENT: "present",
   LATE: "late",
+  EXCUSED: "excused",
   ALREADY: "already",
   ERROR: "error",
 };
@@ -18,7 +24,8 @@ export const SCAN_OUTCOME_STATUS = {
 export const SCAN_OUTCOME_LABELS = {
   [SCAN_OUTCOME_STATUS.PRESENT]: "حاضر",
   [SCAN_OUTCOME_STATUS.LATE]: "متأخر",
-  [SCAN_OUTCOME_STATUS.ALREADY]: "مسجل مسبقاً",
+  [SCAN_OUTCOME_STATUS.EXCUSED]: "بعذر",
+  [SCAN_OUTCOME_STATUS.ALREADY]: "متسجل بالفعل",
   [SCAN_OUTCOME_STATUS.ERROR]: "غير مسجل",
 };
 
@@ -107,12 +114,23 @@ export function outcomeFromApiResponse(response, { code = "", isLate = false } =
   const alreadyRecorded = Boolean(
     data.alreadyRecorded ?? data.AlreadyRecorded ?? false,
   );
+  const backendStatus = normalizeAttendanceStatus(data.status ?? data.Status);
 
-  const status = alreadyRecorded
-    ? SCAN_OUTCOME_STATUS.ALREADY
-    : isLate
-      ? SCAN_OUTCOME_STATUS.LATE
-      : SCAN_OUTCOME_STATUS.PRESENT;
+  let status;
+
+  if (alreadyRecorded) {
+    status = SCAN_OUTCOME_STATUS.ALREADY;
+  } else if (backendStatus === ATTENDANCE_STATUS.LATE) {
+    status = SCAN_OUTCOME_STATUS.LATE;
+  } else if (backendStatus === ATTENDANCE_STATUS.EXCUSED) {
+    status = SCAN_OUTCOME_STATUS.EXCUSED;
+  } else if (backendStatus === ATTENDANCE_STATUS.PRESENT) {
+    status = SCAN_OUTCOME_STATUS.PRESENT;
+  } else {
+    // Backward compatibility: an old response has no status, so fall back to
+    // the session-start display rule.
+    status = isLate ? SCAN_OUTCOME_STATUS.LATE : SCAN_OUTCOME_STATUS.PRESENT;
+  }
 
   return buildScanOutcome({
     ok: true,

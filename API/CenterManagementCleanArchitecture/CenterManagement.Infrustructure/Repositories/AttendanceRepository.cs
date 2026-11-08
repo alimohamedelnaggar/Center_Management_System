@@ -1,6 +1,7 @@
 ﻿
 
 using CenterManagement.Data.Enums;
+using CenterManagement.Data.Results;
 using CenterManagement.Infrustructure.InfrastructureBases.Abstracts;
 
 namespace CenterManagement.Infrustructure.Repositories;
@@ -37,7 +38,8 @@ public class AttendanceRepository : GenericRepository<Attendance>, IAttendanceRe
     public async Task<AttendanceStatsDTO> GetAttendanceStatsAsync(List<Guid>? groupIds = null)
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
-        var now = DateTime.Today;
+        var monthStart = new DateOnly(today.Year, today.Month, 1);
+        var monthEnd = monthStart.AddMonths(1);
 
         var attendances = dbContext.Attendances.AsNoTracking();
 
@@ -46,29 +48,59 @@ public class AttendanceRepository : GenericRepository<Attendance>, IAttendanceRe
         if (groupIds is not null)
             attendances = attendances.Where(x => groupIds.Contains(x.Session.GroupId));
 
-        var presentToday = await attendances.CountAsync(x =>
-            x.AttendanceDate == today &&
-            x.Status == AttendanceStatus.Present);
+        var todayStats = await attendances
+            .Where(x => x.AttendanceDate == today)
+            .GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Present = g.Count(x => x.Status == AttendanceStatus.Present),
+                Absent = g.Count(x => x.Status == AttendanceStatus.Absent),
+                Late = g.Count(x => x.Status == AttendanceStatus.Late),
+                Excused = g.Count(x => x.Status == AttendanceStatus.Excused)
+            })
+            .FirstOrDefaultAsync();
 
-        var absentToday = await attendances.CountAsync(x =>
-            x.AttendanceDate == today &&
-            x.Status == AttendanceStatus.Absent);
+        var monthStats = await attendances
+            .Where(x => x.AttendanceDate >= monthStart && x.AttendanceDate < monthEnd)
+            .GroupBy(_ => 1)
+            .Select(g => new
+            {
+                Present = g.Count(x => x.Status == AttendanceStatus.Present),
+                Absent = g.Count(x => x.Status == AttendanceStatus.Absent),
+                Late = g.Count(x => x.Status == AttendanceStatus.Late),
+                Excused = g.Count(x => x.Status == AttendanceStatus.Excused)
+            })
+            .FirstOrDefaultAsync();
 
-        var presentThisMonth = await attendances.CountAsync(x =>
-            x.Status == AttendanceStatus.Present &&
-            x.AttendanceDate.Month == now.Month &&
-            x.AttendanceDate.Year == now.Year);
+        var presentToday = todayStats?.Present ?? 0;
+        var absentToday = todayStats?.Absent ?? 0;
+        var lateToday = todayStats?.Late ?? 0;
+        var excusedToday = todayStats?.Excused ?? 0;
+        var totalToday = presentToday + absentToday + lateToday + excusedToday;
 
-        var totalToday = presentToday + absentToday;
+        var presentThisMonth = monthStats?.Present ?? 0;
+        var absentThisMonth = monthStats?.Absent ?? 0;
+        var lateThisMonth = monthStats?.Late ?? 0;
+        var excusedThisMonth = monthStats?.Excused ?? 0;
+        var totalThisMonth = presentThisMonth + absentThisMonth + lateThisMonth + excusedThisMonth;
 
         return new AttendanceStatsDTO
         {
             PresentToday = presentToday,
             AbsentToday = absentToday,
+            LateToday = lateToday,
+            ExcusedToday = excusedToday,
+            TotalToday = totalToday,
             PresentThisMonth = presentThisMonth,
-            AttendanceRate = totalToday == 0
-                ? 0
-                : Math.Round((double)presentToday / totalToday * 100, 1)
+            AbsentThisMonth = absentThisMonth,
+            LateThisMonth = lateThisMonth,
+            ExcusedThisMonth = excusedThisMonth,
+            TotalThisMonth = totalThisMonth,
+            AttendanceRate = AttendanceRateCalculator.Calculate(
+                presentToday,
+                lateToday,
+                excusedToday,
+                totalToday)
         };
     }
     public async Task<Attendance?> GetStudentAttendanceForSessionAsync(

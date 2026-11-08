@@ -36,5 +36,11 @@
 
     public int? MonthlyAbsentCount { get; set; }
 
+    public int? MonthlyLateCount { get; set; }
+
+    public int? MonthlyExcusedCount { get; set; }
+
+    public int? MonthlyAttendanceCount { get; set; }
+
     public double? AttendancePercentage { get; set; }
 }

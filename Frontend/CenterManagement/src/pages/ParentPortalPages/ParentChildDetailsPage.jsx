@@ -16,6 +16,7 @@ import ModuleGuard from "../../components/common/ModuleGuard";
 import { MODULES } from "../../constants/modules";
 import { parentPortalService } from "../../services/parentPortalService";
 import { formatCurrency } from "../../utils/formatCurrency";
+import { formatAttendanceRate } from "../../utils/attendance";
 import { formatShortDate } from "../../utils/months";
 
 /**
@@ -188,11 +189,16 @@ function AttendanceBody({ data }) {
 
   return (
     <div>
-      <div className="grid grid-cols-2 gap-2 py-3 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 py-3 sm:grid-cols-6">
         <Stat label="إجمالي الحصص" value={data.totalSessions} />
         <Stat label="حاضر" value={data.presentCount} tone="success" />
         <Stat label="غائب" value={data.absentCount} tone="danger" />
-        <Stat label="نسبة الحضور" value={`${data.attendancePercentage}%`} />
+        <Stat label="متأخر" value={data.lateCount ?? 0} tone="warning" />
+        <Stat label="بعذر" value={data.excusedCount ?? 0} tone="info" />
+        <Stat
+          label="نسبة الحضور"
+          value={formatAttendanceRate(data.attendancePercentage)}
+        />
       </div>
 
       <ul className="divide-y divide-surface-border">
@@ -340,7 +346,11 @@ function Stat({ label, value, tone }) {
       ? "text-status-success"
       : tone === "danger"
         ? "text-status-danger"
-        : "text-text-main";
+        : tone === "warning"
+          ? "text-status-warning"
+          : tone === "info"
+            ? "text-status-info"
+            : "text-text-main";
 
   return (
     <div className="rounded-lg border border-surface-border bg-surface-muted px-3 py-2 text-center">

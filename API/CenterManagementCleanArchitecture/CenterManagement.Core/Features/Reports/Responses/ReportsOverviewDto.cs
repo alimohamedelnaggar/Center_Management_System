@@ -26,6 +26,13 @@ public sealed class ReportsOverviewDto
 
     public int? AbsentCount { get; set; }
 
+    public int? LateCount { get; set; }
+
+    public int? ExcusedCount { get; set; }
+
+    public int? TotalCount { get; set; }
+
+    /// <summary>(Present + Late) / (Total - Excused); null when not countable.</summary>
     public double? AttendancePercentage { get; set; }
 
     // Finance

@@ -45,7 +45,7 @@ public class StudentAttendanceSummaryDTO
     public int AbsentCount { get; set; }
     public int LateCount { get; set; }
     public int ExcusedCount { get; set; }
-    public decimal AttendancePercentage { get; set; }
+    public decimal? AttendancePercentage { get; set; }
     public List<StudentAttendanceRecordDTO> Records { get; set; } = new();
 }
 

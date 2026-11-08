@@ -2,14 +2,20 @@ import {
   AlertTriangle,
   BookOpen,
   Calendar,
+  CalendarCheck,
+  CalendarX,
   CheckCircle2,
+  Clock,
   Edit3,
   FilePenLine,
   Lock,
+  MoreHorizontal,
+  Percent,
   RefreshCw,
   Save,
   ScanLine,
   Search,
+  ShieldCheck,
   UserCheck,
   Users,
   WhatsappLogo,
@@ -29,13 +35,22 @@ import { normalizeEgyptianPhone } from "../../utils/phone";
 import { extractStudentCode } from "../../utils/qrCode";
 import {
   buildScanErrorOutcome,
-  isLateScan,
   outcomeFromApiResponse,
 } from "../../utils/scanOutcome";
 import {
+  ATTENDANCE_STATUS,
+  ATTENDANCE_STATUS_META,
+  calculateAttendanceRate,
+  formatAttendanceRate,
+  getAttendanceStatusMeta,
+  normalizeAttendanceStatus,
+} from "../../utils/attendance";
+import {
   buildTemplateWhatsAppLink,
+  hasMessageTemplate,
   MESSAGE_TEMPLATE_KEYS,
 } from "../../utils/whatsappTemplates";
+import { useMessageTemplates } from "../../hooks/useMessageTemplates";
 import {
   attendanceConnection,
   startAttendanceConnection,
@@ -47,10 +62,19 @@ import {
 } from "../../utils/attendanceHubPayload";
 import AttendanceStatsCards from "./AttendanceStatsCards";
 
-const ATTENDANCE_STATUS = {
-  ABSENT: 2,
-  PRESENT: 1,
+const STATUS_ICONS = {
+  [ATTENDANCE_STATUS.PRESENT]: CalendarCheck,
+  [ATTENDANCE_STATUS.ABSENT]: CalendarX,
+  [ATTENDANCE_STATUS.LATE]: Clock,
+  [ATTENDANCE_STATUS.EXCUSED]: ShieldCheck,
 };
+
+const STATUS_ORDER = [
+  ATTENDANCE_STATUS.PRESENT,
+  ATTENDANCE_STATUS.ABSENT,
+  ATTENDANCE_STATUS.LATE,
+  ATTENDANCE_STATUS.EXCUSED,
+];
 
 const formatDisplayDate = (isoDate) => {
   if (!isoDate) return "";
@@ -92,6 +116,7 @@ export default function AttendanceSheet() {
   const { user } = useAuth();
   const branding = useBranding();
   const centerName = branding?.center?.name || "";
+  const { bodies: templateBodies } = useMessageTemplates();
   const isAdmin =
     user?.["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] ===
       "CenterOwner" ||
@@ -104,9 +129,6 @@ export default function AttendanceSheet() {
   const [sessions, setSessions] = useState([]);
   const [selectedSessionId, setSelectedSessionId] = useState("");
   const [loadingSessions, setLoadingSessions] = useState(false);
-
-  const selectedSession =
-    sessions.find((session) => session.id === selectedSessionId) ?? null;
 
   const [students, setStudents] = useState([]);
   const [loadingGroups, setLoadingGroups] = useState(false);
@@ -149,6 +171,11 @@ export default function AttendanceSheet() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
 
+  // Which student's four-status menu is open, and the status the bulk action
+  // applies to every loaded student.
+  const [statusMenuStudentId, setStatusMenuStudentId] = useState(null);
+  const [bulkStatus, setBulkStatus] = useState(ATTENDANCE_STATUS.PRESENT);
+
   // Remaining absentees to notify one-by-one after the bulk action opens the
   // first WhatsApp link (we never open many tabs at once).
   const [bulkAbsentQueue, setBulkAbsentQueue] = useState([]);
@@ -157,8 +184,15 @@ export default function AttendanceSheet() {
   const [attendanceStats, setAttendanceStats] = useState({
     presentToday: 0,
     absentToday: 0,
+    lateToday: 0,
+    excusedToday: 0,
+    totalToday: 0,
     presentThisMonth: 0,
-    attendanceRate: 0,
+    absentThisMonth: 0,
+    lateThisMonth: 0,
+    excusedThisMonth: 0,
+    totalThisMonth: 0,
+    attendanceRate: null,
   });
   const [loadingStats, setLoadingStats] = useState(true);
   const loadAttendanceStats = useCallback(async () => {
@@ -324,9 +358,7 @@ export default function AttendanceSheet() {
       studentList.forEach((s) => {
         resetMap[s.id] = {
           status:
-            s.status !== null && s.status !== undefined
-              ? s.status
-              : ATTENDANCE_STATUS.PRESENT,
+            normalizeAttendanceStatus(s.status) ?? ATTENDANCE_STATUS.PRESENT,
           note: s.notes || s.note || "",
         };
       });
@@ -442,14 +474,44 @@ export default function AttendanceSheet() {
     });
   };
 
-  const toggleAttendance = (studentId) => {
+  const ensureEditable = () => {
     if (isReadOnly) {
       toast.error(
         "الكشف مفعل عليه وضع الحفظ. اضغطي على زر 'تعديل الحضور' لتتمكني من التعديل.",
       );
-      return;
+      return false;
     }
 
+    return true;
+  };
+
+  const setStudentStatus = (studentId, status) => {
+    if (!ensureEditable()) return;
+
+    const normalized = normalizeAttendanceStatus(status);
+    if (!normalized) return;
+
+    setIsDirty(true);
+    manualStudentIdsRef.current.add(studentId);
+    setAttendanceMap((prev) => {
+      const current = prev[studentId] || { status: ATTENDANCE_STATUS.PRESENT, note: "" };
+
+      return {
+        ...prev,
+        [studentId]: { ...current, status: normalized },
+      };
+    });
+    setStatusMenuStudentId(null);
+  };
+
+  /**
+   * One click on the card keeps the old present ↔ absent toggle. Late/Excused
+   * are chosen from the small menu (or a manual scan that resolves to Late).
+   */
+  const toggleAttendance = (studentId) => {
+    if (!ensureEditable()) return;
+
+    setStatusMenuStudentId(null);
     setIsDirty(true);
     manualStudentIdsRef.current.add(studentId);
     setAttendanceMap((prev) => {
@@ -457,8 +519,10 @@ export default function AttendanceSheet() {
         status: ATTENDANCE_STATUS.PRESENT,
         note: "",
       };
+      const currentStatus =
+        normalizeAttendanceStatus(current.status) ?? ATTENDANCE_STATUS.PRESENT;
       const nextStatus =
-        current.status === ATTENDANCE_STATUS.PRESENT
+        currentStatus === ATTENDANCE_STATUS.PRESENT
           ? ATTENDANCE_STATUS.ABSENT
           : ATTENDANCE_STATUS.PRESENT;
 
@@ -470,6 +534,34 @@ export default function AttendanceSheet() {
         },
       };
     });
+  };
+
+  const handleBulkSetStatus = () => {
+    if (!ensureEditable()) return;
+    if (students.length === 0) {
+      toast.error("لا يوجد طلاب لتطبيق الحالة عليهم");
+      return;
+    }
+
+    const status =
+      normalizeAttendanceStatus(bulkStatus) ?? ATTENDANCE_STATUS.PRESENT;
+
+    setIsDirty(true);
+    students.forEach((student) => manualStudentIdsRef.current.add(student.id));
+    setAttendanceMap((prev) => {
+      const next = { ...prev };
+      students.forEach((student) => {
+        next[student.id] = {
+          ...(prev[student.id] || { note: "" }),
+          status,
+        };
+      });
+      return next;
+    });
+
+    toast.success(
+      `تم تعيين جميع الطلاب كـ «${getAttendanceStatusMeta(status).label}»`,
+    );
   };
 
   const handleSave = async () => {
@@ -504,7 +596,9 @@ export default function AttendanceSheet() {
           const item = attendanceMap[student.id] || {};
           return {
             studentId: student.id,
-            status: Number(item.status) || ATTENDANCE_STATUS.ABSENT,
+            status:
+              normalizeAttendanceStatus(item.status) ??
+              ATTENDANCE_STATUS.ABSENT,
             notes: item.note || "",
             // note: item.note || "",
           };
@@ -525,10 +619,30 @@ export default function AttendanceSheet() {
     }
   };
 
-  const presentCount = Object.values(attendanceMap).filter(
-    (item) => item?.status === ATTENDANCE_STATUS.PRESENT,
-  ).length;
-  const absentCount = students.length - presentCount;
+  const statusCounts = students.reduce(
+    (counts, student) => {
+      const status =
+        normalizeAttendanceStatus(attendanceMap[student.id]?.status) ??
+        ATTENDANCE_STATUS.PRESENT;
+
+      if (status === ATTENDANCE_STATUS.PRESENT) counts.present += 1;
+      else if (status === ATTENDANCE_STATUS.ABSENT) counts.absent += 1;
+      else if (status === ATTENDANCE_STATUS.LATE) counts.late += 1;
+      else if (status === ATTENDANCE_STATUS.EXCUSED) counts.excused += 1;
+
+      return counts;
+    },
+    { present: 0, absent: 0, late: 0, excused: 0 },
+  );
+
+  const presentCount = statusCounts.present;
+  const absentCount = statusCounts.absent;
+  const lateCount = statusCounts.late;
+  const excusedCount = statusCounts.excused;
+  const sheetAttendanceRate = calculateAttendanceRate({
+    ...statusCounts,
+    total: students.length,
+  });
 
   // =========================================================
   // WhatsApp absence notices
@@ -546,9 +660,15 @@ export default function AttendanceSheet() {
         center: centerName,
         date: formatDisplayDate(attendanceDate),
       },
+      templateBodies,
     );
 
   const handleSendAbsence = (student) => {
+    if (!hasMessageTemplate(MESSAGE_TEMPLATE_KEYS.absence, templateBodies)) {
+      toast.error("تعذر تحميل قالب الرسالة، حاول مرة أخرى");
+      return;
+    }
+
     const link = buildAbsenceWhatsAppLink(student);
 
     if (!link) {
@@ -560,6 +680,11 @@ export default function AttendanceSheet() {
   };
 
   const handleBulkNotifyAbsentees = () => {
+    if (!hasMessageTemplate(MESSAGE_TEMPLATE_KEYS.absence, templateBodies)) {
+      toast.error("تعذر تحميل قالب الرسالة، حاول مرة أخرى");
+      return;
+    }
+
     // Absent = the map holds an explicit ABSENT status; only those with a valid
     // parent phone can be notified at all.
     const absentees = students.filter(
@@ -603,13 +728,16 @@ export default function AttendanceSheet() {
 
       if (result?.succeeded && data) {
         const studentId = data.studentId ?? data.StudentId;
+        const status =
+          normalizeAttendanceStatus(data.status ?? data.Status) ??
+          ATTENDANCE_STATUS.PRESENT;
 
         lastScanRef.current = { id: studentId, at: Date.now() };
 
         setAttendanceMap((prev) => ({
           ...prev,
           [studentId]: {
-            status: data.status ?? data.Status ?? ATTENDANCE_STATUS.PRESENT,
+            status,
             note: prev[studentId]?.note ?? data.notes ?? data.Notes ?? "",
           },
         }));
@@ -622,10 +750,7 @@ export default function AttendanceSheet() {
         toast.error(result?.message || "الكود ده مش مسجل.");
       }
 
-      return outcomeFromApiResponse(result, {
-        code,
-        isLate: isLateScan(selectedSession?.startTime),
-      });
+      return outcomeFromApiResponse(result, { code });
     } catch (err) {
       const errorMsg =
         err.response?.data?.message || "حدث خطأ أثناء تسجيل المسح";
@@ -738,12 +863,32 @@ export default function AttendanceSheet() {
             />
           </div>
 
-          <div className="flex items-center gap-2 text-xs font-bold">
-            <span className="px-3 py-1.5 bg-status-success-bg text-status-success rounded-xl border border-status-success/20">
-              حاضر: {presentCount}
-            </span>
-            <span className="px-3 py-1.5 bg-status-danger-bg text-status-danger rounded-xl border border-status-danger/20">
-              غياب: {absentCount}
+          <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+            {STATUS_ORDER.map((status) => {
+              const meta = ATTENDANCE_STATUS_META[status];
+              const Icon = STATUS_ICONS[status];
+              const count =
+                status === ATTENDANCE_STATUS.PRESENT
+                  ? presentCount
+                  : status === ATTENDANCE_STATUS.ABSENT
+                    ? absentCount
+                    : status === ATTENDANCE_STATUS.LATE
+                      ? lateCount
+                      : excusedCount;
+
+              return (
+                <span
+                  key={status}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-transparent ${meta.pillClass}`}
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  {meta.shortLabel}: {count}
+                </span>
+              );
+            })}
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-subtle text-primary rounded-xl border border-transparent">
+              <Percent className="w-3.5 h-3.5" />
+              النسبة: {formatAttendanceRate(sheetAttendanceRate)}
             </span>
           </div>
         </div>
@@ -762,7 +907,34 @@ export default function AttendanceSheet() {
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center justify-end gap-2 w-full sm:w-auto">
+          <div className="flex items-center gap-1.5 rounded-xl border border-surface-border bg-surface-muted/60 px-2 py-1.5">
+            <span className="text-[11px] font-bold text-text-muted whitespace-nowrap">
+              تسجيل جماعي
+            </span>
+            <select
+              value={bulkStatus}
+              onChange={(e) => setBulkStatus(Number(e.target.value))}
+              disabled={isReadOnly || students.length === 0}
+              aria-label="حالة التسجيل الجماعي"
+              className="bg-transparent text-[11px] font-bold text-text-main focus:outline-none cursor-pointer disabled:opacity-60"
+            >
+              {STATUS_ORDER.map((status) => (
+                <option key={status} value={status}>
+                  {ATTENDANCE_STATUS_META[status].label}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={handleBulkSetStatus}
+              disabled={isReadOnly || students.length === 0}
+              className="rounded-lg bg-surface-card border border-surface-border px-2.5 py-1 text-[11px] font-bold text-text-main transition-colors hover:bg-surface-border disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              تطبيق
+            </button>
+          </div>
+
           <button
             type="button"
             onClick={() => setIsScannerOpen(true)}
@@ -840,7 +1012,12 @@ export default function AttendanceSheet() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5">
           {students.map((student) => {
             const studentItem = attendanceMap[student.id] || {};
-            const isPresent = studentItem.status === ATTENDANCE_STATUS.PRESENT;
+            const studentStatus =
+              normalizeAttendanceStatus(studentItem.status) ??
+              ATTENDANCE_STATUS.PRESENT;
+            const statusMeta = ATTENDANCE_STATUS_META[studentStatus];
+            const StatusIcon = STATUS_ICONS[studentStatus];
+            const isMenuOpen = statusMenuStudentId === student.id;
             const hasNote = Boolean(
               studentItem.note && studentItem.note.trim() !== "",
             );
@@ -856,10 +1033,10 @@ export default function AttendanceSheet() {
                   isReadOnly
                     ? "cursor-not-allowed opacity-90"
                     : "cursor-pointer active:scale-95"
-                } ${
-                  isPresent
-                    ? "bg-status-success-bg/60 border-status-success text-text-main shadow-xs"
-                    : "bg-surface-card border-surface-border hover:border-primary/50 text-text-main"
+                } ${statusMeta.panelClass} ${
+                  studentStatus === ATTENDANCE_STATUS.PRESENT
+                    ? "shadow-xs"
+                    : ""
                 }`}
               >
                 <div className="space-y-1">
@@ -879,16 +1056,14 @@ export default function AttendanceSheet() {
 
                 <div className="mt-3 pt-2.5 border-t border-surface-border/60 flex items-center justify-between gap-1">
                   <span
-                    className={`flex-1 text-center py-1 rounded-lg text-[10px] font-bold transition-colors ${
-                      isPresent
-                        ? "bg-status-success text-text-inverse"
-                        : "bg-surface-muted text-text-muted"
-                    }`}
+                    title={`الحالة: ${statusMeta.label} — اضغطي على الكارت للتبديل بين حاضر وغائب`}
+                    className={`flex flex-1 items-center justify-center gap-1 py-1 rounded-lg text-[10px] font-bold transition-colors ${statusMeta.pillClass}`}
                   >
-                    {isPresent ? "حاضر ✓" : "غائب"}
+                    <StatusIcon className="w-3.5 h-3.5" />
+                    {statusMeta.label}
                   </span>
 
-                  {!isPresent && (
+                  {studentStatus === ATTENDANCE_STATUS.ABSENT && (
                     <ModuleOnly moduleKey="whatsapp">
                     <button
                       type="button"
@@ -919,6 +1094,7 @@ export default function AttendanceSheet() {
                       e.stopPropagation();
                       openNotesModal(student);
                     }}
+                    title="ملاحظة"
                     className="p-1.5 rounded-lg hover:bg-surface-muted transition cursor-pointer"
                   >
                     <FilePenLine
@@ -927,7 +1103,67 @@ export default function AttendanceSheet() {
                       }`}
                     />
                   </button>
+
+                  <button
+                    type="button"
+                    aria-haspopup="menu"
+                    aria-expanded={isMenuOpen}
+                    aria-label={`تغيير حالة ${student.fullName}`}
+                    title="متأخر / بعذر"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!ensureEditable()) return;
+                      setStatusMenuStudentId(isMenuOpen ? null : student.id);
+                    }}
+                    className="p-1.5 rounded-lg hover:bg-surface-muted transition cursor-pointer"
+                  >
+                    <MoreHorizontal className="w-4 h-4 text-slate-500" />
+                  </button>
                 </div>
+
+                {isMenuOpen && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setStatusMenuStudentId(null);
+                      }}
+                    />
+                    <div
+                      role="menu"
+                      className="absolute z-20 bottom-2 left-2 right-2 rounded-xl border border-surface-border bg-surface-card p-1 shadow-lg"
+                    >
+                      {STATUS_ORDER.map((status) => {
+                        const meta = ATTENDANCE_STATUS_META[status];
+                        const MenuIcon = STATUS_ICONS[status];
+                        const isActive = status === studentStatus;
+
+                        return (
+                          <button
+                            key={status}
+                            type="button"
+                            role="menuitemradio"
+                            aria-checked={isActive}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setStudentStatus(student.id, status);
+                            }}
+                            className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-right text-[11px] font-bold transition-colors cursor-pointer hover:bg-surface-muted ${
+                              isActive ? meta.pillClass : "text-text-main"
+                            }`}
+                          >
+                            <MenuIcon className="w-3.5 h-3.5" />
+                            {meta.label}
+                            {isActive && (
+                              <CheckCircle2 className="mr-auto w-3.5 h-3.5" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
               </div>
             );
           })}

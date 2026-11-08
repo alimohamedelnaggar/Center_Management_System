@@ -1,4 +1,5 @@
 ﻿using CenterManagement.Core.Features.Reports.Queries.GetStudentAttendanceReports;
+using CenterManagement.Data.Results;
 using CenterManagement.Infrustructure.InfrastructureBases.Bases;
 
 public class GetStudentAttendanceReportHandler
@@ -49,12 +50,15 @@ public class GetStudentAttendanceReportHandler
         var totalSessions = attendances.Count;
 
         var presentCount = attendances.Count(x => x.Status == AttendanceStatus.Present);
-
         var absentCount = attendances.Count(x => x.Status == AttendanceStatus.Absent);
+        var lateCount = attendances.Count(x => x.Status == AttendanceStatus.Late);
+        var excusedCount = attendances.Count(x => x.Status == AttendanceStatus.Excused);
 
-        var attendancePercentage = totalSessions == 0
-            ? 0
-            : Math.Round((decimal)presentCount / totalSessions * 100, 2);
+        var attendancePercentage = (decimal?)AttendanceRateCalculator.Calculate(
+            presentCount,
+            lateCount,
+            excusedCount,
+            totalSessions);
 
         var result = new StudentAttendanceReportDto
         {
@@ -65,6 +69,8 @@ public class GetStudentAttendanceReportHandler
             TotalSessions = totalSessions,
             PresentCount = presentCount,
             AbsentCount = absentCount,
+            LateCount = lateCount,
+            ExcusedCount = excusedCount,
             AttendancePercentage = attendancePercentage,
 
             Records = attendances

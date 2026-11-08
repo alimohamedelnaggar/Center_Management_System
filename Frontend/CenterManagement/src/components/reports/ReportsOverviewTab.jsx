@@ -1,10 +1,12 @@
 import {
   CalendarCheck,
   CalendarX,
+  Clock,
   GraduationCap,
   LayoutGrid,
   Loader2,
   ReceiptText,
+  ShieldCheck,
   TrendingUp,
   UserCheck,
   UserCog,
@@ -17,6 +19,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import { reportsService } from "../../services/reportsService";
 import { formatCurrency } from "../../utils/formatCurrency";
+import { formatAttendanceRate } from "../../utils/attendance";
 
 const MONTHS = [
   { value: 1, label: "يناير" },
@@ -138,9 +141,21 @@ export default function ReportsOverviewTab() {
           icon: CalendarX,
           iconClass: "bg-status-danger-bg text-status-danger",
         },
-        has(data.attendancePercentage) && {
+        has(data.lateCount) && {
+          title: "تأخر (الشهر)",
+          value: data.lateCount,
+          icon: Clock,
+          iconClass: "bg-status-warning-bg text-status-warning",
+        },
+        has(data.excusedCount) && {
+          title: "بعذر (الشهر)",
+          value: data.excusedCount,
+          icon: ShieldCheck,
+          iconClass: "bg-status-info-bg text-status-info",
+        },
+        has(data.totalCount) && {
           title: "نسبة الحضور",
-          value: `${data.attendancePercentage}%`,
+          value: formatAttendanceRate(data.attendancePercentage),
           icon: TrendingUp,
           iconClass: "bg-status-success-bg text-status-success",
         },

@@ -28,6 +28,7 @@ import {
   UserRound,
   Users,
   Wallet,
+  WhatsappLogo,
 } from "@/components/icons";
 
 export const MODULES = {
@@ -135,6 +136,7 @@ export const NAV_ITEMS = [
   { key: "assistants", path: "/assistants", label: "المساعدين", icon: Users, module: null, roles: ["owner", "solo"] },
   { key: "my-subscription", path: "/my-subscription", label: "اشتراكي", icon: CalendarClock, module: null, roles: ["owner", "solo"] },
   { key: "center-settings", path: "/center-settings", label: "إعدادات المركز", icon: Palette, module: null, roles: ["owner", "solo"] },
+  { key: "message-templates", path: "/message-templates", label: "قوالب الرسائل", icon: WhatsappLogo, module: MODULES.WHATSAPP, roles: ["owner", "solo"] },
 
   // --- Platform (SuperAdmin only) ---
   { key: "centers", path: "/centers", label: "المراكز", icon: Building, module: null, roles: ["superAdmin"] },

@@ -36,6 +36,7 @@ import PlatformStatistics from "./pages/PlatformStatistics";
 import AuditLogPage from "./pages/AuditLogPage";
 import ForcePasswordChange from "./pages/ForcePasswordChange";
 import CenterSettingsPage from "./pages/CenterSettingsPage";
+import MessageTemplatesPage from "./pages/MessageTemplatesPage";
 import TeachersManagement from "./pages/TeachersManagement";
 import MySubscriptionPage from "./pages/MySubscriptionPage";
 import BulkParentAccountsPage from "./pages/BulkParentAccountsPage";
@@ -189,6 +190,14 @@ function App() {
             }
           >
             <Route path="/center-settings" element={<CenterSettingsPage />} />
+            <Route
+              path="/message-templates"
+              element={
+                <ModuleRoute path="/message-templates">
+                  <MessageTemplatesPage />
+                </ModuleRoute>
+              }
+            />
             <Route path="/assistants" element={<AssistantManagement />} />
             <Route path="/my-subscription" element={<MySubscriptionPage />} />
             {/* Center-wide report: policy CenterAdmin (owner / solo teacher). */}

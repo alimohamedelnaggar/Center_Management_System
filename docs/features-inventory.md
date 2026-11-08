@@ -155,7 +155,9 @@ Dependency rules are enforced in `ModuleCatalog` (auto-enable closure and disabl
 ### 4.12 Notifications / WhatsApp
 - In-app notifications persisted and pushed over SignalR (`NotificationHub`).
 - Notification types for study notes, exams, results, absence, fees.
-- WhatsApp is **manual deep-link** (`wa.me`) and message templates are stored data; there is **no** template editor and **no** WhatsApp Business API integration.
+- WhatsApp is **manual deep-link** (`wa.me`): the operator opens the link and presses send. There is **no** WhatsApp Business API integration, no queue and no automatic sender.
+- Message templates are stored per center and are the **single source of truth** for the absence, exam-result and fees-reminder texts; the attendance, exams and overdue screens all read the saved body from the API.
+- Owners and solo teachers can edit/restore the three fixed templates at `/message-templates` (module `whatsapp`); assistants and teachers use the templates but cannot edit them. Endpoints: `GET /MessageTemplate/List`, `PUT /MessageTemplate/Update`, `POST /MessageTemplate/{key}/Reset`, `POST /MessageTemplate/Preview`.
 - Email exists for password reset/confirmation; confirmation is commented out in the register flow.
 
 ### 4.13 Platform administration
@@ -203,12 +205,12 @@ Dependency rules are enforced in `ModuleCatalog` (auto-enable closure and disabl
 - Credentials are fake and live in `appsettings.E2E.json` / `e2e/accounts.json`; no real data or phone numbers.
 
 ### Test baseline to preserve
-- Backend: `dotnet test` expected runtime count to be verified; static attributes show 267 cases.
-- Frontend: `npm run test:run` expected runtime count to be verified; 28 test files.
+- Backend: `dotnet test` — 356 passing, 0 failed, 0 skipped.
+- Frontend: `npm run test:run` — 343 passing across 42 test files.
 
 ## 7. Known product limits relevant to the tour
 
-See `docs/not-covered.md`. Summary: no PWA/offline, forgot-password UI is a placeholder, email confirmation is commented out, no WhatsApp template editing or API, attendance UI offers present/absent only (backend has 4 statuses), no external push channel, PDF via browser print, no backup/restore feature.
+See `docs/not-covered.md`. Summary: no PWA/offline, forgot-password UI is a placeholder, email confirmation is commented out, WhatsApp templates are editable by owners/solo teachers but there is no WhatsApp Business API or automatic sender, no external push channel, PDF via browser print, no backup/restore feature.
 
 ## 8. Evidence
 

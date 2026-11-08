@@ -190,7 +190,9 @@ export default function ReportsStudentsTab({
           totalSessions: att?.totalSessions ?? 0,
           presentCount: att?.presentCount ?? 0,
           absentCount: att?.absentCount ?? 0,
-          attendancePercentage: att?.attendancePercentage ?? 0,
+          lateCount: att?.lateCount ?? 0,
+          excusedCount: att?.excusedCount ?? 0,
+          attendancePercentage: att?.attendancePercentage ?? null,
           records: att?.records || [],
 
           subscriptionType:

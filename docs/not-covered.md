@@ -21,7 +21,7 @@ module state or screen may be shown, and only when asserted at that moment.
 | A2 | Native Android/iOS app | Same as A1. | — |
 | A3 | Push notifications on the phone | Notifications are persisted in-app and pushed over SignalR only (`NotificationHub`). There is no FCM/APNs/external push channel. | "إشعارات داخل النظام" for in-app notifications |
 | A4 | Automatic WhatsApp messages, bulk sending, scheduled sending | WhatsApp is a manual `wa.me` deep link opened by a click; message bodies come from stored templates. No WhatsApp Business API, no queue, no scheduler. | "رابط واتساب جاهز تفتحه بضغطة" — only while the `wa.me` link is visible and asserted |
-| A5 | WhatsApp template editor | Templates are seeded/stored data; no editor screen exists. | — |
+| A5 | WhatsApp template editor | **No longer prohibited:** owners and solo teachers edit the three fixed templates at `/message-templates` (module `whatsapp`). Still prohibited: creating/deleting template types, automatic sending, scheduling or bulk sending. | "عدّل نص الرسالة من قوالب الرسائل" — only on the owner/solo editor screen |
 | A6 | Email confirmation of accounts | Confirmation is commented out in the register flow. | — |
 | A7 | Email "forgot password" / reset link | The login link `نسيت كلمة المرور؟` only shows the toast `سيتم توفير استعادة كلمة المرور قريباً`; no reset-by-email flow. Password reset is an admin action. | "المدير يعيد تعيين كلمة المرور" only on the assistant/teacher reset action |
 | A8 | SMS messaging | No SMS provider or endpoint. | — |

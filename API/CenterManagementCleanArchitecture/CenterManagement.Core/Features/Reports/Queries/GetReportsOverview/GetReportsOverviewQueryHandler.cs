@@ -2,6 +2,7 @@ using CenterManagement.Core.Features.Reports.Queries.GetReportsOverview;
 using CenterManagement.Data.AppMetaData;
 using CenterManagement.Data.Entities.Abstractions;
 using CenterManagement.Data.Enums;
+using CenterManagement.Data.Results;
 using CenterManagement.Infrustructure.InfrastructureBases.Bases;
 using Microsoft.EntityFrameworkCore;
 
@@ -67,6 +68,9 @@ public class GetReportsOverviewQueryHandler
                 .CountAsync(x => !x.IsDeleted, cancellationToken);
             dto.PresentCount = stats.MonthlyPresentCount;
             dto.AbsentCount = stats.MonthlyAbsentCount;
+            dto.LateCount = stats.MonthlyLateCount;
+            dto.ExcusedCount = stats.MonthlyExcusedCount;
+            dto.TotalCount = stats.MonthlyAttendanceCount;
             dto.AttendancePercentage = stats.AttendancePercentage;
             dto.MonthlyRevenue = stats.MonthlyRevenue;
             dto.MonthlyExpenses = stats.MonthlyExpenses;
@@ -111,6 +115,9 @@ public class GetReportsOverviewQueryHandler
         {
             dto.PresentCount = null;
             dto.AbsentCount = null;
+            dto.LateCount = null;
+            dto.ExcusedCount = null;
+            dto.TotalCount = null;
             dto.AttendancePercentage = null;
         }
 
@@ -159,18 +166,29 @@ public class GetReportsOverviewQueryHandler
             .Select(g => new
             {
                 Total = g.Count(),
-                Present = g.Count(x => x.Status == AttendanceStatus.Present)
+                Present = g.Count(x => x.Status == AttendanceStatus.Present),
+                Absent = g.Count(x => x.Status == AttendanceStatus.Absent),
+                Late = g.Count(x => x.Status == AttendanceStatus.Late),
+                Excused = g.Count(x => x.Status == AttendanceStatus.Excused)
             })
             .FirstOrDefaultAsync(cancellationToken);
 
         var total = stats?.Total ?? 0;
         var present = stats?.Present ?? 0;
+        var absent = stats?.Absent ?? 0;
+        var late = stats?.Late ?? 0;
+        var excused = stats?.Excused ?? 0;
 
         dto.PresentCount = present;
-        dto.AbsentCount = total - present;
-        dto.AttendancePercentage = total == 0
-            ? 0
-            : Math.Round((double)present / total * 100, 2);
+        dto.AbsentCount = absent;
+        dto.LateCount = late;
+        dto.ExcusedCount = excused;
+        dto.TotalCount = total;
+        dto.AttendancePercentage = AttendanceRateCalculator.Calculate(
+            present,
+            late,
+            excused,
+            total);
     }
 
     private async Task<int> CountTeachersAsync(CancellationToken cancellationToken)

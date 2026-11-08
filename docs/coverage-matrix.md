@@ -386,7 +386,7 @@ This matrix will record the truth, not fake a card layout:
 |---|---|---|
 | Forgot-password flow | Not implemented. `Login.jsx` shows the toast `سيتم توفير استعادة كلمة المرور قريباً`; there is no route/API/UI. | SA-11/SA-12 cover the implemented password-change and forced-change flows. |
 | Email confirmation / verification | No UI or route; `EmailController` only sends an email. | Not asserted. Email modal validation is covered in T-08; actual SMTP delivery is not. |
-| WhatsApp template **editor** | No editor UI; `whatsappTemplates.js` says the override editor is a later step. Only client-side `wa.me` links exist. | Reminder/absence/result links are asserted (popup URL + encoded Arabic text). |
+| WhatsApp template **editor** | Added after this matrix was written: owners/solo teachers edit the three fixed templates at `/message-templates` (module `whatsapp`), and every WhatsApp screen reads the saved body from the backend. The recorded tour predates the editor, so it does not show it. | Reminder/absence/result links are asserted (popup URL + encoded Arabic text); the editor is covered by backend + frontend tests instead. |
 | Server-side WhatsApp sender | No server sender; all links are client `wa.me` deep links. | Same as above. |
 | PWA / offline mode / install prompt | No service worker or manifest-based offline flow in the code. | Not covered. |
 | Backup / restore | No UI or API endpoint. | Not covered. |

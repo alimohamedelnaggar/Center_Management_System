@@ -28,7 +28,9 @@ public class GetTopGroupsQueryHandler : ResponseHandler,
                 Rank = index + 1,
                 GroupName = x.GroupName,
                 StudentsCount = x.StudentsCount,
-                AttendanceRate = Math.Round(x.AttendanceRate, 2)
+                AttendanceRate = x.AttendanceRate.HasValue
+                    ? Math.Round(x.AttendanceRate.Value, 2)
+                    : null
             })
             .ToList();
 

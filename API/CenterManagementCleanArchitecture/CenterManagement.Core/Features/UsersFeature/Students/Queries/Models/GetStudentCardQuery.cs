@@ -31,7 +31,7 @@ public class StudentCardAttendanceSummaryDTO
     public int AbsentSessions { get; set; }
     public int LateSessions { get; set; }
     public int ExcusedSessions { get; set; }
-    public decimal AttendanceRate { get; set; }
+    public decimal? AttendanceRate { get; set; }
 }
 
 public class StudentCardAttendanceDTO

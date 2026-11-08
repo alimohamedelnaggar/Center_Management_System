@@ -9,6 +9,7 @@ import {
 } from "@/components/icons";
 import toast from "react-hot-toast";
 import { studentPortalService } from "../../services/studentPortalService";
+import { formatAttendanceRate } from "../../utils/attendance";
 
 function formatDate(value) {
   if (!value) return "-";
@@ -88,9 +89,16 @@ export default function StudentAttendancePage() {
       label: "بعذر",
       value: summary?.excusedCount ?? 0,
       icon: ShieldCheck,
-      tone: "bg-surface-muted text-text-muted",
+      tone: "bg-status-info-bg text-status-info",
     },
   ];
+
+  const hasAttendanceRate =
+    summary?.attendancePercentage !== null &&
+    summary?.attendancePercentage !== undefined;
+  const attendanceRateValue = hasAttendanceRate
+    ? Math.min(Math.max(Number(summary.attendancePercentage) || 0, 0), 100)
+    : 0;
 
   return (
     <div className="p-4 md:p-6 font-sans">
@@ -135,13 +143,13 @@ export default function StudentAttendancePage() {
         <div className="mb-2 flex items-center justify-between text-sm">
           <span className="font-medium text-text-main">نسبة الحضور</span>
           <span className="font-bold text-primary">
-            {summary?.attendancePercentage ?? 0}%
+            {formatAttendanceRate(summary?.attendancePercentage)}
           </span>
         </div>
         <div className="h-2 w-full overflow-hidden rounded-full bg-surface-muted">
           <div
             className="h-full rounded-full bg-status-success transition-all"
-            style={{ width: `${summary?.attendancePercentage ?? 0}%` }}
+            style={{ width: `${attendanceRateValue}%` }}
           />
         </div>
       </div>

@@ -5,16 +5,20 @@ import {
   Award,
   BookOpen,
   CalendarCheck,
+  CalendarX,
+  Clock,
   GraduationCap,
   Loader2,
   Percent,
   QrCode,
   School,
   Search,
+  ShieldCheck,
   TriangleAlert,
   UserRound,
 } from "@/components/icons";
 import { studentsService } from "../../services/studentService";
+import { formatAttendanceRate } from "../../utils/attendance";
 import {
   buildStudentCardUrl,
   extractStudentCode,
@@ -26,7 +30,7 @@ const STATUS_STYLES = {
   Present: "bg-status-success-bg text-status-success border-status-success/20",
   Absent: "bg-status-danger-bg text-status-danger border-status-danger/20",
   Late: "bg-status-warning-bg text-status-warning border-status-warning/20",
-  Excused: "bg-slate-100 text-slate-600 border-slate-200",
+  Excused: "bg-status-info-bg text-status-info border-status-info/20",
 };
 
 const formatDate = (value) => {
@@ -126,7 +130,7 @@ export default function StudentCardLookupPage() {
           <div>
             <h1 className="text-base font-bold">كارت الطالب</h1>
             <p className="mt-0.5 text-[11px] opacity-90">
-              متابعة الحضور والغياب ودرجات الامتحانات
+              متابعة الحضور والدرجات
             </p>
           </div>
           <QrCode className="h-7 w-7 opacity-90" />
@@ -216,7 +220,7 @@ export default function StudentCardLookupPage() {
             </div>
 
             {summary && (
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
                 <StatCard
                   icon={CalendarCheck}
                   label="حصص مسجلة"
@@ -230,15 +234,27 @@ export default function StudentCardLookupPage() {
                   tone="success"
                 />
                 <StatCard
-                  icon={CalendarCheck}
+                  icon={CalendarX}
                   label="غياب"
                   value={summary.absentSessions ?? 0}
                   tone="danger"
                 />
                 <StatCard
+                  icon={Clock}
+                  label="تأخر"
+                  value={summary.lateSessions ?? 0}
+                  tone="warning"
+                />
+                <StatCard
+                  icon={ShieldCheck}
+                  label="بعذر"
+                  value={summary.excusedSessions ?? 0}
+                  tone="info"
+                />
+                <StatCard
                   icon={Percent}
                   label="نسبة الحضور"
-                  value={`${summary.attendanceRate ?? 0}%`}
+                  value={formatAttendanceRate(summary.attendanceRate)}
                   tone="primary"
                 />
               </div>
@@ -387,6 +403,8 @@ function StatCard({ icon: Icon, label, value, tone }) {
     slate: "bg-slate-100 text-slate-700",
     success: "bg-status-success-bg text-status-success",
     danger: "bg-status-danger-bg text-status-danger",
+    warning: "bg-status-warning-bg text-status-warning",
+    info: "bg-status-info-bg text-status-info",
     primary: "bg-primary-subtle text-primary",
   };
 

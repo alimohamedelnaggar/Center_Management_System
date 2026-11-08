@@ -6,5 +6,5 @@
 
     public int StudentsCount { get; set; }
 
-    public double AttendanceRate { get; set; }
+    public double? AttendanceRate { get; set; }
 }

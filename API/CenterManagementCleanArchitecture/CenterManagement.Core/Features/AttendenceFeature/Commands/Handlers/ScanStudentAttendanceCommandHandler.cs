@@ -15,11 +15,18 @@ internal sealed class ScannableStudent
 public class ScanStudentAttendanceCommandHandler : ResponseHandler,
     IRequestHandler<ScanStudentAttendanceCommand, Response<ScanAttendanceResultDTO>>
 {
+    /// <summary>
+    /// Unchanged from the previous client-side rule: a scan inside this window
+    /// after the session start is Present, beyond it is Late.
+    /// </summary>
+    private const int ScanLateGraceMinutes = 10;
+
     #region Fields
     private readonly IRepositoryManager _repositoryManager;
     private readonly IStudentAttendanceNotification _notificationService;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IUserScopeService _scopeService;
+    private readonly TimeProvider _timeProvider;
     #endregion
 
     #region Constructors
@@ -28,12 +35,14 @@ public class ScanStudentAttendanceCommandHandler : ResponseHandler,
         IStringLocalizer<SharedResources> localizer,
         IStudentAttendanceNotification notificationService,
         IHttpContextAccessor httpContextAccessor,
-        IUserScopeService scopeService) : base(localizer)
+        IUserScopeService scopeService,
+        TimeProvider timeProvider) : base(localizer)
     {
         _repositoryManager = repositoryService;
         _notificationService = notificationService;
         _httpContextAccessor = httpContextAccessor;
         _scopeService = scopeService;
+        _timeProvider = timeProvider;
     }
     #endregion
 
@@ -47,7 +56,9 @@ public class ScanStudentAttendanceCommandHandler : ResponseHandler,
         if (string.IsNullOrWhiteSpace(code))
             return BadRequest<ScanAttendanceResultDTO>("الكود اللي اتمسح غير صالح.");
 
-        if (request.AttendanceDate > DateOnly.FromDateTime(DateTime.Now))
+        var now = _timeProvider.GetLocalNow().DateTime;
+
+        if (request.AttendanceDate > DateOnly.FromDateTime(now))
             return BadRequest<ScanAttendanceResultDTO>("لا يمكن تسجيل الحضور لتاريخ مستقبلي.");
 
         var session = await _repositoryManager
@@ -100,14 +111,16 @@ public class ScanStudentAttendanceCommandHandler : ResponseHandler,
                 x.AttendanceDate == request.AttendanceDate,
                 cancellationToken);
 
-        // Same card scanned twice: keep the first scan untouched.
+        // Same card scanned twice: keep the first scan untouched. A row that a
+        // staff member overrode manually (Absent/Excused, Source=Manual) can
+        // still be corrected by scanning the card again.
         if (attendance is not null
-            && attendance.Status == AttendanceStatus.Present
-            && attendance.Source == AttendanceSource.Scan)
+            && attendance.Source == AttendanceSource.Scan
+            && attendance.Status is AttendanceStatus.Present or AttendanceStatus.Late)
         {
             return Success(
                 BuildResult(session.GroupId, group?.Name, student, attendance, alreadyRecorded: true),
-                $"{student.FullName} متسجل حضوره بالفعل.");
+                $"{student.FullName} متسجل بالفعل.");
         }
 
         if (attendance is null)
@@ -122,7 +135,9 @@ public class ScanStudentAttendanceCommandHandler : ResponseHandler,
             await _repositoryManager.AttendanceRepository.AddAsync(attendance);
         }
 
-        attendance.Status = AttendanceStatus.Present;
+        var status = ResolveScanStatus(session.StartTime, request.AttendanceDate);
+
+        attendance.Status = status;
         attendance.Source = AttendanceSource.Scan;
         attendance.RecordedAt = DateTime.UtcNow;
         attendance.RecordedBy = CurrentUserId();
@@ -141,19 +156,44 @@ public class ScanStudentAttendanceCommandHandler : ResponseHandler,
                     GroupId = session.GroupId,
                     FullName = student.FullName,
                     Phone = student.PhoneNumber,
-                    Status = AttendanceStatus.Present
+                    Status = status
                 }
             ]);
 
         #endregion
 
+        var message = status == AttendanceStatus.Late
+            ? $"تم تسجيل تأخر {student.FullName}."
+            : $"تم تسجيل حضور {student.FullName}.";
+
         return Success(
             BuildResult(session.GroupId, group?.Name, student, attendance, alreadyRecorded: false),
-            $"تم تسجيل حضور {student.FullName}.");
+            message);
     }
     #endregion
 
     #region Helpers
+    /// <summary>
+    /// Present inside the grace window after the session starts, Late beyond
+    /// it. Back-dated scans are always Present: lateness is only meaningful
+    /// against the live clock, exactly like the previous client-side rule.
+    /// </summary>
+    private AttendanceStatus ResolveScanStatus(
+        TimeOnly sessionStart,
+        DateOnly attendanceDate)
+    {
+        var now = _timeProvider.GetLocalNow().DateTime;
+
+        if (attendanceDate != DateOnly.FromDateTime(now))
+            return AttendanceStatus.Present;
+
+        var elapsed = TimeOnly.FromDateTime(now).ToTimeSpan() - sessionStart.ToTimeSpan();
+
+        return elapsed.TotalMinutes > ScanLateGraceMinutes
+            ? AttendanceStatus.Late
+            : AttendanceStatus.Present;
+    }
+
     private Guid? CurrentUserId()
     {
         var raw = _httpContextAccessor.HttpContext?

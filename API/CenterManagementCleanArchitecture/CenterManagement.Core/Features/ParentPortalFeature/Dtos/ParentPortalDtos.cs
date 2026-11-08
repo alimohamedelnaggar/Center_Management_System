@@ -114,7 +114,7 @@ public class ParentChildAttendanceDTO
     public int AbsentCount { get; set; }
     public int LateCount { get; set; }
     public int ExcusedCount { get; set; }
-    public decimal AttendancePercentage { get; set; }
+    public decimal? AttendancePercentage { get; set; }
     public List<ParentChildAttendanceRecordDTO> Records { get; set; } = new();
 }
 

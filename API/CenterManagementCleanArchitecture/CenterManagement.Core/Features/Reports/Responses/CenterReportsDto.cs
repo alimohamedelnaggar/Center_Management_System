@@ -82,7 +82,18 @@ namespace CenterManagement.Core.Features.Reports.Queries.GetCenterReports
         /// <summary>Student payments collected in the range for this teacher's groups.</summary>
         public decimal CollectedInRange { get; set; }
 
-        public double AttendanceRate { get; set; }
+        public int TotalSessions { get; set; }
+
+        public int PresentCount { get; set; }
+
+        public int AbsentCount { get; set; }
+
+        public int LateCount { get; set; }
+
+        public int ExcusedCount { get; set; }
+
+        /// <summary>(Present + Late) / (Total - Excused); null when not countable.</summary>
+        public double? AttendanceRate { get; set; }
     }
 
     public sealed class CenterReportGroupDto
@@ -95,7 +106,18 @@ namespace CenterManagement.Core.Features.Reports.Queries.GetCenterReports
 
         public int StudentsCount { get; set; }
 
-        public double AttendanceRate { get; set; }
+        public int TotalSessions { get; set; }
+
+        public int PresentCount { get; set; }
+
+        public int AbsentCount { get; set; }
+
+        public int LateCount { get; set; }
+
+        public int ExcusedCount { get; set; }
+
+        /// <summary>(Present + Late) / (Total - Excused); null when not countable.</summary>
+        public double? AttendanceRate { get; set; }
 
         /// <summary>Expected for the billing month (sum of dues).</summary>
         public decimal Expected { get; set; }

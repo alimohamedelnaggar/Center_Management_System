@@ -31,6 +31,13 @@
 
     public int MonthlyAbsentCount { get; set; }
 
-    public double AttendancePercentage { get; set; }
+    public int MonthlyLateCount { get; set; }
+
+    public int MonthlyExcusedCount { get; set; }
+
+    public int MonthlyAttendanceCount { get; set; }
+
+    /// <summary>(Present + Late) / (Total - Excused); null when nothing is countable.</summary>
+    public double? AttendancePercentage { get; set; }
 
 }

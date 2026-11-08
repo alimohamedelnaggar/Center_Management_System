@@ -1,13 +1,23 @@
 import {
   Award,
   Calendar,
+  CalendarCheck,
+  CalendarX,
   CheckCircle2,
+  Clock,
   CreditCard,
   FileText,
   Printer,
+  ShieldCheck,
   X,
   XCircle,
 } from "@/components/icons";
+import {
+  ATTENDANCE_STATUS,
+  formatAttendanceRate,
+  getAttendanceStatusMeta,
+  normalizeAttendanceStatus,
+} from "../../utils/attendance";
 
 const formatDate = (dateString) => {
   if (!dateString) return "-";
@@ -40,20 +50,24 @@ const getSubscriptionText = (type) => {
   return "غير محدد";
 };
 
+const ATTENDANCE_STATUS_ICONS = {
+  [ATTENDANCE_STATUS.PRESENT]: CalendarCheck,
+  [ATTENDANCE_STATUS.ABSENT]: CalendarX,
+  [ATTENDANCE_STATUS.LATE]: Clock,
+  [ATTENDANCE_STATUS.EXCUSED]: ShieldCheck,
+};
+
 const getAttendanceStatus = (status) => {
-  if (status === 1) {
-    return (
-      <span className="inline-flex items-center gap-1 text-status-success font-bold">
-        <CheckCircle2 className="w-3.5 h-3.5" />
-        حضور
-      </span>
-    );
-  }
+  const meta = getAttendanceStatusMeta(status);
+  const Icon =
+    ATTENDANCE_STATUS_ICONS[normalizeAttendanceStatus(status)] || Calendar;
 
   return (
-    <span className="inline-flex items-center gap-1 text-status-danger font-bold">
-      <XCircle className="w-3.5 h-3.5" />
-      غياب
+    <span
+      className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 font-bold ${meta.pillClass}`}
+    >
+      <Icon className="w-3.5 h-3.5" />
+      {meta.label}
     </span>
   );
 };
@@ -226,7 +240,9 @@ export default function ReportDetailsModal({
     // Attendance
     // ========================================
 
-    if (type === "attendance") {
+    if (type === "attendance" || type === "full") {
+      if (type === "full") csvContent += "تفاصيل الحضور\n";
+
       csvContent +=
         "تاريخ الجلسة,اليوم,الوقت,الحالة,ملاحظات\n";
 
@@ -236,9 +252,11 @@ export default function ReportDetailsModal({
         )}","${getDayName(r.dayOfWeek)}","${
           r.startTime || ""
         } - ${r.endTime || ""}","${
-          r.status === 1 ? "حضور" : "غياب"
+          getAttendanceStatusMeta(r.status).label
         }","${r.notes || ""}"\n`;
       });
+
+      if (type === "full") csvContent += "\n";
     }
 
     // ========================================
@@ -262,7 +280,9 @@ export default function ReportDetailsModal({
     // Grades
     // ========================================
 
-    else if (type === "grades" || type === "full") {
+    if (type === "grades" || type === "full") {
+      if (type === "full") csvContent += "نتائج الامتحانات\n";
+
       csvContent +=
         "الامتحان,التاريخ,الدرجة المحصلة,الدرجة الكلية,النسبة المئوية,التواصل مع ولي الأمر,تاريخ التواصل\n";
 
@@ -465,7 +485,7 @@ export default function ReportDetailsModal({
               SUMMARY CARDS
           ======================================== */}
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
 
             {/* Attendance */}
 
@@ -508,6 +528,30 @@ export default function ReportDetailsModal({
 
                 </div>
 
+                <div className="bg-status-warning-bg/50 p-3 rounded-xl border border-status-warning/20 text-center">
+
+                  <span className="text-[11px] text-status-warning block">
+                    مرات التأخر
+                  </span>
+
+                  <span className="text-base font-bold text-status-warning">
+                    {reportData.lateCount ?? 0}
+                  </span>
+
+                </div>
+
+                <div className="bg-status-info-bg/50 p-3 rounded-xl border border-status-info/20 text-center">
+
+                  <span className="text-[11px] text-status-info block">
+                    مرات العذر
+                  </span>
+
+                  <span className="text-base font-bold text-status-info">
+                    {reportData.excusedCount ?? 0}
+                  </span>
+
+                </div>
+
                 <div className="bg-primary-subtle p-3 rounded-xl border border-primary/20 text-center">
 
                   <span className="text-[11px] text-primary block">
@@ -515,7 +559,7 @@ export default function ReportDetailsModal({
                   </span>
 
                   <span className="text-base font-bold text-primary">
-                    %{reportData.attendancePercentage ?? 0}
+                    {formatAttendanceRate(reportData.attendancePercentage)}
                   </span>
 
                 </div>

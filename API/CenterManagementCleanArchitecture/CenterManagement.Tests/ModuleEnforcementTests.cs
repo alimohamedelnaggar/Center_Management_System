@@ -185,6 +185,10 @@ public sealed class ModuleEnforcementTests : IClassFixture<ScopeApiFactory>
         SetModule(_seed.CenterA, ModuleKeys.Accounting, false);
         try
         {
+            // A month with no countable attendance has no rate (null) even when
+            // the module is on, so seed one Present row for the requested month.
+            await SeedAugustAttendanceAsync();
+
             var response = await Client(AppRoles.Teacher, isCenterAdmin: true)
                 .GetAsync("dashboard-summary?year=2026&month=8");
 
@@ -198,6 +202,8 @@ public sealed class ModuleEnforcementTests : IClassFixture<ScopeApiFactory>
             Assert.Equal(JsonValueKind.Null, data.GetProperty("netProfit").ValueKind);
             // Attendance stays because its module is still enabled.
             Assert.NotEqual(JsonValueKind.Null, data.GetProperty("attendancePercentage").ValueKind);
+            Assert.Equal(100, data.GetProperty("attendancePercentage").GetDouble());
+            Assert.Equal(1, data.GetProperty("monthlyPresentCount").GetInt32());
         }
         finally
         {
@@ -343,6 +349,36 @@ public sealed class ModuleEnforcementTests : IClassFixture<ScopeApiFactory>
 
         var enabled = await Client(role, isCenterAdmin, centerOverride: _seed.CenterA, subjectOverride: subjectUserId).GetAsync(route);
         Assert.NotEqual(HttpStatusCode.Forbidden, enabled.StatusCode);
+    }
+
+    private async Task SeedAugustAttendanceAsync()
+    {
+        using var scope = _factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        var session = new CenterManagement.Data.Entities.Groups.Session
+        {
+            Id = Guid.NewGuid(),
+            GroupId = _seed.GroupA,
+            CenterId = _seed.CenterA,
+            SessionPrice = 0,
+            DayOfWeek = DayOfWeek.Monday,
+            StartTime = new TimeOnly(10, 0),
+            EndTime = new TimeOnly(12, 0)
+        };
+
+        context.Sessions.Add(session);
+        context.Attendances.Add(new CenterManagement.Data.Entities.Groups.Attendance
+        {
+            StudentId = _seed.StudentA,
+            SessionId = session.Id,
+            AttendanceDate = new DateOnly(2026, 8, 10),
+            Status = AttendanceStatus.Present,
+            Source = AttendanceSource.Manual,
+            CenterId = _seed.CenterA
+        });
+
+        await context.SaveChangesAsync();
     }
 
     private void SetModule(Guid centerId, string moduleKey, bool enabled)

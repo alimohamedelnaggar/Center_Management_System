@@ -21,8 +21,10 @@ import {
 import { normalizeEgyptianPhone } from "../../utils/phone";
 import {
   buildTemplateWhatsAppLink,
+  hasMessageTemplate,
   MESSAGE_TEMPLATE_KEYS,
 } from "../../utils/whatsappTemplates";
+import { useMessageTemplates } from "../../hooks/useMessageTemplates";
 
 const EXAM_TYPES = {
   Paragraph: 0,
@@ -41,6 +43,7 @@ const normalizeList = (res) => {
 export default function ExamManagementTab() {
   const branding = useBranding();
   const centerName = branding?.center?.name || "";
+  const { bodies: templateBodies } = useMessageTemplates();
 
   const [groups, setGroups] = useState([]);
   const [sessions, setSessions] = useState([]);
@@ -593,6 +596,11 @@ export default function ExamManagementTab() {
   };
 
   const handleSendExamResult = async (student) => {
+    if (!hasMessageTemplate(MESSAGE_TEMPLATE_KEYS.examResult, templateBodies)) {
+      toast.error("تعذر تحميل قالب الرسالة، حاول مرة أخرى");
+      return;
+    }
+
     const examName =
       exams.find((e) => e.id === selectedExam)?.name || "الامتحان";
 
@@ -614,6 +622,7 @@ export default function ExamManagementTab() {
         score,
         total,
       },
+      templateBodies,
     );
 
     if (!link) {

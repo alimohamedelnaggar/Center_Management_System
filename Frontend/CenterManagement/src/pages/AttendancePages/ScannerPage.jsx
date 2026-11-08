@@ -16,8 +16,8 @@ import { attendanceService } from "../../services/attendanceService";
 import { extractStudentCode } from "../../utils/qrCode";
 import {
   buildScanErrorOutcome,
-  isLateScan,
   outcomeFromApiResponse,
+  SCAN_OUTCOME_LABELS,
 } from "../../utils/scanOutcome";
 
 const todayString = () => new Date().toISOString().split("T")[0];
@@ -115,11 +115,14 @@ export default function ScannerPage() {
         attendanceDate,
       });
 
+      const outcome = outcomeFromApiResponse(result, { code });
+
       if (result?.succeeded) {
         const data = result.data ?? {};
 
         addLog({
           type: "success",
+          statusLabel: SCAN_OUTCOME_LABELS[outcome.status],
           name: data.fullName ?? data.FullName ?? "طالب",
           code: data.qrCode ?? data.QrCode ?? code,
           message: result.message,
@@ -137,10 +140,7 @@ export default function ScannerPage() {
         toast.error(result?.message || "الكود ده مش صالح.");
       }
 
-      return outcomeFromApiResponse(result, {
-        code,
-        isLate: isLateScan(selectedSession?.startTime),
-      });
+      return outcome;
     } catch (error) {
       const message =
         error.response?.data?.message || "حدث خطأ أثناء تسجيل المسح";
@@ -324,9 +324,16 @@ export default function ScannerPage() {
 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2">
-                      <p className="truncate text-xs font-bold text-text-main">
-                        {item.name}
-                      </p>
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <p className="truncate text-xs font-bold text-text-main">
+                          {item.name}
+                        </p>
+                        {item.statusLabel && (
+                          <span className="shrink-0 rounded-md bg-surface-card px-1.5 py-0.5 text-[10px] font-bold text-text-muted">
+                            {item.statusLabel}
+                          </span>
+                        )}
+                      </div>
                       <span className="shrink-0 text-[10px] text-text-muted">
                         {item.at.toLocaleTimeString("en-GB", {
                           hour: "2-digit",

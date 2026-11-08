@@ -87,7 +87,7 @@ public sealed class ParentNotificationsTests : IClassFixture<ScopeApiFactory>
     }
 
     [Fact]
-    public async Task Attendance_Status_Change_Notifies_Again()
+    public async Task Attendance_Status_Change_To_Late_Does_Not_Notify_Again()
     {
         var (parent, child) = await CreateParentWithChildAsync(_seed.CenterA, "Change Child");
         var sessionId = SeedSession(_seed.CenterA, _seed.GroupA);
@@ -96,8 +96,48 @@ public sealed class ParentNotificationsTests : IClassFixture<ScopeApiFactory>
         await SaveAttendanceAsync(CenterAdmin(), sessionId, date, (child, AttendanceStatus.Absent));
         await SaveAttendanceAsync(CenterAdmin(), sessionId, date, (child, AttendanceStatus.Late));
 
-        // A genuinely different status is a new event, so the parent is told twice.
-        Assert.Equal(2, await CountParentNotificationsAsync(parent, ParentNotificationTypes.Attendance));
+        // Late is an attendance state, not an absence event: the parent already
+        // heard about the absence and must not get a second notification.
+        Assert.Equal(1, await CountParentNotificationsAsync(parent, ParentNotificationTypes.Attendance));
+    }
+
+    [Fact]
+    public async Task Attendance_Status_Change_To_Present_Does_Not_Notify_Again()
+    {
+        var (parent, child) = await CreateParentWithChildAsync(_seed.CenterA, "Present Change Child");
+        var sessionId = SeedSession(_seed.CenterA, _seed.GroupA);
+        var date = new DateOnly(2026, 10, 10);
+
+        await SaveAttendanceAsync(CenterAdmin(), sessionId, date, (child, AttendanceStatus.Absent));
+        await SaveAttendanceAsync(CenterAdmin(), sessionId, date, (child, AttendanceStatus.Present));
+
+        Assert.Equal(1, await CountParentNotificationsAsync(parent, ParentNotificationTypes.Attendance));
+    }
+
+    [Fact]
+    public async Task Attendance_Late_And_Excused_Never_Notify()
+    {
+        var (parent, child) = await CreateParentWithChildAsync(_seed.CenterA, "Late Excused Child");
+        var sessionId = SeedSession(_seed.CenterA, _seed.GroupA);
+        var date = new DateOnly(2026, 10, 11);
+
+        await SaveAttendanceAsync(CenterAdmin(), sessionId, date, (child, AttendanceStatus.Late));
+        await SaveAttendanceAsync(CenterAdmin(), sessionId, date, (child, AttendanceStatus.Excused));
+
+        Assert.Equal(0, await CountParentNotificationsAsync(parent, ParentNotificationTypes.Attendance));
+    }
+
+    [Fact]
+    public async Task Attendance_Change_To_Absent_Notifies_Once()
+    {
+        var (parent, child) = await CreateParentWithChildAsync(_seed.CenterA, "Absent Change Child");
+        var sessionId = SeedSession(_seed.CenterA, _seed.GroupA);
+        var date = new DateOnly(2026, 10, 12);
+
+        await SaveAttendanceAsync(CenterAdmin(), sessionId, date, (child, AttendanceStatus.Late));
+        await SaveAttendanceAsync(CenterAdmin(), sessionId, date, (child, AttendanceStatus.Absent));
+
+        Assert.Equal(1, await CountParentNotificationsAsync(parent, ParentNotificationTypes.Attendance));
     }
 
     [Fact]

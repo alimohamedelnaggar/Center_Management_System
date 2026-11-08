@@ -7,12 +7,14 @@ import {
   BookOpen,
   CalendarCheck,
   CalendarX,
+  Clock,
   DollarSign,
   GraduationCap,
   Inbox,
   Loader2,
   ReceiptText,
   RefreshCw,
+  ShieldCheck,
   TrendingDown,
   TrendingUp,
   UserCheck,
@@ -40,6 +42,7 @@ import {
 } from "recharts";
 import { dashboardService } from "../services/dashboardService";
 import { formatCurrency } from "../utils/formatCurrency";
+import { formatAttendanceRate } from "../utils/attendance";
 import { useAuth } from "../context/useAuth";
 
 const MONTHS = [
@@ -1025,33 +1028,77 @@ function StudentDistributionDonut({ summary }) {
 }
 
 /* ======================================================================
-   Attendance overview (rate + present/absent)
+   Attendance overview (unified rate + the four statuses)
    ====================================================================== */
 function AttendanceOverview({ summary }) {
-  const rate = Number(summary?.attendancePercentage) || 0;
+  // null means "nothing countable" (e.g. every session was excused): show "—",
+  // never a fake 0%.
+  const rate =
+    summary?.attendancePercentage === null ||
+    summary?.attendancePercentage === undefined
+      ? null
+      : Number(summary.attendancePercentage);
+
   const present = Number(summary?.monthlyPresentCount) || 0;
   const absent = Number(summary?.monthlyAbsentCount) || 0;
-  const totalAttendance = present + absent;
+  const late = Number(summary?.monthlyLateCount) || 0;
+  const excused = Number(summary?.monthlyExcusedCount) || 0;
+  const totalAttendance = Number(summary?.monthlyAttendanceCount) || 0;
+
+  const statusCards = [
+    {
+      key: "present",
+      label: "حضور",
+      value: present,
+      icon: CalendarCheck,
+      className: "bg-status-success-bg text-status-success",
+    },
+    {
+      key: "absent",
+      label: "غياب",
+      value: absent,
+      icon: CalendarX,
+      className: "bg-status-danger-bg text-status-danger",
+    },
+    {
+      key: "late",
+      label: "تأخر",
+      value: late,
+      icon: Clock,
+      className: "bg-status-warning-bg text-status-warning",
+    },
+    {
+      key: "excused",
+      label: "بعذر",
+      value: excused,
+      icon: ShieldCheck,
+      className: "bg-status-info-bg text-status-info",
+    },
+  ];
 
   return (
     <div className="flex flex-col items-center gap-5">
       <RadialProgress percent={rate} />
 
       <div className="grid grid-cols-2 gap-3 w-full">
-        <div className="rounded-xl bg-status-success-bg p-3 text-center">
-          <p className="text-lg font-extrabold text-status-success">
-            {present}
-          </p>
-          <p className="text-[11px] text-text-muted font-semibold mt-0.5">
-            حضور
-          </p>
-        </div>
-        <div className="rounded-xl bg-status-danger-bg p-3 text-center">
-          <p className="text-lg font-extrabold text-status-danger">{absent}</p>
-          <p className="text-[11px] text-text-muted font-semibold mt-0.5">
-            غياب
-          </p>
-        </div>
+        {statusCards.map((card) => {
+          const Icon = card.icon;
+
+          return (
+            <div
+              key={card.key}
+              className={`rounded-xl p-3 text-center ${card.className}`}
+            >
+              <p className="flex items-center justify-center gap-1 text-lg font-extrabold">
+                <Icon className="w-4 h-4" />
+                {card.value}
+              </p>
+              <p className="text-[11px] text-text-muted font-semibold mt-0.5">
+                {card.label}
+              </p>
+            </div>
+          );
+        })}
       </div>
 
       <p className="text-[11px] text-text-muted">
@@ -1064,7 +1111,10 @@ function AttendanceOverview({ summary }) {
 }
 
 function RadialProgress({ percent, size = 132, strokeWidth = 10 }) {
-  const safePercent = Math.min(Math.max(Number(percent) || 0, 0), 100);
+  const hasRate = percent !== null && percent !== undefined;
+  const safePercent = hasRate
+    ? Math.min(Math.max(Number(percent) || 0, 0), 100)
+    : 0;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (safePercent / 100) * circumference;
@@ -1094,7 +1144,7 @@ function RadialProgress({ percent, size = 132, strokeWidth = 10 }) {
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className="text-2xl font-black text-text-main">
-          {safePercent.toFixed(1)}%
+          {formatAttendanceRate(percent)}
         </span>
         <span className="text-[11px] text-text-muted">نسبة الحضور</span>
       </div>
@@ -1114,11 +1164,12 @@ function TopGroupsList({ groups }) {
   return (
     <ul className="space-y-4">
       {groups.map((group) => {
-        const rate = Math.min(
-          Math.max(Number(group.attendanceRate) || 0, 0),
-          100,
-        );
-        const width = Math.max((rate / maxRate) * 100, 4);
+        const hasRate =
+          group.attendanceRate !== null && group.attendanceRate !== undefined;
+        const rate = hasRate
+          ? Math.min(Math.max(Number(group.attendanceRate) || 0, 0), 100)
+          : 0;
+        const width = hasRate ? Math.max((rate / maxRate) * 100, 4) : 0;
 
         return (
           <li key={`${group.rank}-${group.groupName}`} className="space-y-1.5">
@@ -1130,7 +1181,7 @@ function TopGroupsList({ groups }) {
               <span className="text-xs text-text-muted whitespace-nowrap">
                 {group.studentsCount} طالب ·{" "}
                 <span className="text-status-success font-bold">
-                  {rate.toFixed(1)}%
+                  {formatAttendanceRate(group.attendanceRate)}
                 </span>
               </span>
             </div>

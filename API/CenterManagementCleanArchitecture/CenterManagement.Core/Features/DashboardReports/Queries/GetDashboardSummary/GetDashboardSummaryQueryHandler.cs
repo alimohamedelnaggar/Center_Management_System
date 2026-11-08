@@ -59,6 +59,9 @@ public class GetDashboardSummaryQueryHandler
             // Attendance
             MonthlyPresentCount = attendance ? statistics.MonthlyPresentCount : null,
             MonthlyAbsentCount = attendance ? statistics.MonthlyAbsentCount : null,
+            MonthlyLateCount = attendance ? statistics.MonthlyLateCount : null,
+            MonthlyExcusedCount = attendance ? statistics.MonthlyExcusedCount : null,
+            MonthlyAttendanceCount = attendance ? statistics.MonthlyAttendanceCount : null,
             AttendancePercentage = attendance ? statistics.AttendancePercentage : null
         };
 

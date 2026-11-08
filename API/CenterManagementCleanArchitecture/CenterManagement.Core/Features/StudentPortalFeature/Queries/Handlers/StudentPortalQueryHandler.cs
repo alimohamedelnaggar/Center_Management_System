@@ -4,6 +4,7 @@ using CenterManagement.Core.Features.NotificationFeature.Dtos;
 using CenterManagement.Core.Features.StudentPortalFeature.Dtos;
 using CenterManagement.Core.Features.StudentPortalFeature.Queries.Models;
 using CenterManagement.Data.Enums;
+using CenterManagement.Data.Results;
 using CenterManagement.Data.Entities.Notifications;
 using CenterManagement.Data.Entities.QuestionBank;
 using CenterManagement.Data.Entities.Users;
@@ -417,9 +418,11 @@ public class StudentPortalQueryHandler : ResponseHandler,
         var excused = records.Count(x => x.Status == AttendanceStatus.Excused);
 
         var total = records.Count;
-        var percentage = total == 0
-            ? 0
-            : Math.Round((decimal)(present + late) / total * 100, 1);
+        var percentage = (decimal?)AttendanceRateCalculator.Calculate(
+            present,
+            late,
+            excused,
+            total);
 
         return Success(new StudentAttendanceSummaryDTO
         {

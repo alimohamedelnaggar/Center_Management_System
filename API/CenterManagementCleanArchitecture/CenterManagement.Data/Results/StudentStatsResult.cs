@@ -13,7 +13,22 @@ public class AttendanceStatsDTO
 
     public int AbsentToday { get; set; }
 
+    public int LateToday { get; set; }
+
+    public int ExcusedToday { get; set; }
+
+    public int TotalToday { get; set; }
+
     public int PresentThisMonth { get; set; }
 
-    public double AttendanceRate { get; set; }
+    public int AbsentThisMonth { get; set; }
+
+    public int LateThisMonth { get; set; }
+
+    public int ExcusedThisMonth { get; set; }
+
+    public int TotalThisMonth { get; set; }
+
+    /// <summary>(Present + Late) / (Total - Excused); null when nothing is countable.</summary>
+    public double? AttendanceRate { get; set; }
 }

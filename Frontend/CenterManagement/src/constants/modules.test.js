@@ -3,8 +3,11 @@ import {
   MODULES,
   canUseModule,
   canUseCenterModule,
+  canSeeNavItem,
   closureToEnable,
   moduleForPath,
+  navItemForPath,
+  navRoleContext,
   normaliseModules,
 } from "./modules";
 
@@ -166,5 +169,37 @@ describe("moduleForPath", () => {
     expect(moduleForPath("/parent")).toBe(MODULES.PARENT_PORTAL);
     expect(moduleForPath("/parent/dashboard")).toBe(MODULES.PARENT_PORTAL);
     expect(moduleForPath("/parent/notifications")).toBe(MODULES.PARENT_PORTAL);
+  });
+});
+
+describe("message templates navigation", () => {
+  const item = navItemForPath("/message-templates");
+
+  it("is a whatsapp-gated route", () => {
+    expect(item).not.toBeNull();
+    expect(item.module).toBe(MODULES.WHATSAPP);
+    expect(moduleForPath("/message-templates")).toBe(MODULES.WHATSAPP);
+  });
+
+  it("is visible to the owner and the solo teacher only", () => {
+    expect(
+      canSeeNavItem(item, navRoleContext({ role: "CenterOwner" })),
+    ).toBe(true);
+    expect(
+      canSeeNavItem(
+        item,
+        navRoleContext({
+          role: "Teacher",
+          isCenterAdmin: true,
+          centerType: "SoloTeacher",
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      canSeeNavItem(item, navRoleContext({ role: "Teacher" })),
+    ).toBe(false);
+    expect(
+      canSeeNavItem(item, navRoleContext({ role: "Assistant" })),
+    ).toBe(false);
   });
 });

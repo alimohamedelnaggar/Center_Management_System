@@ -12,7 +12,12 @@
 
     public int AbsentCount { get; set; }
 
-    public decimal AttendancePercentage { get; set; }
+    public int LateCount { get; set; }
+
+    public int ExcusedCount { get; set; }
+
+    /// <summary>(Present + Late) / (Total - Excused); null when not countable.</summary>
+    public decimal? AttendancePercentage { get; set; }
 
     public List<AttendanceRecordDto> Records { get; set; } = [];
 }

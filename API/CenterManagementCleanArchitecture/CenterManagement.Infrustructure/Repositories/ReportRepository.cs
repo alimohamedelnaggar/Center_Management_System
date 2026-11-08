@@ -1,4 +1,5 @@
 ﻿using CenterManagement.Data.Enums;
+using CenterManagement.Data.Results;
 using CenterManagement.Infrustructure.Data.Models;
 using CenterManagement.Infrustructure.InfrastructureBases.Abstracts;
 
@@ -183,21 +184,31 @@ public class ReportRepository : IReportRepository
                 Present = g.Count(
                     x => x.Status == AttendanceStatus.Present),
                 Absent = g.Count(
-                    x => x.Status != AttendanceStatus.Present)
+                    x => x.Status == AttendanceStatus.Absent),
+                Late = g.Count(
+                    x => x.Status == AttendanceStatus.Late),
+                Excused = g.Count(
+                    x => x.Status == AttendanceStatus.Excused)
             })
             .FirstOrDefaultAsync(cancellationToken);
 
         var totalAttendance = attendanceStats?.Total ?? 0;
         var presentAttendance = attendanceStats?.Present ?? 0;
+        var absentAttendance = attendanceStats?.Absent ?? 0;
+        var lateAttendance = attendanceStats?.Late ?? 0;
+        var excusedAttendance = attendanceStats?.Excused ?? 0;
 
         statistics.MonthlyPresentCount = presentAttendance;
-        statistics.MonthlyAbsentCount = attendanceStats?.Absent ?? 0;
+        statistics.MonthlyAbsentCount = absentAttendance;
+        statistics.MonthlyLateCount = lateAttendance;
+        statistics.MonthlyExcusedCount = excusedAttendance;
+        statistics.MonthlyAttendanceCount = totalAttendance;
 
-        statistics.AttendancePercentage = totalAttendance == 0
-            ? 0
-            : Math.Round(
-                (double)presentAttendance / totalAttendance * 100,
-                2);
+        statistics.AttendancePercentage = AttendanceRateCalculator.Calculate(
+            presentAttendance,
+            lateAttendance,
+            excusedAttendance,
+            totalAttendance);
 
         #endregion
 
@@ -315,7 +326,13 @@ public class ReportRepository : IReportRepository
             .GroupBy(x => x.AttendanceDate.DayOfWeek)
             .ToDictionary(
                 g => g.Key,
-                g => g.Count(x => x.Status == AttendanceStatus.Present) * 100.0 / g.Count());
+                g => new
+                {
+                    Total = g.Count(),
+                    Present = g.Count(x => x.Status == AttendanceStatus.Present),
+                    Late = g.Count(x => x.Status == AttendanceStatus.Late),
+                    Excused = g.Count(x => x.Status == AttendanceStatus.Excused)
+                });
 
         var weekDays = new[]
         {
@@ -328,10 +345,21 @@ public class ReportRepository : IReportRepository
         DayOfWeek.Friday
     };
 
-        return weekDays.Select(day => new AttendanceChartModel
+        return weekDays.Select(day =>
         {
-            DayOfWeek = day,
-            AttendanceRate = Math.Round(attendanceData.GetValueOrDefault(day, 0), 2)
+            attendanceData.TryGetValue(day, out var stats);
+
+            return new AttendanceChartModel
+            {
+                DayOfWeek = day,
+                AttendanceRate = stats is null
+                    ? null
+                    : AttendanceRateCalculator.Calculate(
+                        stats.Present,
+                        stats.Late,
+                        stats.Excused,
+                        stats.Total)
+            };
         }).ToList();
     }
     //public async Task<List<TopGroupModel>> GetTopGroupsAsync(
@@ -367,29 +395,41 @@ public class ReportRepository : IReportRepository
     int take = 5,
     CancellationToken cancellationToken = default)
     {
-        var result = await _context.Attendances
+        var rows = await _context.Attendances
             .GroupBy(a => new
             {
                 a.Session.GroupId,
                 a.Session.Group.Name
             })
-            .Select(g => new TopGroupModel
+            .Select(g => new
             {
-                GroupName = g.Key.Name,
+                g.Key.Name,
 
                 StudentsCount = _context.StudentGroups
                     .Count(sg => sg.GroupId == g.Key.GroupId && sg.IsActive && sg.LeftAt == null && sg.Student.IsActive),
 
-                AttendanceRate = g.Count() == 0
-                    ? 0
-                    : g.Count(x => x.Status == AttendanceStatus.Present) * 100.0 / g.Count()
+                Total = g.Count(),
+                Present = g.Count(x => x.Status == AttendanceStatus.Present),
+                Late = g.Count(x => x.Status == AttendanceStatus.Late),
+                Excused = g.Count(x => x.Status == AttendanceStatus.Excused)
             })
-            .OrderByDescending(x => x.AttendanceRate)
-            .ThenByDescending(x => x.StudentsCount)
-            .Take(take)
             .ToListAsync(cancellationToken);
 
-        return result;
+        return rows
+            .Select(x => new TopGroupModel
+            {
+                GroupName = x.Name,
+                StudentsCount = x.StudentsCount,
+                AttendanceRate = AttendanceRateCalculator.Calculate(
+                    x.Present,
+                    x.Late,
+                    x.Excused,
+                    x.Total)
+            })
+            .OrderByDescending(x => x.AttendanceRate ?? double.MinValue)
+            .ThenByDescending(x => x.StudentsCount)
+            .Take(take)
+            .ToList();
     }
 
     public async Task<List<RecentActivityModel>> GetRecentActivityAsync(

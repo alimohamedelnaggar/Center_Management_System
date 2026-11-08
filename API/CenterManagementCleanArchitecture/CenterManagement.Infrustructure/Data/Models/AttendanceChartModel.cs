@@ -8,6 +8,6 @@ namespace CenterManagement.Infrustructure.Data.Models
     {
         public DayOfWeek DayOfWeek { get; set; } = default!;
 
-        public double AttendanceRate { get; set; }
+        public double? AttendanceRate { get; set; }
     }
 }
