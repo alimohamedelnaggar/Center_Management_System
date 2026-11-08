@@ -122,7 +122,7 @@ export const NAV_ITEMS = [
   // --- Center administration: owners and solo teachers ---
   { key: "center-reports", path: "/center-reports", label: "تقارير المركز", icon: GraduationCap, module: MODULES.CENTER_REPORTS, roles: ["owner", "solo"] },
   { key: "adminDashboard", path: "/adminDashboard", label: "إحصائيات", icon: ChartArea, module: null, roles: ["owner", "solo"] },
-  { key: "bulk-parent-accounts", path: "/bulk-parent-accounts", label: "حسابات أولياء الأمور", icon: UserPlus, module: MODULES.PARENT_PORTAL, roles: ["owner", "solo"] },
+  // { key: "bulk-parent-accounts", path: "/bulk-parent-accounts", label: "حسابات أولياء الأمور", icon: UserPlus, module: MODULES.PARENT_PORTAL, roles: ["owner", "solo"] },
   { key: "teachers", path: "/teachers", label: "إدارة المدرسين", icon: UserCog, module: null, roles: ["owner", "solo"], multiOnly: true },
   {
     key: "settings",

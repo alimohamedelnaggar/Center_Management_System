@@ -62,8 +62,8 @@ public static class SerivesCollection
                     .WithOrigins(
                        
                         "http://localhost:5173",
-                       
-                        "https://center-management-system-v02.vercel.app"
+
+                        "https://center-system-orcin.vercel.app"
                     )
                     .AllowAnyMethod()              // GET, POST, PUT, PATCH, DELETE
                     .AllowAnyHeader()              // Content-Type, Authorization, etc.
