@@ -6,11 +6,13 @@ import {
   BarChart3,
   BookOpen,
   CalendarCheck,
+  CalendarDays,
   CalendarX,
   Clock,
   DollarSign,
   GraduationCap,
   Inbox,
+  Lightbulb,
   Loader2,
   ReceiptText,
   RefreshCw,
@@ -31,7 +33,6 @@ import {
   CartesianGrid,
   Cell,
   ComposedChart,
-  Legend,
   Line,
   Pie,
   PieChart,
@@ -40,6 +41,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import StatCard from "../components/ui/StatCard";
 import { dashboardService } from "../services/dashboardService";
 import { formatCurrency } from "../utils/formatCurrency";
 import { formatAttendanceRate } from "../utils/attendance";
@@ -71,6 +73,16 @@ const ACTIVITY_META = {
   attendance_absent: { icon: CalendarX, cls: "bg-status-danger-bg text-status-danger" },
 };
 
+/* Chart colours come from the identity tokens, so both themes stay in sync. */
+const CHART = {
+  primary: "var(--color-primary)",
+  secondary: "var(--color-secondary)",
+  info: "var(--color-status-info)",
+  warning: "var(--color-status-warning)",
+  success: "var(--color-status-success)",
+  danger: "var(--color-status-danger)",
+};
+
 function toArray(value) {
   return Array.isArray(value) ? value : value?.data || [];
 }
@@ -100,9 +112,53 @@ function formatDateTime(value) {
   }).format(date);
 }
 
+/**
+ * The chart adapts to its own container, not the viewport: ticks thin out and
+ * bars get slimmer on a phone, while the same component scales up on desktop.
+ */
+function useElementWidth() {
+  const [el, setEl] = useState(null);
+  const [width, setWidth] = useState(0);
+
+  useEffect(() => {
+    if (!el) return undefined;
+
+    const update = () => setWidth(el.getBoundingClientRect().width);
+
+    if (typeof ResizeObserver === "undefined") {
+      update();
+      window.addEventListener("resize", update);
+      return () => window.removeEventListener("resize", update);
+    }
+
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [el]);
+
+  return [setEl, width];
+}
+
+export function tickInterval(width) {
+  // Horizontal month labels: on narrow cards show every second month with its
+  // full Arabic name; wide cards can afford all twelve. The tooltip still
+  // carries the exact month + values for the bar that was tapped.
+  if (!width) return 0;
+  return width < 720 ? 1 : 0;
+}
+
+function barWidth(width, max = 24) {
+  if (!width) return max;
+  if (width < 380) return 8;
+  if (width < 560) return 12;
+  return max;
+}
+
 export default function AdminDashboard() {
   const now = new Date();
   const { hasModule } = useAuth();
+  const showPayments = hasModule("payments");
   const showAccounting = hasModule("accounting");
   const showAttendance = hasModule("attendance");
 
@@ -120,6 +176,10 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [movementRef, movementWidth] = useElementWidth();
+  const [revenueRef, revenueWidth] = useElementWidth();
+  const [attendanceRef, attendanceWidth] = useElementWidth();
+
   const years = useMemo(() => {
     const currentYear = new Date().getFullYear();
     const result = [];
@@ -132,6 +192,11 @@ export default function AdminDashboard() {
   const monthLabel = MONTHS.find((m) => m.value === selectedMonth)?.label || "";
 
   const fetchData = useCallback(async () => {
+    // The backend gates revenue on `payments` and attendance/top-groups on
+    // `attendance`. Calling a disabled module would return 403 and fail the
+    // whole Promise.all, so those requests are skipped up-front.
+    const skipped = Promise.resolve([]);
+
     const [sumData, distData, revData, moveData, attData, groupsData, activityData] =
       await Promise.all([
         dashboardService.getSummary({
@@ -139,10 +204,12 @@ export default function AdminDashboard() {
           month: selectedMonth,
         }),
         dashboardService.getStudentDistribution(),
-        dashboardService.getRevenueChart({ year: selectedYear }),
+        showPayments
+          ? dashboardService.getRevenueChart({ year: selectedYear })
+          : skipped,
         dashboardService.getStudentMovement({ year: selectedYear }),
-        dashboardService.getAttendanceChart(),
-        dashboardService.getTopGroups(),
+        showAttendance ? dashboardService.getAttendanceChart() : skipped,
+        showAttendance ? dashboardService.getTopGroups() : skipped,
         dashboardService.getRecentActivity(),
       ]);
     return {
@@ -154,7 +221,7 @@ export default function AdminDashboard() {
       groupsData,
       activityData,
     };
-  }, [selectedYear, selectedMonth]);
+  }, [selectedYear, selectedMonth, showPayments, showAttendance]);
 
   const applyResults = useCallback(
     ({ sumData, distData, revData, moveData, attData, groupsData, activityData }) => {
@@ -250,6 +317,17 @@ export default function AdminDashboard() {
 
   const netStudentGrowth = Number(summary?.netStudentGrowth) || 0;
 
+  const lowAttendanceGroups = useMemo(
+    () =>
+      !showAttendance
+        ? 0
+        : topGroups.filter((group) => {
+            const rate = Number(group.attendanceRate);
+            return Number.isFinite(rate) && rate < 75;
+          }).length,
+    [topGroups, showAttendance],
+  );
+
   if (error && !summary) {
     return (
       <ErrorState message={error} onRetry={loadData} loading={loading} />
@@ -257,568 +335,705 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="space-y-8 p-4 md:p-6 max-w-[1440px] mx-auto pb-24 text-text-main">
-      {/* ================= SECTION 1 — HEADER ================= */}
-      <header className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-black text-text-main">
-            لوحة التحكم
-          </h1>
-          <p className="text-sm text-text-muted mt-1">
-            نظرة شاملة على أداء السنتر
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-bold text-text-muted">الشهر</label>
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(Number(e.target.value))}
-              className="min-w-[140px] px-4 py-2.5 rounded-xl border border-surface-border bg-surface-card text-text-main font-medium outline-none focus:border-primary transition-colors cursor-pointer"
-            >
-              {MONTHS.map((month) => (
-                <option key={month.value} value={month.value}>
-                  {month.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-bold text-text-muted">السنة</label>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="min-w-[120px] px-4 py-2.5 rounded-xl border border-surface-border bg-surface-card text-text-main font-medium outline-none focus:border-primary transition-colors cursor-pointer"
-            >
-              {years.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <button
-            type="button"
-            onClick={loadData}
-            disabled={loading}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-text-inverse text-sm font-bold hover:bg-primary-hover transition-colors disabled:opacity-60 cursor-pointer h-[46px]"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-            تحديث
-          </button>
-        </div>
-      </header>
-
-      <div
-        className={`space-y-8 transition-opacity duration-200 ${
-          loading ? "opacity-70" : "opacity-100"
-        }`}
-      >
-        {/* ================= SECTION 2 — STUDENT OVERVIEW ================= */}
-        <section>
-          <SectionHeading
-            icon={Users}
-            title="نظرة عامة على الطلاب"
-            subtitle={`إحصائيات الطلاب لشهر ${monthLabel} ${selectedYear}`}
+    <div
+      dir="rtl"
+      data-testid="admin-dashboard"
+      className="min-h-dvh w-full bg-surface-bg text-text-main"
+    >
+      <div className="mx-auto w-full max-w-[1440px] space-y-6 px-4 pb-24 pt-4 md:px-6 md:pt-6 wide:max-w-[1600px] ultra:max-w-[1760px]">
+        {/* ================= WELCOME BANNER ================= */}
+        <header
+          data-testid="dashboard-hero"
+          className="relative overflow-hidden rounded-card bg-gradient-to-br from-primary via-primary to-primary-hover p-5 text-primary-contrast shadow-card dark:from-primary-subtle dark:via-primary-subtle dark:to-surface-card dark:text-text-main sm:p-6 lg:p-7"
+        >
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -left-16 -top-20 h-64 w-64 rounded-full bg-primary-contrast/10 dark:bg-primary/10"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -bottom-24 right-1/3 h-56 w-56 rounded-full bg-secondary/20 dark:bg-secondary/10"
           />
 
-          {isInitialLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <StatCardSkeleton key={i} />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-              <StatCard
-                title="إجمالي الطلاب"
-                value={summary?.totalStudents ?? 0}
-                icon={Users}
-                iconClass="bg-primary-subtle text-primary"
-              />
-              <StatCard
-                title="الطلاب النشطين"
-                value={summary?.activeStudents ?? 0}
-                icon={UserCheck}
-                iconClass="bg-status-success-bg text-status-success"
-              />
-              <StatCard
-                title="الطلاب غير النشطين"
-                value={summary?.inactiveStudents ?? 0}
-                icon={UserX}
-                iconClass="bg-status-warning-bg text-status-warning"
-              />
-              <StatCard
-                title="إجمالي الطلاب المحذوفين"
-                value={summary?.deletedStudents ?? 0}
-                icon={UserX}
-                iconClass="bg-status-danger-bg text-status-danger"
-              />
-            </div>
-          )}
-        </section>
+          <div className="relative z-10 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="min-w-0">
+              <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-bold opacity-95">
+                <Activity className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>نبض السنتر</span>
+                <span aria-hidden="true">·</span>
+                <span>
+                  {monthLabel} {selectedYear}
+                </span>
+              </p>
 
-        {/* ================= SECTION 3 — STUDENT MOVEMENT ================= */}
-        <section>
-          <SectionHeading
-            icon={Activity}
-            title="حركة الطلاب"
-            subtitle="مقارنة الطلاب الجدد بالطلاب الذين غادروا خلال الفترة المحددة"
-          />
-
-          {isInitialLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <StatCardSkeleton key={i} />
-              ))}
+              <h1 className="mt-2 break-words text-2xl font-black tracking-tight sm:text-3xl">
+                لوحة التحكم
+              </h1>
+              <p className="mt-1 break-words text-sm leading-7 opacity-95 sm:text-base">
+                نظرة شاملة على أداء السنتر
+              </p>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-              <StatCard
-                title="طلاب جدد هذا الشهر"
-                value={summary?.monthlyStudents ?? 0}
-                icon={UserPlus}
-                iconClass="bg-status-success-bg text-status-success"
-              />
-              <StatCard
-                title="طلاب غادروا هذا الشهر"
-                value={summary?.monthlyDeletedStudents ?? 0}
-                icon={UserMinus}
-                iconClass="bg-status-danger-bg text-status-danger"
-              />
-              <StatCard
-                title="صافي نمو الطلاب"
-                value={netStudentGrowth}
-                icon={netStudentGrowth >= 0 ? TrendingUp : TrendingDown}
-                iconClass="bg-primary-subtle text-primary"
-              />
-            </div>
-          )}
-        </section>
 
-        {/* ================= SECTION 4 — MOVEMENT TREND ================= */}
-        <section>
-          <SectionHeading
-            icon={BarChart3}
-            title="حركة الطلاب خلال السنة"
-            subtitle={`الطلاب الجدد والذين غادروا شهريًا خلال عام ${selectedYear}`}
-          />
-
-          <ChartCard>
-            {isInitialLoading ? (
-              <div className="h-72 rounded-xl bg-surface-muted animate-pulse" />
-            ) : movementHasData ? (
-              <div className="h-72 min-w-0">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart
-                    data={movementData}
-                    margin={{ top: 4, right: 4, left: -12, bottom: 0 }}
+            <div className="rounded-card border border-primary-contrast/20 bg-primary-contrast/10 p-3 dark:border-primary/20 dark:bg-primary/10">
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:items-end">
+                <label className="flex min-w-0 flex-col gap-1 text-sm font-bold">
+                  الشهر
+                  <select
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                    data-testid="dashboard-month"
+                    className="min-h-11 w-full cursor-pointer rounded-control border border-surface-border bg-surface-card px-3 text-sm font-semibold text-text-main outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:min-w-[140px]"
                   >
-                    <CartesianGrid
-                      stroke="var(--color-surface-border)"
-                      vertical={false}
-                    />
-                    <XAxis
-                      dataKey="monthName"
-                      tick={{ fill: "var(--color-text-muted)", fontSize: 10 }}
-                      axisLine={false}
-                      tickLine={false}
-                      interval={0}
-                      angle={-35}
-                      textAnchor="end"
-                      height={56}
-                    />
-                    <YAxis
-                      allowDecimals={false}
-                      tick={{ fill: "var(--color-text-muted)", fontSize: 11 }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <Tooltip
-                      cursor={{ fill: "var(--color-surface-muted)", opacity: 0.4 }}
-                      contentStyle={{
-                        borderRadius: "12px",
-                        border: "1px solid var(--color-surface-border)",
-                        background: "var(--color-surface-card)",
-                        color: "var(--color-text-main)",
-                      }}
-                      formatter={(value, name) => [value, name]}
-                    />
-                    <Legend
-                      formatter={(value) => (
-                        <span className="text-xs text-text-muted">
-                          {value}
-                        </span>
-                      )}
-                    />
-                    <Bar
-                      dataKey="newStudents"
-                      name="طلاب جدد"
-                      fill="var(--color-primary)"
-                      radius={[6, 6, 0, 0]}
-                      maxBarSize={20}
-                    />
-                    <Bar
-                      dataKey="departedStudents"
-                      name="غادروا"
-                      fill="var(--color-status-danger)"
-                      radius={[6, 6, 0, 0]}
-                      maxBarSize={20}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="netGrowth"
-                      name="صافي النمو"
-                      stroke="var(--color-status-info)"
-                      strokeWidth={2}
-                      dot={{ r: 3, fill: "var(--color-status-info)" }}
-                    />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <EmptyState message="لا توجد بيانات متاحة للفترة المحددة" />
-            )}
-          </ChartCard>
-        </section>
+                    {MONTHS.map((month) => (
+                      <option key={month.value} value={month.value}>
+                        {month.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
 
-        {/* ================= SECTION 5 — FINANCIAL OVERVIEW ================= */}
-        {showAccounting && (
-        <section>
-          <SectionHeading
-            icon={Wallet}
-            title="الوضع المالي"
-            subtitle={`الإيرادات والمصروفات والأرباح لشهر ${monthLabel} ${selectedYear}`}
-          />
-
-          {isInitialLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <StatCardSkeleton key={i} />
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-              <MoneyCard
-                title="إيرادات الشهر"
-                value={summary?.monthlyRevenue ?? 0}
-                icon={DollarSign}
-                iconClass="bg-status-success-bg text-status-success"
-                current={summary?.monthlyRevenue ?? 0}
-                previous={summary?.previousMonthRevenue ?? 0}
-              />
-              <MoneyCard
-                title="مصروفات الشهر"
-                value={summary?.monthlyExpenses ?? 0}
-                icon={Wallet}
-                iconClass="bg-status-warning-bg text-status-warning"
-                current={summary?.monthlyExpenses ?? 0}
-                previous={summary?.previousMonthExpenses ?? 0}
-              />
-              <MoneyCard
-                title="مرتبات المساعدين"
-                value={summary?.monthlyAssistantSalaries ?? 0}
-                icon={Banknote}
-                iconClass="bg-status-info-bg text-status-info"
-                current={summary?.monthlyAssistantSalaries ?? 0}
-                previous={summary?.previousMonthAssistantSalaries ?? 0}
-              />
-              <MoneyCard
-                title="صافي الربح"
-                value={summary?.netProfit ?? 0}
-                icon={TrendingUp}
-                iconClass="bg-primary-subtle text-primary"
-                current={summary?.netProfit ?? 0}
-                previous={previousNetProfit}
-              />
-            </div>
-          )}
-        </section>
-        )}
-
-        {/* ================= SECTION 6 — REVENUE VS EXPENSES ================= */}
-        {showAccounting && (
-        <section>
-          <SectionHeading
-            icon={BarChart3}
-            title="الإيرادات مقابل المصروفات"
-            subtitle={`البيانات الشهرية لعام ${selectedYear}`}
-          />
-
-          <ChartCard>
-            {isInitialLoading ? (
-              <div className="h-72 rounded-xl bg-surface-muted animate-pulse" />
-            ) : revenueHasData ? (
-              <div className="h-72 min-w-0">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={revenueData}
-                    margin={{ top: 4, right: 4, left: -12, bottom: 0 }}
-                    barCategoryGap="24%"
+                <label className="flex min-w-0 flex-col gap-1 text-sm font-bold">
+                  السنة
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                    data-testid="dashboard-year"
+                    className="num min-h-11 w-full cursor-pointer rounded-control border border-surface-border bg-surface-card px-3 text-sm font-semibold text-text-main outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20 sm:min-w-[120px]"
                   >
-                    <CartesianGrid
-                      stroke="var(--color-surface-border)"
-                      vertical={false}
-                    />
-                    <XAxis
-                      dataKey="monthName"
-                      tick={{ fill: "var(--color-text-muted)", fontSize: 11 }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tick={{ fill: "var(--color-text-muted)", fontSize: 11 }}
-                      tickFormatter={compactNumber}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <Tooltip
-                      cursor={{ fill: "var(--color-surface-muted)", opacity: 0.4 }}
-                      contentStyle={{
-                        borderRadius: "12px",
-                        border: "1px solid var(--color-surface-border)",
-                        background: "var(--color-surface-card)",
-                        color: "var(--color-text-main)",
-                      }}
-                      formatter={(value, name) => [
-                        formatCurrency(value),
-                        name,
-                      ]}
-                    />
-                    <Legend
-                      formatter={(value) => (
-                        <span className="text-xs text-text-muted">
-                          {value}
-                        </span>
-                      )}
-                    />
-                    <Bar
-                      dataKey="revenue"
-                      name="الإيرادات"
-                      fill="var(--color-primary)"
-                      radius={[6, 6, 0, 0]}
-                      maxBarSize={34}
-                    />
-                    <Bar
-                      dataKey="expenses"
-                      name="المصروفات"
-                      fill="var(--color-status-warning)"
-                      radius={[6, 6, 0, 0]}
-                      maxBarSize={34}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <EmptyState message="لا توجد بيانات متاحة للفترة المحددة" />
-            )}
-          </ChartCard>
-        </section>
-        )}
+                    {years.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </label>
 
-        {/* ================= SECTION 7 — DISTRIBUTION + ATTENDANCE ================= */}
+                <button
+                  type="button"
+                  onClick={loadData}
+                  disabled={loading}
+                  data-testid="dashboard-refresh"
+                  className="col-span-2 inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-surface-card px-4 text-sm font-bold text-primary transition-colors hover:bg-surface-muted disabled:opacity-60 sm:col-span-1"
+                >
+                  <RefreshCw
+                    className={`h-4 w-4 ${loading ? "animate-spin" : ""}`}
+                    aria-hidden="true"
+                  />
+                  تحديث
+                </button>
+              </div>
+            </div>
+          </div>
+        </header>
+
         <div
-          className={`grid grid-cols-1 gap-4 ${
-            showAttendance ? "lg:grid-cols-3" : "lg:grid-cols-1"
+          className={`space-y-6 transition-opacity duration-200 ${
+            loading ? "opacity-70" : "opacity-100"
           }`}
         >
-          <ChartCard
-            title="حالة الطلاب"
-            subtitle="النشط / غير النشط / المحذوف"
-          >
-            <StudentDistributionDonut summary={summary} />
-          </ChartCard>
-
-          {showAttendance && (
-          <ChartCard
-            title="الحضور"
-            subtitle={`حضور شهر ${monthLabel} ${selectedYear}`}
-          >
-            <AttendanceOverview summary={summary} />
-          </ChartCard>
+          {!isInitialLoading && summary && (
+            <InsightBanner
+              summary={summary}
+              lowAttendanceGroups={lowAttendanceGroups}
+              showAttendance={showAttendance}
+            />
           )}
 
-          {showAttendance && (
-          <ChartCard
-            title="معدل الحضور اليومي"
-            subtitle="آخر 7 أيام"
-          >
-            {isInitialLoading ? (
-              <div className="h-64 rounded-xl bg-surface-muted animate-pulse" />
-            ) : attendanceHasData ? (
-              <div className="h-64 min-w-0">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={attendanceData}
-                    margin={{ top: 4, right: 4, left: -18, bottom: 0 }}
-                    barCategoryGap="30%"
-                  >
-                    <CartesianGrid
-                      stroke="var(--color-surface-border)"
-                      vertical={false}
-                    />
-                    <XAxis
-                      dataKey="dayName"
-                      tick={{ fill: "var(--color-text-muted)", fontSize: 11 }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      unit="%"
-                      tick={{ fill: "var(--color-text-muted)", fontSize: 11 }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <Tooltip
-                      cursor={{ fill: "var(--color-surface-muted)", opacity: 0.4 }}
-                      contentStyle={{
-                        borderRadius: "12px",
-                        border: "1px solid var(--color-surface-border)",
-                        background: "var(--color-surface-card)",
-                        color: "var(--color-text-main)",
-                      }}
-                      formatter={(value) => [`${value}%`, "نسبة الحضور"]}
-                    />
-                    <Bar
-                      dataKey="attendanceRate"
-                      name="نسبة الحضور"
-                      fill="var(--color-primary)"
-                      radius={[8, 8, 0, 0]}
-                      maxBarSize={44}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            ) : (
-              <EmptyState message="لا توجد بيانات حضور متاحة للأسبوع الحالي" />
-            )}
-          </ChartCard>
-          )}
-        </div>
-
-        {/* ================= SECTION 8 — GROUPS ================= */}
-        <section>
-          <SectionHeading
-            icon={BookOpen}
-            title="المجموعات"
-            subtitle="إحصائيات المجموعات وأداء الحضور"
-          />
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* Groups summary */}
-            <div className="bg-surface-card rounded-2xl border border-surface-border shadow-sm p-5 flex flex-col justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 rounded-xl bg-status-info-bg text-status-info flex items-center justify-center shrink-0">
-                  <GraduationCap className="h-6 w-6" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs text-text-muted font-semibold min-h-[28px]">
-                    إجمالي المجموعات
-                  </p>
-                  <p className="text-2xl font-extrabold">
-                    {summary?.totalGroups ?? 0}
-                  </p>
-                </div>
-              </div>
-
-              <div className="border-t border-surface-border pt-4">
-                <p className="text-xs text-text-muted font-semibold mb-1 min-h-[28px]">
-                  متوسط عدد الطلاب في المجموعة
-                </p>
-                <p className="text-xl font-extrabold text-text-main">
-                  {distribution.length
-                    ? avgStudentsPerGroup.toFixed(1)
-                    : "—"}
-                  <span className="text-sm font-medium text-text-muted">
-                    {" "}
-                    طالب
-                  </span>
-                </p>
-              </div>
-            </div>
-
-            {/* Top groups */}
-            <ChartCard
-              className="lg:col-span-2"
-              title="أفضل المجموعات من حيث الحضور"
-              subtitle="أعلى 5 مجموعات حسب نسبة الحضور"
-            >
-              {isInitialLoading ? (
-                <div className="space-y-4">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="space-y-2">
-                      <div className="h-3 w-40 rounded bg-surface-muted animate-pulse" />
-                      <div className="h-2 rounded-full bg-surface-muted animate-pulse" />
-                    </div>
-                  ))}
-                </div>
-              ) : topGroups.length ? (
-                <TopGroupsList groups={topGroups} />
-              ) : (
-                <EmptyState message="لا توجد بيانات مجموعات متاحة" compact />
-              )}
-            </ChartCard>
-          </div>
-        </section>
-
-        {/* ================= SECTION 9 — RECENT ACTIVITY ================= */}
-        {recentActivity.length > 0 && (
-          <section>
+          {/* ================= STUDENT OVERVIEW ================= */}
+          <section data-testid="section-students">
             <SectionHeading
-              icon={Activity}
-              title="آخر النشاطات"
-              subtitle="أحدث العمليات المسجلة في النظام"
+              icon={Users}
+              title="نظرة عامة على الطلاب"
+              subtitle={`إحصائيات الطلاب لشهر ${monthLabel} ${selectedYear}`}
             />
 
-            <div className="bg-surface-card rounded-2xl border border-surface-border shadow-sm p-2 md:p-3">
-              {isInitialLoading ? (
-                <div className="space-y-1 p-2">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="h-12 rounded-xl bg-surface-muted animate-pulse"
-                    />
+            {isInitialLoading ? (
+              <div className="cq-host">
+                <div className="card-grid">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <StatCardSkeleton key={i} />
                   ))}
                 </div>
-              ) : (
-                <ul className="divide-y divide-surface-border">
-                  {recentActivity.slice(0, 8).map((item, index) => {
-                    const meta =
-                      ACTIVITY_META[item.activityType] || {
-                        icon: Activity,
-                        cls: "bg-surface-muted text-text-muted",
-                      };
-                    const Icon = meta.icon;
+              </div>
+            ) : (
+              <div className="cq-host">
+                <div className="card-grid">
+                  <StatCard
+                    label="إجمالي الطلاب"
+                    value={summary?.totalStudents ?? 0}
+                    icon={Users}
+                    tone="primary"
+                  />
+                  <StatCard
+                    label="الطلاب النشطين"
+                    value={summary?.activeStudents ?? 0}
+                    icon={UserCheck}
+                    tone="success"
+                  />
+                  <StatCard
+                    label="الطلاب غير النشطين"
+                    value={summary?.inactiveStudents ?? 0}
+                    icon={UserX}
+                    tone="warning"
+                  />
+                  <StatCard
+                    label="إجمالي الطلاب المحذوفين"
+                    value={summary?.deletedStudents ?? 0}
+                    icon={UserX}
+                    tone="danger"
+                  />
+                </div>
+              </div>
+            )}
+          </section>
 
-                    return (
-                      <li
-                        key={`${item.date}-${index}`}
-                        className="flex items-center gap-3 px-3 py-3"
+          {/* ================= STUDENT MOVEMENT ================= */}
+          <section data-testid="section-movement">
+            <SectionHeading
+              icon={Activity}
+              title="حركة الطلاب"
+              subtitle="مقارنة الطلاب الجدد بالطلاب الذين غادروا خلال الفترة المحددة"
+            />
+
+            {isInitialLoading ? (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <StatCardSkeleton key={i} />
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <StatCard
+                  label="طلاب جدد هذا الشهر"
+                  value={summary?.monthlyStudents ?? 0}
+                  icon={UserPlus}
+                  tone="success"
+                />
+                <StatCard
+                  label="طلاب غادروا هذا الشهر"
+                  value={summary?.monthlyDeletedStudents ?? 0}
+                  icon={UserMinus}
+                  tone="danger"
+                />
+                <StatCard
+                  label="صافي نمو الطلاب"
+                  value={netStudentGrowth}
+                  icon={netStudentGrowth >= 0 ? TrendingUp : TrendingDown}
+                  tone="primary"
+                />
+              </div>
+            )}
+          </section>
+
+          {/* ================= MOVEMENT TREND ================= */}
+          <section data-testid="section-movement-chart">
+            <SectionHeading
+              icon={BarChart3}
+              title="حركة الطلاب خلال السنة"
+              subtitle={`الطلاب الجدد والذين غادروا شهريًا خلال عام ${selectedYear}`}
+            />
+
+            <ChartCard id="movement">
+              <ChartLegend
+                items={[
+                  { label: "طلاب جدد", color: CHART.primary },
+                  { label: "غادروا", color: CHART.secondary },
+                  { label: "صافي النمو", color: CHART.info, line: true },
+                ]}
+              />
+
+              {isInitialLoading ? (
+                <ChartSkeleton />
+              ) : movementHasData ? (
+                <div ref={movementRef} className="h-56 min-w-0 xs:h-64 sm:h-72">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart
+                      data={movementData}
+                      margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+                      accessibilityLayer
+                    >
+                      <CartesianGrid
+                        stroke="var(--color-surface-border)"
+                        strokeDasharray="3 6"
+                        vertical={false}
+                      />
+                      <XAxis
+                        dataKey="monthName"
+                        tick={{ fill: "var(--color-text-muted)", fontSize: 12 }}
+                        tickMargin={8}
+                        minTickGap={8}
+                        interval={tickInterval(movementWidth)}
+                        angle={0}
+                        textAnchor="middle"
+                        height={34}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <YAxis
+                        allowDecimals={false}
+                        tick={{ fill: "var(--color-text-muted)", fontSize: 12 }}
+                        tickFormatter={compactNumber}
+                        width={40}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <Tooltip
+                        trigger="click"
+                        cursor={{ fill: "var(--color-surface-muted)", opacity: 0.5 }}
+                        content={<ChartTooltip />}
+                      />
+                      <Bar
+                        dataKey="newStudents"
+                        name="طلاب جدد"
+                        fill={CHART.primary}
+                        radius={[6, 6, 0, 0]}
+                        maxBarSize={barWidth(movementWidth, 20)}
+                        animationDuration={180}
+                      />
+                      <Bar
+                        dataKey="departedStudents"
+                        name="غادروا"
+                        fill={CHART.secondary}
+                        radius={[6, 6, 0, 0]}
+                        maxBarSize={barWidth(movementWidth, 20)}
+                        animationDuration={180}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="netGrowth"
+                        name="صافي النمو"
+                        stroke={CHART.info}
+                        strokeWidth={2.5}
+                        dot={false}
+                        activeDot={{ r: 5 }}
+                        animationDuration={180}
+                      />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <EmptyState message="لا توجد بيانات متاحة للفترة المحددة" />
+              )}
+            </ChartCard>
+          </section>
+
+          {/* ================= FINANCIAL OVERVIEW ================= */}
+          {showAccounting || showPayments ? (
+            <section data-testid="section-finance">
+              <SectionHeading
+                icon={Wallet}
+                title="الوضع المالي"
+                subtitle={`الإيرادات والمصروفات والأرباح لشهر ${monthLabel} ${selectedYear}`}
+              />
+
+              {isInitialLoading ? (
+                <div className="cq-host">
+                  <div className="card-grid">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <MoneyCardSkeleton key={i} />
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="cq-host">
+                  <div className="card-grid">
+                    {showPayments && (
+                      <MoneyCard
+                        title="إيرادات الشهر"
+                        value={summary?.monthlyRevenue ?? 0}
+                        icon={DollarSign}
+                        tone="success"
+                        current={summary?.monthlyRevenue ?? 0}
+                        previous={summary?.previousMonthRevenue ?? 0}
+                      />
+                    )}
+                    {showAccounting && (
+                      <MoneyCard
+                        title="مصروفات الشهر"
+                        value={summary?.monthlyExpenses ?? 0}
+                        icon={Wallet}
+                        tone="warning"
+                        current={summary?.monthlyExpenses ?? 0}
+                        previous={summary?.previousMonthExpenses ?? 0}
+                      />
+                    )}
+                    {showAccounting && (
+                      <MoneyCard
+                        title="مرتبات المساعدين"
+                        value={summary?.monthlyAssistantSalaries ?? 0}
+                        icon={Banknote}
+                        tone="info"
+                        current={summary?.monthlyAssistantSalaries ?? 0}
+                        previous={summary?.previousMonthAssistantSalaries ?? 0}
+                      />
+                    )}
+                    {showPayments && showAccounting && (
+                      <MoneyCard
+                        title="صافي الربح"
+                        value={summary?.netProfit ?? 0}
+                        icon={TrendingUp}
+                        tone="primary"
+                        current={summary?.netProfit ?? 0}
+                        previous={previousNetProfit}
+                      />
+                    )}
+                  </div>
+                </div>
+              )}
+            </section>
+          ) : null}
+
+          {/* ================= REVENUE VS EXPENSES ================= */}
+          {showAccounting && showPayments && (
+            <section data-testid="section-revenue-chart">
+              <SectionHeading
+                icon={BarChart3}
+                title="الإيرادات مقابل المصروفات"
+                subtitle={`البيانات الشهرية لعام ${selectedYear}`}
+              />
+
+              <ChartCard id="revenue">
+                <ChartLegend
+                  items={[
+                    { label: "الإيرادات", color: CHART.primary },
+                    { label: "المصروفات", color: CHART.warning },
+                  ]}
+                />
+
+                {isInitialLoading ? (
+                  <ChartSkeleton />
+                ) : revenueHasData ? (
+                  <div ref={revenueRef} className="h-56 min-w-0 xs:h-64 sm:h-72">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={revenueData}
+                        margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+                        barCategoryGap="24%"
+                        accessibilityLayer
                       >
-                        <div
-                          className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${meta.cls}`}
-                        >
-                          <Icon className="h-4 w-4" />
+                        <CartesianGrid
+                          stroke="var(--color-surface-border)"
+                          strokeDasharray="3 6"
+                          vertical={false}
+                        />
+                        <XAxis
+                          dataKey="monthName"
+                          tick={{ fill: "var(--color-text-muted)", fontSize: 12 }}
+                          tickMargin={8}
+                          minTickGap={8}
+                          interval={tickInterval(revenueWidth)}
+                          angle={0}
+                          textAnchor="middle"
+                          height={34}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          tick={{ fill: "var(--color-text-muted)", fontSize: 12 }}
+                          tickFormatter={compactNumber}
+                          width={40}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <Tooltip
+                          trigger="click"
+                          cursor={{
+                            fill: "var(--color-surface-muted)",
+                            opacity: 0.5,
+                          }}
+                          content={
+                            <ChartTooltip
+                              formatValue={(value) => formatCurrency(value)}
+                            />
+                          }
+                        />
+                        <Bar
+                          dataKey="revenue"
+                          name="الإيرادات"
+                          fill={CHART.primary}
+                          radius={[6, 6, 0, 0]}
+                          maxBarSize={barWidth(revenueWidth, 24)}
+                          animationDuration={180}
+                        />
+                        <Bar
+                          dataKey="expenses"
+                          name="المصروفات"
+                          fill={CHART.warning}
+                          radius={[6, 6, 0, 0]}
+                          maxBarSize={barWidth(revenueWidth, 24)}
+                          animationDuration={180}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <EmptyState message="لا توجد بيانات متاحة للفترة المحددة" />
+                )}
+              </ChartCard>
+            </section>
+          )}
+
+          {/* ================= DISTRIBUTION + ATTENDANCE ================= */}
+          <div
+            className={`grid grid-cols-1 gap-4 ${
+              showAttendance ? "lg:grid-cols-3" : "lg:grid-cols-1"
+            }`}
+          >
+            <ChartCard
+              id="distribution"
+              title="حالة الطلاب"
+              subtitle="النشط / غير النشط / المحذوف"
+            >
+              <StudentDistributionDonut summary={summary} />
+            </ChartCard>
+
+            {showAttendance && (
+              <ChartCard
+                id="attendance"
+                title="الحضور"
+                subtitle={`حضور شهر ${monthLabel} ${selectedYear}`}
+              >
+                <AttendanceOverview summary={summary} />
+              </ChartCard>
+            )}
+
+            {showAttendance && (
+              <ChartCard
+                id="daily-attendance"
+                title="معدل الحضور اليومي"
+                subtitle="آخر 7 أيام"
+              >
+                {isInitialLoading ? (
+                  <ChartSkeleton className="h-64" />
+                ) : attendanceHasData ? (
+                  <div
+                    ref={attendanceRef}
+                    className="h-56 min-w-0 xs:h-64"
+                  >
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart
+                        data={attendanceData}
+                        margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+                        barCategoryGap="30%"
+                        accessibilityLayer
+                      >
+                        <CartesianGrid
+                          stroke="var(--color-surface-border)"
+                          strokeDasharray="3 6"
+                          vertical={false}
+                        />
+                        <XAxis
+                          dataKey="dayName"
+                          tick={{ fill: "var(--color-text-muted)", fontSize: 12 }}
+                          tickMargin={8}
+                          minTickGap={4}
+                          interval={0}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          unit="%"
+                          tick={{ fill: "var(--color-text-muted)", fontSize: 12 }}
+                          width={40}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <Tooltip
+                          trigger="click"
+                          cursor={{
+                            fill: "var(--color-surface-muted)",
+                            opacity: 0.5,
+                          }}
+                          content={
+                            <ChartTooltip
+                              formatValue={(value) => `${value}%`}
+                            />
+                          }
+                        />
+                        <Bar
+                          dataKey="attendanceRate"
+                          name="نسبة الحضور"
+                          fill={CHART.primary}
+                          radius={[8, 8, 0, 0]}
+                          maxBarSize={barWidth(attendanceWidth, 44)}
+                          animationDuration={180}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : (
+                  <EmptyState message="لا توجد بيانات حضور متاحة للأسبوع الحالي" />
+                )}
+              </ChartCard>
+            )}
+          </div>
+
+          {/* ================= GROUPS ================= */}
+          <section data-testid="section-groups">
+            <SectionHeading
+              icon={BookOpen}
+              title="المجموعات"
+              subtitle={
+                showAttendance
+                  ? "إحصائيات المجموعات وأداء الحضور"
+                  : "إحصائيات المجموعات"
+              }
+            />
+
+            <div
+              className={`grid grid-cols-1 gap-4 ${
+                showAttendance ? "lg:grid-cols-3" : "lg:grid-cols-1"
+              }`}
+            >
+              <div className="flex min-w-0 flex-col justify-between gap-4 rounded-card border border-surface-border bg-surface-card p-4 shadow-soft sm:p-5">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-control bg-status-info-bg text-status-info">
+                    <GraduationCap className="h-6 w-6" aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="break-words text-sm font-semibold text-text-muted">
+                      إجمالي المجموعات
+                    </p>
+                    <p className="num break-words text-2xl font-extrabold text-text-main">
+                      {summary?.totalGroups ?? 0}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="border-t border-surface-border pt-4">
+                  <p className="break-words text-sm font-semibold text-text-muted">
+                    متوسط عدد الطلاب في المجموعة
+                  </p>
+                  <p className="mt-1 break-words text-xl font-extrabold text-text-main">
+                    {distribution.length
+                      ? avgStudentsPerGroup.toFixed(1)
+                      : "—"}
+                    <span className="text-sm font-medium text-text-muted">
+                      {" "}
+                      طالب
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              {showAttendance && (
+                <ChartCard
+                  id="top-groups"
+                  className="lg:col-span-2"
+                  title="أفضل المجموعات من حيث الحضور"
+                  subtitle="أعلى 5 مجموعات حسب نسبة الحضور"
+                >
+                  {isInitialLoading ? (
+                    <div className="space-y-4">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <div key={i} className="space-y-2">
+                          <div className="h-3 w-40 rounded bg-surface-muted animate-pulse" />
+                          <div className="h-2 rounded-full bg-surface-muted animate-pulse" />
                         </div>
-                        <p className="flex-1 min-w-0 text-sm text-text-main font-medium">
-                          {item.description}
-                        </p>
-                        <span className="text-[11px] text-text-muted whitespace-nowrap">
-                          {formatDateTime(item.date)}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
+                      ))}
+                    </div>
+                  ) : topGroups.length ? (
+                    <TopGroupsList groups={topGroups} />
+                  ) : (
+                    <EmptyState message="لا توجد بيانات مجموعات متاحة" compact />
+                  )}
+                </ChartCard>
               )}
             </div>
           </section>
-        )}
+
+          {/* ================= RECENT ACTIVITY ================= */}
+          {recentActivity.length > 0 && (
+            <section data-testid="section-activity">
+              <SectionHeading
+                icon={Activity}
+                title="آخر النشاطات"
+                subtitle="أحدث العمليات المسجلة في النظام"
+              />
+
+              <div className="rounded-card border border-surface-border bg-surface-card p-2 shadow-soft md:p-3">
+                {isInitialLoading ? (
+                  <div className="space-y-1 p-2">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <div
+                        key={i}
+                        className="h-12 rounded-control bg-surface-muted animate-pulse"
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-surface-border">
+                    {recentActivity.slice(0, 8).map((item, index) => {
+                      const meta =
+                        ACTIVITY_META[item.activityType] || {
+                          icon: Activity,
+                          cls: "bg-surface-muted text-text-muted",
+                        };
+                      const Icon = meta.icon;
+
+                      return (
+                        <li
+                          key={`${item.date}-${index}`}
+                          className="flex items-start gap-3 px-2 py-3 sm:px-3"
+                        >
+                          <span
+                            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-control ${meta.cls}`}
+                          >
+                            <Icon className="h-5 w-5" aria-hidden="true" />
+                          </span>
+                          <p className="min-w-0 flex-1 break-words text-sm font-medium text-text-main">
+                            {item.description}
+                          </p>
+                          <span className="shrink-0 whitespace-nowrap text-sm text-text-muted">
+                            {formatDateTime(item.date)}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            </section>
+          )}
+        </div>
       </div>
     </div>
+  );
+}
+
+/* ======================================================================
+   Insight banner (real, data-driven — never a fake number)
+   ====================================================================== */
+function InsightBanner({ summary, lowAttendanceGroups, showAttendance }) {
+  const inactive = Number(summary?.inactiveStudents) || 0;
+  // Attendance fields are already null server-side when the module is off;
+  // this guard keeps the copy honest even if a stale payload arrives.
+  const absent = showAttendance ? Number(summary?.monthlyAbsentCount) || 0 : 0;
+
+  // Deliberately no payments/overdue here: the banner only surfaces data the
+  // caller can act on in the core/academic scope.
+  const items = [];
+  if (inactive) items.push(`${inactive} طالب غير نشط`);
+  if (absent) items.push(`${absent} سجل غياب هذا الشهر`);
+  if (showAttendance && lowAttendanceGroups)
+    items.push(`${lowAttendanceGroups} مجموعة حضورها أقل من 75%`);
+
+  if (!items.length) return null;
+
+  return (
+    <section
+      data-testid="dashboard-insight"
+      role="status"
+      className="flex flex-col gap-3 rounded-card border border-status-warning/30 bg-status-warning-bg p-4 text-status-warning sm:flex-row sm:items-center"
+    >
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-status-warning/15">
+        <Lightbulb className="h-5 w-5" aria-hidden="true" />
+      </span>
+      <div className="min-w-0">
+        <p className="text-sm font-extrabold sm:text-base">تحتاج متابعة</p>
+        <p className="mt-0.5 break-words text-sm">{items.join(" · ")}</p>
+      </div>
+    </section>
   );
 }
 
@@ -827,16 +1042,16 @@ export default function AdminDashboard() {
    ====================================================================== */
 function SectionHeading({ icon: Icon, title, subtitle }) {
   return (
-    <div className="flex items-center gap-2.5 mb-3">
-      <div className="h-9 w-9 rounded-xl bg-primary-subtle text-primary flex items-center justify-center shrink-0">
-        <Icon className="h-4 w-4" />
-      </div>
+    <div className="mb-3 flex items-start gap-3">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-primary-subtle text-primary">
+        <Icon className="h-5 w-5" aria-hidden="true" />
+      </span>
       <div className="min-w-0">
-        <h2 className="text-sm md:text-base font-extrabold text-text-main">
+        <h2 className="break-words text-base font-extrabold text-text-main sm:text-lg">
           {title}
         </h2>
         {subtitle && (
-          <p className="text-xs text-text-muted leading-snug">{subtitle}</p>
+          <p className="mt-0.5 break-words text-sm text-text-muted">{subtitle}</p>
         )}
       </div>
     </div>
@@ -846,94 +1061,169 @@ function SectionHeading({ icon: Icon, title, subtitle }) {
 /* ======================================================================
    Card shell
    ====================================================================== */
-function ChartCard({ title, subtitle, className = "", children }) {
+function ChartCard({ id, title, subtitle, className = "", children }) {
   return (
     <div
-      className={`bg-surface-card rounded-2xl border border-surface-border shadow-sm p-5 min-w-0 ${className}`}
+      data-testid={id ? `chart-${id}` : undefined}
+      className={`min-w-0 rounded-card border border-surface-border bg-surface-card p-4 shadow-soft sm:p-5 ${className}`}
     >
-      <h3 className="text-sm md:text-base font-extrabold text-text-main mb-0.5">
-        {title}
-      </h3>
-      {subtitle && (
-        <p className="text-xs text-text-muted leading-snug mb-4">{subtitle}</p>
+      {title && (
+        <h3 className="break-words text-base font-extrabold text-text-main">
+          {title}
+        </h3>
       )}
-      {children}
+      {subtitle && (
+        <p className="mt-0.5 break-words text-sm text-text-muted">{subtitle}</p>
+      )}
+      <div className={title ? "mt-3" : ""}>{children}</div>
     </div>
   );
 }
 
 /* ======================================================================
-   Stat card (counters) — no truncation, titles may wrap on small screens
+   Chart legend + tooltip (theme-aware, touch friendly)
    ====================================================================== */
-function StatCard({ title, value, icon: Icon, iconClass }) {
+function ChartLegend({ items }) {
   return (
-    <div className="bg-surface-card rounded-2xl border border-surface-border shadow-sm p-4 md:p-5 flex items-center gap-4 min-w-0">
-      <div
-        className={`h-11 w-11 md:h-12 md:w-12 rounded-xl flex items-center justify-center shrink-0 ${iconClass}`}
-      >
-        <Icon className="h-5 w-5 md:h-6 md:w-6" />
-      </div>
-      <div className="min-w-0">
-        <p className="text-[11px] md:text-xs text-text-muted font-semibold leading-snug min-h-[24px] md:min-h-[28px]">
-          {title}
-        </p>
-        <p className="text-lg md:text-2xl font-extrabold text-text-main">
-          {value}
-        </p>
-      </div>
+    <ul className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+      {items.map((item) => (
+        <li
+          key={item.label}
+          className="flex items-center gap-1.5 text-sm font-semibold text-text-muted"
+        >
+          <span
+            className={
+              item.line
+                ? "h-0.5 w-4 rounded-pill"
+                : "h-2.5 w-2.5 rounded-full"
+            }
+            style={{ backgroundColor: item.color }}
+            aria-hidden="true"
+          />
+          {item.label}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function ChartTooltip({ active, payload, label, formatValue }) {
+  if (!active || !payload || payload.length === 0) return null;
+
+  return (
+    <div
+      dir="rtl"
+      className="min-w-40 rounded-control border border-surface-border bg-surface-card px-3 py-2 text-sm shadow-card"
+    >
+      {label && (
+        <p className="mb-1.5 font-extrabold text-text-main">{label}</p>
+      )}
+      <ul className="space-y-1">
+        {payload.map((item, index) => (
+          <li
+            key={`${item.dataKey}-${index}`}
+            className="flex items-center justify-between gap-4"
+          >
+            <span className="flex items-center gap-1.5 text-text-muted">
+              <span
+                className="h-2.5 w-2.5 rounded-full"
+                style={{
+                  backgroundColor:
+                    item.color || item.payload?.color || item.payload?.fill,
+                }}
+                aria-hidden="true"
+              />
+              {item.name}
+            </span>
+            <span className="num font-bold text-text-main">
+              {formatValue ? formatValue(item.value, item.name) : item.value}
+            </span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
 
+/* ======================================================================
+   Skeletons
+   ====================================================================== */
 function StatCardSkeleton() {
   return (
-    <div className="bg-surface-card rounded-2xl border border-surface-border shadow-sm p-4 md:p-5 flex items-center gap-4">
-      <div className="h-11 w-11 md:h-12 md:w-12 rounded-xl bg-surface-muted animate-pulse shrink-0" />
+    <div className="flex items-center gap-4 rounded-card border border-surface-border bg-surface-card p-4 shadow-soft sm:p-5">
+      <div className="h-12 w-12 shrink-0 animate-pulse rounded-control bg-surface-muted" />
       <div className="flex-1 space-y-2">
-        <div className="h-3 w-24 rounded bg-surface-muted animate-pulse" />
-        <div className="h-6 w-14 rounded bg-surface-muted animate-pulse" />
+        <div className="h-3 w-24 animate-pulse rounded bg-surface-muted" />
+        <div className="h-6 w-14 animate-pulse rounded bg-surface-muted" />
       </div>
     </div>
   );
 }
 
-/* ======================================================================
-   Financial card with neutral previous-month comparison
-   ====================================================================== */
-function MoneyCard({ title, value, icon: Icon, iconClass, current, previous }) {
-  const delta = computeDelta(current, previous);
+function MoneyCardSkeleton() {
+  return (
+    <div className="space-y-3 rounded-card border border-surface-border bg-surface-card p-4 shadow-soft sm:p-5">
+      <div className="flex items-center gap-3">
+        <div className="h-12 w-12 shrink-0 animate-pulse rounded-control bg-surface-muted" />
+        <div className="h-3 w-24 animate-pulse rounded bg-surface-muted" />
+      </div>
+      <div className="h-7 w-28 animate-pulse rounded bg-surface-muted" />
+      <div className="h-4 w-32 animate-pulse rounded bg-surface-muted" />
+    </div>
+  );
+}
 
+function ChartSkeleton({ className = "h-56 xs:h-64 sm:h-72" }) {
+  return (
+    <div
+      className={`animate-pulse rounded-control bg-surface-muted ${className}`}
+    />
+  );
+}
+
+/* ======================================================================
+   Financial card with previous-month comparison
+   ====================================================================== */
+const MONEY_TONES = {
+  primary: "bg-primary-subtle text-primary",
+  success: "bg-status-success-bg text-status-success",
+  warning: "bg-status-warning-bg text-status-warning",
+  info: "bg-status-info-bg text-status-info",
+};
+
+function MoneyCard({ title, value, icon: Icon, tone = "primary", current, previous }) {
+  const delta = computeDelta(current, previous);
   const DirectionIcon = delta >= 0 ? ArrowUpLeft : ArrowDownLeft;
 
   return (
-    <div className="bg-surface-card rounded-2xl border border-surface-border shadow-sm p-4 md:p-5 min-w-0 flex flex-col gap-3">
-      <div className="flex items-center gap-4">
-        <div
-          className={`h-11 w-11 md:h-12 md:w-12 rounded-xl flex items-center justify-center shrink-0 ${iconClass}`}
+    <div className="flex min-w-0 flex-col gap-3 rounded-card border border-surface-border bg-surface-card p-4 shadow-soft sm:p-5">
+      <div className="flex items-center gap-3">
+        <span
+          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-control ${MONEY_TONES[tone]}`}
         >
-          <Icon className="h-5 w-5 md:h-6 md:w-6" />
-        </div>
-        <p className="text-xs text-text-muted font-semibold leading-snug min-h-[28px]">
+          <Icon className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <p className="break-words text-sm font-semibold text-text-muted">
           {title}
         </p>
       </div>
 
-      <p className="text-xl md:text-2xl font-extrabold text-text-main">
+      <p className="num break-words text-xl font-extrabold text-text-main sm:text-2xl">
         {formatCurrency(value)}
       </p>
 
-      <div className="flex items-center gap-1.5 min-h-[20px]">
+      <div className="flex min-h-6 flex-wrap items-center gap-1.5">
         {delta == null ? (
-          <span className="text-[11px] text-text-muted">
+          <span className="text-sm text-text-muted">
             لا توجد بيانات سابقة للمقارنة
           </span>
         ) : (
           <>
-            <span className="inline-flex items-center gap-1 text-xs font-bold text-text-muted">
-              <DirectionIcon className="h-3.5 w-3.5" />
+            <span className="inline-flex items-center gap-1 text-sm font-bold text-text-muted">
+              <DirectionIcon className="h-4 w-4" aria-hidden="true" />
               {Math.abs(delta).toFixed(1)}%
             </span>
-            <span className="text-[11px] text-text-muted">عن الشهر السابق</span>
+            <span className="text-sm text-text-muted">عن الشهر السابق</span>
           </>
         )}
       </div>
@@ -949,17 +1239,17 @@ function StudentDistributionDonut({ summary }) {
     {
       name: "الطلاب النشطين",
       value: Number(summary?.activeStudents) || 0,
-      color: "var(--color-status-success)",
+      color: CHART.success,
     },
     {
       name: "الطلاب غير النشطين",
       value: Number(summary?.inactiveStudents) || 0,
-      color: "var(--color-status-warning)",
+      color: CHART.warning,
     },
     {
       name: "الطلاب المحذوفين",
       value: Number(summary?.deletedStudents) || 0,
-      color: "var(--color-status-danger)",
+      color: CHART.danger,
     },
   ];
 
@@ -971,9 +1261,9 @@ function StudentDistributionDonut({ summary }) {
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <div className="relative h-44 w-44">
+      <div className="relative h-44 w-44 sm:h-48 sm:w-48">
         <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
+          <PieChart accessibilityLayer>
             <Pie
               data={data}
               dataKey="value"
@@ -985,25 +1275,24 @@ function StudentDistributionDonut({ summary }) {
               paddingAngle={3}
               stroke="var(--color-surface-card)"
               strokeWidth={2}
+              animationDuration={180}
             >
               {data.map((entry, index) => (
                 <Cell key={index} fill={entry.color} />
               ))}
             </Pie>
             <Tooltip
-              contentStyle={{
-                borderRadius: "12px",
-                border: "1px solid var(--color-surface-border)",
-                background: "var(--color-surface-card)",
-                color: "var(--color-text-main)",
-              }}
+              trigger="click"
+              content={
+                <ChartTooltip formatValue={(value) => `${value} طالب`} />
+              }
             />
           </PieChart>
         </ResponsiveContainer>
 
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-xl font-black text-text-main">{total}</span>
-          <span className="text-[11px] text-text-muted">إجمالي</span>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+          <span className="num text-xl font-black text-text-main">{total}</span>
+          <span className="text-sm text-text-muted">إجمالي</span>
         </div>
       </div>
 
@@ -1011,13 +1300,14 @@ function StudentDistributionDonut({ summary }) {
         {data.map((item) => (
           <li key={item.name} className="flex items-center gap-2.5">
             <span
-              className="h-2.5 w-2.5 rounded-full shrink-0"
+              className="h-2.5 w-2.5 shrink-0 rounded-full"
               style={{ background: item.color }}
+              aria-hidden="true"
             />
-            <span className="flex-1 text-xs text-text-muted leading-snug">
+            <span className="min-w-0 flex-1 break-words text-sm leading-snug text-text-muted">
               {item.name}
             </span>
-            <span className="text-sm font-extrabold text-text-main">
+            <span className="num text-sm font-extrabold text-text-main">
               {item.value}
             </span>
           </li>
@@ -1080,28 +1370,26 @@ function AttendanceOverview({ summary }) {
     <div className="flex flex-col items-center gap-5">
       <RadialProgress percent={rate} />
 
-      <div className="grid grid-cols-2 gap-3 w-full">
+      <div className="grid w-full grid-cols-2 gap-2.5">
         {statusCards.map((card) => {
           const Icon = card.icon;
 
           return (
             <div
               key={card.key}
-              className={`rounded-xl p-3 text-center ${card.className}`}
+              className={`min-w-0 rounded-control p-3 text-center ${card.className}`}
             >
               <p className="flex items-center justify-center gap-1 text-lg font-extrabold">
-                <Icon className="w-4 h-4" />
-                {card.value}
+                <Icon className="h-4 w-4" aria-hidden="true" />
+                <span className="num">{card.value}</span>
               </p>
-              <p className="text-[11px] text-text-muted font-semibold mt-0.5">
-                {card.label}
-              </p>
+              <p className="mt-0.5 text-sm font-semibold">{card.label}</p>
             </div>
           );
         })}
       </div>
 
-      <p className="text-[11px] text-text-muted">
+      <p className="text-center text-sm text-text-muted">
         {totalAttendance > 0
           ? `إجمالي سجلات الحضور: ${totalAttendance}`
           : "لا توجد سجلات حضور للفترة المحددة"}
@@ -1110,7 +1398,7 @@ function AttendanceOverview({ summary }) {
   );
 }
 
-function RadialProgress({ percent, size = 132, strokeWidth = 10 }) {
+function RadialProgress({ percent, size = 140, strokeWidth = 10 }) {
   const hasRate = percent !== null && percent !== undefined;
   const safePercent = hasRate
     ? Math.min(Math.max(Number(percent) || 0, 0), 100)
@@ -1143,10 +1431,10 @@ function RadialProgress({ percent, size = 132, strokeWidth = 10 }) {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-2xl font-black text-text-main">
+        <span className="num text-2xl font-black text-text-main">
           {formatAttendanceRate(percent)}
         </span>
-        <span className="text-[11px] text-text-muted">نسبة الحضور</span>
+        <span className="text-sm text-text-muted">نسبة الحضور</span>
       </div>
     </div>
   );
@@ -1173,21 +1461,24 @@ function TopGroupsList({ groups }) {
 
         return (
           <li key={`${group.rank}-${group.groupName}`} className="space-y-1.5">
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-sm font-bold text-text-main leading-snug">
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+              <span className="min-w-0 break-words text-sm font-bold leading-snug text-text-main">
                 {group.groupName}
-                <span className="text-text-muted font-medium"> ({group.rank})</span>
+                <span className="font-medium text-text-muted">
+                  {" "}
+                  ({group.rank})
+                </span>
               </span>
-              <span className="text-xs text-text-muted whitespace-nowrap">
+              <span className="break-words text-sm text-text-muted">
                 {group.studentsCount} طالب ·{" "}
-                <span className="text-status-success font-bold">
+                <span className="font-bold text-status-success">
                   {formatAttendanceRate(group.attendanceRate)}
                 </span>
               </span>
             </div>
-            <div className="h-2 rounded-full bg-surface-muted overflow-hidden">
+            <div className="h-2.5 overflow-hidden rounded-pill bg-surface-muted">
               <div
-                className="h-full rounded-full bg-primary transition-all duration-300"
+                className="h-full rounded-pill bg-primary transition-all duration-300"
                 style={{ width: `${width}%` }}
               />
             </div>
@@ -1201,17 +1492,20 @@ function TopGroupsList({ groups }) {
 /* ======================================================================
    Empty state
    ====================================================================== */
-function EmptyState({ message = "لا توجد بيانات متاحة للفترة المحددة", compact = false }) {
+function EmptyState({
+  message = "لا توجد بيانات متاحة للفترة المحددة",
+  compact = false,
+}) {
   return (
     <div
-      className={`flex flex-col items-center justify-center text-center gap-2 min-w-0 ${
+      className={`flex min-w-0 flex-col items-center justify-center gap-2 text-center ${
         compact ? "py-6" : "py-12"
       }`}
     >
-      <div className="h-11 w-11 rounded-xl bg-surface-muted text-text-muted flex items-center justify-center">
-        <Inbox className="h-5 w-5" />
-      </div>
-      <p className="text-sm text-text-muted">{message}</p>
+      <span className="flex h-11 w-11 items-center justify-center rounded-control bg-surface-muted text-text-muted">
+        <Inbox className="h-5 w-5" aria-hidden="true" />
+      </span>
+      <p className="break-words text-sm text-text-muted">{message}</p>
     </div>
   );
 }
@@ -1221,24 +1515,26 @@ function EmptyState({ message = "لا توجد بيانات متاحة للفت�
    ====================================================================== */
 function ErrorState({ message, onRetry, loading }) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center">
-      <div className="h-14 w-14 rounded-2xl bg-status-danger-bg text-status-danger flex items-center justify-center mb-4">
-        <Inbox className="h-7 w-7" />
+    <div className="flex min-h-[60vh] flex-col items-center justify-center px-4 text-center">
+      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-card bg-status-danger-bg text-status-danger">
+        <Inbox className="h-7 w-7" aria-hidden="true" />
       </div>
-      <h2 className="text-lg font-extrabold text-text-main mb-1">
+      <h2 className="mb-1 text-lg font-extrabold text-text-main">
         تعذر تحميل لوحة التحكم
       </h2>
-      <p className="text-sm text-text-muted max-w-md mb-6">{message}</p>
+      <p className="mb-6 max-w-md break-words text-sm text-text-muted">
+        {message}
+      </p>
       <button
         type="button"
         onClick={onRetry}
         disabled={loading}
-        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-text-inverse text-sm font-bold hover:bg-primary-hover transition-colors disabled:opacity-60 cursor-pointer"
+        className="inline-flex min-h-11 items-center gap-2 rounded-control bg-primary px-5 text-sm font-bold text-primary-contrast transition-colors hover:bg-primary-hover disabled:opacity-60"
       >
         {loading ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
+          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
         ) : (
-          <RefreshCw className="w-4 h-4" />
+          <RefreshCw className="h-4 w-4" aria-hidden="true" />
         )}
         إعادة المحاولة
       </button>
