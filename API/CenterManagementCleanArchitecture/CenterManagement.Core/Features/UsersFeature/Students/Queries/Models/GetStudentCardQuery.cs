@@ -7,6 +7,11 @@ public record GetStudentCardQuery : IRequest<Response<StudentCardDTO>>
 
 public class StudentCardDTO
 {
+    // The centre that owns the card. The public card is anonymous, so this is
+    // the only branding a parent sees - never the platform logo.
+    public string? CenterName { get; set; }
+    public string? CenterLogoUrl { get; set; }
+
     public string QrCode { get; set; } = string.Empty;
     public string FullName { get; set; } = string.Empty;
     public string? GroupName { get; set; }

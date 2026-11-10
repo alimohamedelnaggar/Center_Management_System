@@ -116,6 +116,17 @@ public class GetStudentCardQueryHandler : ResponseHandler,
         if (student is null)
             return NotFound<StudentCardDTO>("مفيش طالب بالكود ده.");
 
+        // The card is public, so its branding must come from the student's own
+        // centre. No centre (legacy/global student) means no branding fields.
+        var center = student.CenterId is null
+            ? null
+            : await _repositoryManager
+                .CenterRepository
+                .GetTableNoTracking()
+                .Where(x => x.Id == student.CenterId)
+                .Select(x => new { x.Name, x.LogoUrl })
+                .FirstOrDefaultAsync(cancellationToken);
+
         // The card is served anonymously, so module gating must happen here.
         // Only expose a section when its module is enabled for the student's center.
         var (attendanceEnabled, gradesEnabled) = await ResolveModulesAsync(student.CenterId, cancellationToken);
@@ -131,6 +142,8 @@ public class GetStudentCardQueryHandler : ResponseHandler,
         return Success(
             new StudentCardDTO
             {
+                CenterName = center?.Name,
+                CenterLogoUrl = center?.LogoUrl,
                 QrCode = student.QrCode,
                 FullName = student.FullName,
                 GroupName = string.IsNullOrWhiteSpace(student.GroupName) ? null : student.GroupName,
