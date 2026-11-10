@@ -34,6 +34,15 @@
   animation: shakeX 180ms ease both;
 }
 
+/* Short desktop viewports (1280x800 laptops): the brand panel is the tallest
+   column, so trim its vertical rhythm instead of letting the page scroll. */
+@media (min-width: 768px) and (max-height: 900px) {
+  .login-brand-content {
+    gap: 1.5rem !important;
+    padding: 1.5rem 2rem !important;
+  }
+}
+
 /* Short landscape phones: the brand panel would eat the whole viewport and
    hide the form. Keep the compact brand lockup instead and let the page scroll. */
 @media (max-height: 520px) and (orientation: landscape) {

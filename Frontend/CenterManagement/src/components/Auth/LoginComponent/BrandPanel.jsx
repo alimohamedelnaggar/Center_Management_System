@@ -73,7 +73,7 @@ export default function BrandPanel() {
         className="pointer-events-none absolute inset-y-0 left-1/3 w-px bg-primary-contrast/20 dark:bg-primary/20"
       />
 
-      <div className="relative z-10 flex w-full flex-col justify-between gap-8 p-8 lg:p-10 xl:p-12">
+      <div className="login-brand-content relative z-10 flex w-full flex-col justify-between gap-8 p-8 lg:p-10 xl:p-12">
         <div className="flex items-center gap-3">
           <span className="flex h-12 w-12 items-center justify-center rounded-card bg-primary-contrast/20 p-2 dark:bg-primary/20">
             <img
