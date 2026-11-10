@@ -60,7 +60,7 @@ export default function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-[10000] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[10000] flex items-center justify-center p-2 sm:p-4"
       role="presentation"
     >
       <div
@@ -76,19 +76,19 @@ export default function Modal({
         aria-label={typeof title === "string" ? title : undefined}
         tabIndex={-1}
         className={cn(
-          "relative z-10 w-full rounded-card border border-surface-border bg-surface-card shadow-elevated outline-none",
+          "modal-panel relative z-10 w-full rounded-card border border-surface-border bg-surface-card shadow-elevated outline-none",
           SIZES[size] ?? SIZES.md,
           className,
         )}
       >
         {(title || showClose) && (
-          <div className="flex items-start justify-between gap-3 border-b border-surface-border px-5 py-4">
+          <div className="flex shrink-0 items-start justify-between gap-3 border-b border-surface-border px-4 py-3 sm:px-5 sm:py-4">
             <div className="min-w-0">
               {title && (
                 <h3 className="text-base font-bold text-text-main">{title}</h3>
               )}
               {description && (
-                <p className="mt-0.5 text-xs text-text-muted">{description}</p>
+                <p className="mt-0.5 text-sm text-text-muted">{description}</p>
               )}
             </div>
 
@@ -97,7 +97,7 @@ export default function Modal({
                 type="button"
                 onClick={onClose}
                 aria-label="إغلاق"
-                className="rounded-lg p-1 text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
+                className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors duration-150 hover:bg-surface-muted hover:text-text-main"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -105,10 +105,15 @@ export default function Modal({
           </div>
         )}
 
-        <div className="px-5 py-4">{children}</div>
+        <div
+          data-scroll-region="modal-body"
+          className="modal-scroll px-4 py-4 sm:px-5"
+        >
+          {children}
+        </div>
 
         {footer && (
-          <div className="flex items-center justify-end gap-3 border-t border-surface-border px-5 py-4">
+          <div className="modal-footer flex shrink-0 flex-wrap items-center justify-end gap-3 border-t border-surface-border px-4 py-4 sm:px-5">
             {footer}
           </div>
         )}

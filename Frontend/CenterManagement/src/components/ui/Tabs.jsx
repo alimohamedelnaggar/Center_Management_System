@@ -28,7 +28,7 @@ export default function Tabs({ tabs, activeId, onChange, className }) {
             aria-selected={isActive}
             onClick={() => onChange?.(tab.id)}
             className={cn(
-              "relative flex items-center gap-2 whitespace-nowrap px-4 py-2.5 text-sm font-medium transition-colors",
+              "relative flex min-h-11 items-center gap-2 whitespace-nowrap px-4 py-2.5 text-sm font-medium transition-colors duration-150",
               isActive
                 ? "text-primary"
                 : "text-text-muted hover:text-text-main",

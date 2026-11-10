@@ -39,12 +39,12 @@ export default function FormField({
         <span
           id={errorId}
           role="alert"
-          className="text-xs font-medium text-status-danger"
+          className="text-sm font-medium text-status-danger"
         >
           {typeof error === "string" ? error : error?.message}
         </span>
       ) : helper ? (
-        <span id={helperId} className="text-xs text-text-muted">
+        <span id={helperId} className="text-sm text-text-muted">
           {helper}
         </span>
       ) : null}

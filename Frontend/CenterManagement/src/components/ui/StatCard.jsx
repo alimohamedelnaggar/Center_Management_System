@@ -27,14 +27,14 @@ export default function StatCard({
   return (
     <div
       className={cn(
-        "flex items-center gap-4 rounded-card border border-surface-border bg-surface-card p-4 shadow-soft",
+        "flex h-full items-center gap-3 rounded-card border border-surface-border bg-surface-card p-4 shadow-soft sm:gap-4 sm:p-5",
         className,
       )}
     >
       {Icon && (
         <div
           className={cn(
-            "flex h-11 w-11 shrink-0 items-center justify-center rounded-control",
+            "flex h-12 w-12 shrink-0 items-center justify-center rounded-control",
             TONES[tone] ?? TONES.primary,
           )}
         >
@@ -43,11 +43,13 @@ export default function StatCard({
       )}
 
       <div className="min-w-0">
-        <p className="truncate text-xs font-medium text-text-muted">{label}</p>
-        <p className="mt-0.5 truncate text-xl font-bold text-text-main tabular-nums">
+        <p className="break-words text-sm font-medium text-text-muted">{label}</p>
+        <p className="num mt-0.5 break-words text-2xl font-bold leading-tight text-text-main">
           {value}
         </p>
-        {hint && <p className="mt-0.5 truncate text-xs text-text-muted">{hint}</p>}
+        {hint && (
+          <p className="mt-0.5 break-words text-sm text-text-muted">{hint}</p>
+        )}
       </div>
     </div>
   );

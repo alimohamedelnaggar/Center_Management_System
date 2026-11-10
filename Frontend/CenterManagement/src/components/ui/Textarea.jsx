@@ -10,7 +10,7 @@ const Textarea = forwardRef(function Textarea(
     <textarea
       ref={ref}
       rows={rows}
-      className={cn(fieldBaseClass, fieldStateClass(error), "resize-y", className)}
+      className={cn(fieldBaseClass, fieldStateClass(error), "min-h-24 resize-y", className)}
       {...props}
     />
   );

@@ -19,7 +19,7 @@ export default function PageHeader({
       {breadcrumbs.length > 0 && (
         <nav
           aria-label="مسار التنقل"
-          className="flex items-center gap-1 text-xs text-text-muted"
+          className="flex flex-wrap items-center gap-1 text-xs text-text-muted"
         >
           {breadcrumbs.map((crumb, index) => (
             <span key={`${crumb.label}-${index}`} className="flex items-center gap-1">
@@ -29,12 +29,14 @@ export default function PageHeader({
               {crumb.to ? (
                 <Link
                   to={crumb.to}
-                  className="transition-colors hover:text-primary"
+                  className="inline-flex min-h-11 min-w-11 items-center justify-center transition-colors hover:text-primary"
                 >
                   {crumb.label}
                 </Link>
               ) : (
-                <span className="font-medium text-text-main">{crumb.label}</span>
+                <span className="inline-flex min-h-11 items-center font-medium text-text-main">
+                  {crumb.label}
+                </span>
               )}
             </span>
           ))}
@@ -43,16 +45,18 @@ export default function PageHeader({
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="truncate text-xl font-bold text-text-main md:text-2xl">
+          <h1 className="page-title break-words font-bold text-text-main">
             {title}
           </h1>
           {subtitle && (
-            <p className="mt-1 text-sm text-text-muted">{subtitle}</p>
+            <p className="mt-1 break-words text-sm text-text-muted">{subtitle}</p>
           )}
         </div>
 
         {actions && (
-          <div className="flex shrink-0 items-center gap-2">{actions}</div>
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0">
+            {actions}
+          </div>
         )}
       </div>
     </div>
