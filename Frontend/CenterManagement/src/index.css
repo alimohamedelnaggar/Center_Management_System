@@ -4,14 +4,97 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ============================================================= */
+/* Local fonts (OFL)                                              */
+/* Tajawal for Arabic UI, Manrope for numerals/latin.             */
+/* No runtime request to Google Fonts.                            */
+/* ============================================================= */
+@font-face {
+  font-family: "Tajawal";
+  src: url("./assets/fonts/tajawal-arabic-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Tajawal";
+  src: url("./assets/fonts/tajawal-arabic-500-normal.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Tajawal";
+  src: url("./assets/fonts/tajawal-arabic-700-normal.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Tajawal";
+  src: url("./assets/fonts/tajawal-arabic-800-normal.woff2") format("woff2");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Manrope";
+  src: url("./assets/fonts/manrope-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Manrope";
+  src: url("./assets/fonts/manrope-latin-600-normal.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Manrope";
+  src: url("./assets/fonts/manrope-latin-700-normal.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Manrope";
+  src: url("./assets/fonts/manrope-latin-800-normal.woff2") format("woff2");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ============================================================= */
 /* Design tokens -> Tailwind theme                               */
 /* Single source of truth. Consumed as: bg-primary, text-text-main, etc. */
 /* The *_val variables are the raw values and can be overridden  */
 /* at runtime (e.g. per-center white-label branding).            */
+/*                                                               */
+/* Breakpoints are defined once here. Components must use the    */
+/* generated variants (xs / ph / phl / md / lg / xl / 2xl /      */
+/* wide / ultra) instead of repeating pixel values.              */
 /* ============================================================= */
 @theme {
-  --font-sans: "Cairo", "IBM Plex Sans Arabic", ui-sans-serif, system-ui,
+  --font-sans: "Tajawal", "Manrope", ui-sans-serif, system-ui,
     -apple-system, "Segoe UI", sans-serif;
+  --font-numeric: "Manrope", "Tajawal", ui-sans-serif, system-ui, sans-serif;
+
+  /* Breakpoints ------------------------------------------------ */
+  --breakpoint-xs: 360px; /* small phone */
+  --breakpoint-ph: 390px; /* phone */
+  --breakpoint-phl: 430px; /* large phone */
+  /* The default `sm` breakpoint must be declared here too: Tailwind emits
+     variants in declaration order, and an undeclared `sm` is appended after
+     every custom breakpoint, which would let `sm:` rules override `lg:` at
+     desktop widths. Keeping the list in ascending order fixes the cascade. */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px; /* portrait tablet / rail */
+  --breakpoint-lg: 1024px; /* landscape tablet / compact sidebar */
+  --breakpoint-xl: 1280px; /* desktop */
+  --breakpoint-2xl: 1440px; /* full desktop */
+  --breakpoint-wide: 1920px; /* large screens */
+  --breakpoint-ultra: 2560px; /* ultra-wide */
 
   /* Brand ------------------------------------------------------ */
   --color-primary: var(--color-primary-val);
@@ -51,15 +134,22 @@
   --color-status-info-bg: var(--color-info-bg-val);
 
   /* Radius scale (additive semantic tokens) -------------------- */
-  --radius-control: 10px; /* inputs, buttons */
-  --radius-card: 16px; /* cards, panels */
-  --radius-pill: 999px; /* badges, pills */
+  --radius-control: 0.75rem; /* inputs */
+  --radius-card: 1.25rem; /* cards, panels */
+  --radius-pill: 999px; /* badges, pills, buttons */
+  --radius-action: 999px; /* primary call-to-action */
 
   /* Elevation scale (additive semantic tokens) ----------------- */
-  --shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.04),
-    0 1px 3px rgba(15, 23, 42, 0.06);
-  --shadow-card: 0 4px 12px rgba(15, 23, 42, 0.07);
-  --shadow-elevated: 0 12px 28px rgba(15, 23, 42, 0.12);
+  --shadow-soft: 0 1px 2px rgba(16, 21, 40, 0.04),
+    0 16px 34px -28px rgba(79, 70, 229, 0.55);
+  --shadow-card: 0 1px 2px rgba(16, 21, 40, 0.05),
+    0 20px 40px -32px rgba(79, 70, 229, 0.45);
+  --shadow-elevated: 0 40px 90px -30px rgba(16, 21, 40, 0.45);
+
+  /* Motion ----------------------------------------------------- */
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-base: 180ms;
 }
 
 /* ============================================================= */
@@ -67,108 +157,540 @@
 /* ============================================================= */
 @layer base {
   :root {
-    /* Brand */
-    --color-primary-val: #4338ca;
-    --color-primary-hover-val: #3730a3;
-    --color-primary-light-val: #4f46e5;
-    --color-primary-subtle-val: #eef2ff;
+    color-scheme: light;
+
+    /* Brand: B «نبض» */
+    --color-primary-val: #4f46e5;
+    --color-primary-hover-val: #4338ca;
+    --color-primary-light-val: #6366f1;
+    --color-primary-subtle-val: #edeefe;
     --color-primary-contrast-val: #ffffff;
 
-    --color-secondary-val: #0f172a;
-    --color-secondary-hover-val: #1e293b;
-    --color-secondary-light-val: #e2e8f0;
+    --color-secondary-val: #e11d48;
+    --color-secondary-hover-val: #be123c;
+    --color-secondary-light-val: #ffe4e9;
 
-    --color-accent-val: #0d9488;
-    --color-accent-hover-val: #0f766e;
-    --color-accent-light-val: #ccfbf1;
+    --color-accent-val: #e11d48;
+    --color-accent-hover-val: #be123c;
+    --color-accent-light-val: #ffe4e9;
 
     /* Layout & backgrounds */
-    --color-bg-val: #f8fafc;
+    --color-bg-val: #f4f5fb;
     --color-card-val: #ffffff;
-    --color-muted-val: #f1f5f9;
-    --color-border-val: #e2e8f0;
+    --color-muted-val: #eceef8;
+    --color-border-val: #dde1f0;
 
-    --color-text-main-val: #0f172a;
-    --color-text-muted-val: #64748b;
+    --color-text-main-val: #101528;
+    --color-text-muted-val: #5a6178;
     --color-text-inverse-val: #ffffff;
 
     /* Status */
-    --color-success-val: #16a34a;
-    --color-success-bg-val: #dcfce7;
-    --color-warning-val: #d97706;
-    --color-warning-bg-val: #fef3c7;
-    --color-danger-val: #dc2626;
-    --color-danger-bg-val: #fee2e2;
-    --color-info-val: #0284c7;
-    --color-info-bg-val: #e0f2fe;
+    --color-success-val: #067a52;
+    --color-success-bg-val: #ddf7ec;
+    --color-warning-val: #9a5b00;
+    --color-warning-bg-val: #fff0d6;
+    --color-danger-val: #c81e3a;
+    --color-danger-bg-val: #ffe4e8;
+    --color-info-val: #0b6fa4;
+    --color-info-bg-val: #dff2ff;
+
+    /* Layout metrics ------------------------------------------- */
+    --sidebar-w: 16rem;
+    --sidebar-rail: 4.75rem;
+    --sidebar-compact: 12rem;
+    --content-max: 90rem; /* 1440 */
+    --content-max-wide: 100rem; /* 1600 at >=1920 */
+    --content-max-ultra: 110rem; /* 1760 at >=2560 */
+    --mobile-nav-h: 4.25rem;
+    --field-h: 2.75rem; /* 44px touch target */
+    --gap-page: 1.25rem;
   }
 
   .dark {
-    --color-primary-val: #6366f1;
-    --color-primary-hover-val: #818cf8;
-    --color-primary-light-val: #a5b4fc;
-    --color-primary-subtle-val: #1e1b4b;
-    --color-primary-contrast-val: #ffffff;
+    color-scheme: dark;
 
-    --color-secondary-val: #e2e8f0;
-    --color-secondary-hover-val: #f8fafc;
-    --color-secondary-light-val: #334155;
+    --color-primary-val: #8b93ff;
+    --color-primary-hover-val: #a5abff;
+    --color-primary-light-val: #b9beff;
+    --color-primary-subtle-val: #1d2350;
+    --color-primary-contrast-val: #0b102a;
 
-    --color-accent-val: #2dd4bf;
-    --color-accent-hover-val: #5eead4;
-    --color-accent-light-val: #134e4a;
+    --color-secondary-val: #ff7a93;
+    --color-secondary-hover-val: #ff9aaf;
+    --color-secondary-light-val: #3a1420;
 
-    --color-bg-val: #0f172a;
-    --color-card-val: #1e293b;
-    --color-muted-val: #334155;
-    --color-border-val: #334155;
+    --color-accent-val: #ff7a93;
+    --color-accent-hover-val: #ff9aaf;
+    --color-accent-light-val: #3a1420;
 
-    --color-text-main-val: #f8fafc;
-    --color-text-muted-val: #94a3b8;
-    --color-text-inverse-val: #0f172a;
+    --color-bg-val: #080b18;
+    --color-card-val: #121831;
+    --color-muted-val: #1b2340;
+    --color-border-val: #2a3357;
 
-    --color-success-val: #22c55e;
-    --color-success-bg-val: #052e16;
-    --color-warning-val: #f59e0b;
-    --color-warning-bg-val: #451a03;
-    --color-danger-val: #f87171;
-    --color-danger-bg-val: #450a0a;
-    --color-info-val: #38bdf8;
-    --color-info-bg-val: #082f49;
+    --color-text-main-val: #f2f4ff;
+    --color-text-muted-val: #a8b0ca;
+    --color-text-inverse-val: #080b18;
+
+    --color-success-val: #4ce0a5;
+    --color-success-bg-val: #0b2a1f;
+    --color-warning-val: #ffc857;
+    --color-warning-bg-val: #2b230c;
+    --color-danger-val: #ff8fa3;
+    --color-danger-bg-val: #2e0f18;
+    --color-info-val: #6ec8ff;
+    --color-info-bg-val: #0b2233;
   }
 
   html {
     font-family: var(--font-sans);
+    font-size: 100%;
     -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
   }
 
   body {
     background-color: var(--color-bg-val);
     color: var(--color-text-main-val);
     font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.65;
+    min-height: 100dvh;
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
 
+  /* Numerals and latin strings stay isolated and readable in RTL. */
+  .num,
+  .font-numeric {
+    font-family: var(--font-numeric);
+    direction: ltr;
+    unicode-bidi: isolate;
+    font-variant-numeric: tabular-nums;
+  }
+
   /* Visible, consistent keyboard focus ring */
   :focus-visible {
-    outline: 2px solid var(--color-primary-val);
+    outline: 3px solid var(--color-primary-val);
     outline-offset: 2px;
-    border-radius: 4px;
+    border-radius: 0.375rem;
+  }
+}
+
+/* ============================================================= */
+/* Responsive shell                                              */
+/* Global layout queries only; component internals use container */
+/* queries (see .cq-* below).                                    */
+/* ============================================================= */
+@layer components {
+  .app-shell {
+    display: flex;
+    min-height: 100dvh;
+    background: var(--color-bg-val);
+    color: var(--color-text-main-val);
+  }
+
+  .app-main {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+  }
+
+  .app-content {
+    width: 100%;
+    max-width: var(--content-max);
+    margin-inline: auto;
+    padding: var(--gap-page);
+    padding-bottom: calc(
+      var(--mobile-nav-h) + env(safe-area-inset-bottom, 0px) + 1.25rem
+    );
+    display: grid;
+    align-content: start;
+    gap: var(--gap-page);
+  }
+
+  /* Desktop sidebar: rail at 768, compact at 1024, full at 1280. */
+  .app-sidebar {
+    display: none;
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    flex: 0 0 auto;
+    flex-direction: column;
+    background: var(--color-card-val);
+    border-inline-start: 1px solid var(--color-border-val);
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    z-index: 40;
+  }
+
+  .app-sidebar .sidebar-label,
+  .app-sidebar .sidebar-identity,
+  .app-sidebar .sidebar-brand-text,
+  .app-sidebar .sidebar-section-label {
+    display: none;
+  }
+
+  .app-sidebar .sidebar-link {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .app-sidebar .sidebar-logo {
+    margin-inline: auto;
+  }
+
+  .app-sidebar .sidebar-footer-btn {
+    justify-content: center;
+    gap: 0;
+    padding-inline: 0;
+  }
+
+  /* The gallery shows the sidebar at every breakpoint, including the widths
+     where the real shell would hide it and use the drawer instead. */
+  .sidebar-demo {
+    display: flex !important;
+    position: relative;
+    height: 100%;
+    width: var(--sidebar-rail);
+  }
+
+  .sidebar-link[aria-current="page"]::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0.25rem;
+    inset-block: 0.65rem;
+    width: 0.1875rem;
+    border-radius: 999px;
+    background: var(--color-primary-val);
+  }
+
+  .app-main {
+    padding-bottom: calc(
+      var(--mobile-nav-h) + env(safe-area-inset-bottom, 0px)
+    );
+  }
+
+  .mobile-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 1rem;
+    padding-top: calc(0.625rem + env(safe-area-inset-top, 0px));
+    background: color-mix(in srgb, var(--color-bg-val) 88%, transparent);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--color-border-val);
+  }
+
+  .mobile-bottom-nav {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    z-index: 35;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-around;
+    gap: 0.25rem;
+    padding: 0.35rem 0.5rem;
+    padding-bottom: calc(0.35rem + env(safe-area-inset-bottom, 0px));
+    background: color-mix(in srgb, var(--color-card-val) 94%, transparent);
+    backdrop-filter: blur(14px);
+    border-top: 1px solid var(--color-border-val);
+  }
+
+  .mobile-bottom-nav a,
+  .mobile-bottom-nav button {
+    /* 44px is a physical touch target: keep it in px so it does not balloon
+       when the user raises the root font size (which would overflow 5 tabs). */
+    min-height: 44px;
+    min-width: 44px;
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.15rem;
+    border-radius: 0.75rem;
+    font-size: 0.6875rem;
+    line-height: 1.2;
+    text-align: center;
+    overflow-wrap: anywhere;
+    color: var(--color-text-muted-val);
+  }
+
+  .mobile-bottom-nav a[aria-current="page"] {
+    color: var(--color-primary-val);
+    background: var(--color-primary-subtle-val);
+    font-weight: 700;
+  }
+
+  .app-drawer {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: 60;
+    width: min(20rem, 88vw);
+    display: flex;
+    flex-direction: column;
+    background: var(--color-card-val);
+    border-inline-end: 1px solid var(--color-border-val);
+    box-shadow: var(--shadow-elevated);
+    transform: translateX(100%);
+    transition: transform var(--duration-base) var(--ease-standard);
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    overflow-y: auto;
+  }
+
+  .app-drawer[data-open="true"] {
+    transform: translateX(0);
+  }
+
+  .app-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background: rgba(8, 11, 24, 0.55);
+    backdrop-filter: blur(2px);
+  }
+
+  @media (min-width: 768px) {
+    .app-sidebar {
+      display: flex;
+      width: var(--sidebar-rail);
+    }
+
+    .app-content {
+      padding: 1.25rem 1.5rem 2rem;
+    }
+
+    .app-main {
+      padding-bottom: 0;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .app-sidebar {
+      width: var(--sidebar-compact);
+    }
+
+    .app-sidebar .sidebar-label,
+    .app-sidebar .sidebar-identity,
+    .app-sidebar .sidebar-brand-text,
+    .app-sidebar .sidebar-section-label {
+      display: block;
+    }
+
+    .app-sidebar .sidebar-link {
+      justify-content: flex-start;
+      padding-inline: 0.75rem;
+    }
+
+    .app-sidebar .sidebar-footer-btn {
+      justify-content: flex-start;
+      gap: 0.75rem;
+      padding-inline: 0.75rem;
+    }
+
+    .app-sidebar .sidebar-logo {
+      margin-inline: 0;
+    }
+
+    .app-content {
+      padding: 1.5rem 1.75rem 2.25rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .app-sidebar {
+      width: var(--sidebar-w);
+    }
+  }
+
+  @media (min-width: 1920px) {
+    .app-content {
+      max-width: var(--content-max-wide);
+      padding-inline: 2.5rem;
+    }
+  }
+
+  @media (min-width: 2560px) {
+    .app-content {
+      max-width: var(--content-max-ultra);
+    }
+  }
+
+  /* Short landscape phones: the bottom bar would steal usable height.
+     The drawer remains available from the top bar. */
+  @media (max-height: 430px) and (orientation: landscape) {
+    .mobile-bottom-nav {
+      display: none;
+    }
+
+    .app-content {
+      padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+    }
+
+    .app-main {
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .mobile-topbar {
+      padding-block: 0.375rem;
+    }
+  }
+
+  /* Content container used by pages that need an explicit measure. */
+  .content-container {
+    width: 100%;
+    max-width: var(--content-max);
+    margin-inline: auto;
+  }
+
+  @media (min-width: 1920px) {
+    .content-container {
+      max-width: var(--content-max-wide);
+    }
+  }
+
+  @media (min-width: 2560px) {
+    .content-container {
+      max-width: var(--content-max-ultra);
+    }
+  }
+
+  .page-title {
+    font-size: clamp(1.5rem, 1.15rem + 1.2vw, 2.125rem);
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+
+  /* Cards inside a variable-width host adapt to the host, not the screen. */
+  .card-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .card-grid > * {
+    min-width: 0;
+  }
+
+  .cq-host {
+    container-type: inline-size;
+  }
+
+  @container (min-width: 24rem) {
+    .card-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @container (min-width: 46rem) {
+    .card-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @container (min-width: 72rem) {
+    .card-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  /* Table <-> cards switch driven by the table's own container width. */
+  .responsive-table {
+    container-type: inline-size;
+  }
+
+  .responsive-table .as-table {
+    display: block;
+  }
+
+  .responsive-table .as-cards {
+    display: none;
+  }
+
+  @container (max-width: 44rem) {
+    .responsive-table .as-table {
+      display: none;
+    }
+
+    .responsive-table .as-cards {
+      display: grid;
+      gap: 0.75rem;
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @container (min-width: 32rem) and (max-width: 44rem) {
+    .responsive-table .as-cards {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  /* Dialog body scrolls internally; header/footer stay visible in landscape. */
+  .modal-panel {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 1.5rem);
+  }
+
+  .modal-scroll {
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .modal-footer {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .safe-x {
+    padding-inline: env(safe-area-inset-left, 0px) env(safe-area-inset-right, 0px);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* Segmented control used by the internal components gallery. */
+@layer components {
+  .segmented {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border-radius: 999px;
+    background: var(--color-muted-val);
+  }
+
+  .segmented button {
+    min-height: 2.25rem;
+    border-radius: 999px;
+    padding-inline: 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-text-muted-val);
+  }
+
+  .segmented button[aria-pressed="true"] {
+    background: var(--color-card-val);
+    color: var(--color-primary-val);
+    box-shadow: var(--shadow-soft);
   }
 }
 
 /* ============================= */
-/* Smooth Scroll */
+/* Respect reduced-motion        */
 /* ============================= */
-
-html {
-  scroll-behavior: smooth;
-}
-
-/* Respect reduced-motion preferences globally */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
