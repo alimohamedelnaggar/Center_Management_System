@@ -20,6 +20,7 @@ import OverduePage from "./pages/OverduePage";
 import NotFound from "./pages/NotFound";
 import ReportsPage from "./pages/ReportsPage";
 import CenterReportsPage from "./pages/CenterReportsPage";
+import DesignComponentsPage from "./pages/DesignComponentsPage";
 
 import AdminDashboard from "./pages/AdminDashboard";
 import AssistantManagement from "./pages/AssistantManagement";
@@ -124,6 +125,9 @@ function App() {
       {/* Public: a parent scans the card QR with the phone camera. */}
       <Route path="/student-card/:code" element={<StudentCardLookupPage />} />
       <Route path="/student-card" element={<StudentCardLookupPage />} />
+
+      {/* Internal design-system gallery (not linked from the product nav). */}
+      <Route path="/components" element={<DesignComponentsPage />} />
 
       {/* First sign-in with a temporary password: forces a change before use. */}
       <Route element={<ProtectedRoute allowWhilePasswordChange />}>
