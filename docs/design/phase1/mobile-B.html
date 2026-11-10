@@ -1,0 +1,592 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>المرحلة 1 — لوحات الموبايل B</title>
+<link rel="stylesheet" href="app.css" />
+<link rel="stylesheet" href="compare.css" />
+<style>
+  body.v-after { overflow-x: clip; }
+  .board { max-width: 1320px; margin: 0 auto; padding: 26px 16px 60px; display: grid; gap: 22px; }
+  .board-head { display: grid; gap: 8px; }
+  .kicker { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: .14em; color: var(--text2); font-family: "Manrope", sans-serif; }
+  .kicker i { width: 22px; height: 2px; background: var(--primary); border-radius: 2px; }
+  .board-head h1 { font-size: clamp(24px, 3vw, 34px); letter-spacing: -.03em; }
+  .board-head p { max-width: 760px; color: var(--text2); font-size: 13.5px; }
+  .frames { display: grid; grid-template-columns: repeat(3, 390px); gap: 24px; justify-content: center; align-items: start; }
+  .frame-wrap { margin: 0; display: grid; gap: 10px; }
+  .phone-title { display: grid; gap: 2px; padding: 0 4px; }
+  .phone-title b { font-size: 14px; }
+  .phone-title span { font-size: 11.5px; color: var(--text2); }
+
+  .phone {
+    width: 390px; height: 844px; padding: 9px; border-radius: 38px;
+    background: #0b102a; box-shadow: 0 30px 70px -34px rgba(11, 16, 42, .7), 0 0 0 1px rgba(11, 16, 42, .9);
+  }
+  .phone-screen {
+    position: relative; height: 100%; border-radius: 30px; overflow: hidden;
+    background: var(--bg); color: var(--text); display: flex; flex-direction: column;
+  }
+  .pstat {
+    flex: 0 0 28px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 18px; font-size: 11px; font-weight: 700; color: var(--text);
+    background: var(--card); border-bottom: 1px solid transparent;
+  }
+  .pstat .notch { width: 88px; height: 18px; border-radius: 999px; background: #0b102a; }
+  .pstat .sig { display: inline-flex; align-items: center; gap: 4px; }
+  .pstat .sig svg { width: 13px; height: 13px; }
+
+  .papp {
+    flex: 0 0 auto; display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; background: var(--card); border-bottom: 1px solid var(--border);
+    min-height: 56px;
+  }
+  .papp h2 { font-size: 16px; letter-spacing: -.01em; }
+  .papp .sub { font-size: 10.5px; color: var(--text2); }
+  .papp .grow { flex: 1; min-width: 0; }
+  .papp .icon-btn { min-width: 44px; min-height: 44px; border-color: transparent; background: transparent; }
+  .pbody { flex: 1; min-height: 0; overflow: auto; padding: 12px; display: grid; gap: 12px; align-content: start; }
+  .pbody.flush { padding: 0; gap: 0; }
+  .sec-cap { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .sec-cap b { font-size: 14px; }
+  .sec-cap span { font-size: 11px; color: var(--text2); }
+  .chip-row { display: flex; gap: 6px; overflow: auto; padding-bottom: 2px; }
+  .chip-row .pill { min-height: 44px; padding: 0 14px; font-size: 12.5px; border: 1px solid var(--border); background: var(--card); }
+  .chip-row .pill[aria-pressed="true"] { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+
+  .phone .mcards { display: block; background: var(--card); border: 1px solid var(--border); border-radius: var(--r-card); overflow: hidden; }
+  .phone .mcard { padding: 13px 14px; gap: 9px; }
+  .phone .mcard .name b { font-size: 15px; }
+  .phone .mcard-meta { font-size: 12px; }
+  .phone .mcard-foot { padding-top: 2px; }
+
+  /* drawer */
+  .drawer-layer { position: absolute; inset: 28px 0 0; z-index: 40; transition: opacity .16s ease; }
+  .drawer-layer[hidden] { display: none; }
+  @media (prefers-reduced-motion: reduce) { .drawer-layer { transition: none; } }
+  .drawer-layer .drawer-scrim { position: absolute; inset: 0; background: rgba(8, 11, 24, .55); }
+  .drawer-layer .drawer { position: absolute; inset-block: 0; inset-inline-start: 0; width: 300px; }
+  .drawer .side-head { padding: 16px 14px 10px; }
+  .drawer .side-nav { padding: 4px 8px 10px; overflow: auto; }
+  .drawer .side-foot { padding: 10px; }
+  .drawer .nav-item { min-height: 46px; font-size: 13px; }
+  .drawer-user { display: flex; align-items: center; gap: 9px; padding: 8px; border-radius: 12px; background: var(--bg); margin-bottom: 8px; }
+  .drawer-user b { display: block; font-size: 12.5px; }
+  .drawer-user small { display: block; font-size: 10.5px; color: var(--text2); }
+
+  /* bottom sheet */
+  .sheet-layer { position: absolute; inset: 28px 0 0; z-index: 50; display: flex; align-items: flex-end; }
+  .sheet-layer .drawer-scrim { position: absolute; inset: 0; background: rgba(8, 11, 24, .55); }
+  .sheet-layer .sheet { position: relative; z-index: 1; max-height: 95%; }
+  .sheet-b .label { margin-bottom: 5px; }
+  .sheet-b .input, .sheet-b .select { min-height: 44px; }
+  .req { color: var(--err); }
+
+  /* exam */
+  .timer-chip {
+    display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px;
+    border-radius: 999px; background: var(--muted); color: var(--text);
+    font-family: "Manrope", sans-serif; font-size: 15px; font-weight: 800;
+    font-variant-numeric: tabular-nums; direction: ltr;
+  }
+  .timer-chip svg { width: 15px; height: 15px; color: var(--text2); }
+  .exam-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 11.5px; color: var(--text2); }
+  .exam-bar b { color: var(--text); }
+  .progress { height: 6px; border-radius: 999px; background: var(--muted); overflow: hidden; }
+  .progress i { display: block; height: 100%; border-radius: inherit; background: var(--primary); }
+  .qcard { padding: 14px; display: grid; gap: 10px; }
+  .qcard p { font-size: 14.5px; font-weight: 600; line-height: 1.75; }
+  .opt {
+    display: flex; align-items: flex-start; gap: 10px; min-height: 52px; padding: 10px 12px;
+    border: 1.5px solid var(--border); border-radius: 12px; background: var(--card);
+    font-size: 13.5px; cursor: pointer;
+  }
+  .opt input { appearance: none; width: 22px; height: 22px; flex: 0 0 22px; border: 2px solid var(--border); border-radius: 50%; margin: 2px 0 0; }
+  .opt input:checked { border-color: var(--primary); background: radial-gradient(circle, var(--primary) 0 5px, transparent 5.5px); }
+  .opt:has(input:checked) { border-color: var(--primary); background: var(--primary-soft); }
+  .exam-foot {
+    flex: 0 0 auto; padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+    border-top: 1px solid var(--border); background: var(--card); display: grid; gap: 8px;
+  }
+  .exam-foot .btn { width: 100%; }
+  .exam-foot small { text-align: center; font-size: 10.5px; color: var(--text2); }
+
+  /* import */
+  .imp-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .imp-stat { padding: 10px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); text-align: center; }
+  .imp-stat b { display: block; font-family: "Manrope", sans-serif; font-size: 19px; }
+  .imp-stat small { font-size: 10.5px; color: var(--text2); }
+  .imp-card { padding: 11px 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--card); display: grid; gap: 4px; }
+  .imp-card .top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .imp-card .top b { font-size: 14px; }
+  .imp-card small { font-size: 11.5px; color: var(--text2); }
+  .imp-card .err-line { color: var(--err); font-size: 11.5px; display: flex; align-items: center; gap: 5px; }
+  .imp-card .err-line svg { width: 13px; height: 13px; }
+  .imp-foot { flex: 0 0 auto; padding: 10px 12px calc(10px + env(safe-area-inset-bottom)); border-top: 1px solid var(--border); background: var(--card); display: grid; gap: 8px; }
+
+  @media (max-width: 1260px) {
+    .frames { grid-template-columns: repeat(2, 390px); }
+  }
+  @media (max-width: 840px) {
+    .frames { grid-template-columns: 390px; }
+  }
+  @media (max-width: 430px) {
+    .board { padding: 0; gap: 0; }
+    .board-head { display: none; }
+    .frames { display: block; }
+    .frame-wrap { gap: 0; }
+    .phone-title { padding: 10px 14px 6px; background: var(--bg); }
+    .phone { width: 100%; height: 844px; padding: 0; border-radius: 0; box-shadow: none; }
+    .phone-screen { border-radius: 0; }
+    .pstat .notch { width: 76px; }
+  }
+</style>
+</head>
+<body class="v-after">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5"/><path d="M16 13h.01"/></symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v18l-3-2-3 2-3-2-3 2Z"/><path d="M9 7h6M9 11h6M9 15h3"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6" rx="1"/><rect x="12.5" y="7" width="3" height="10" rx="1"/><rect x="18" y="13" width="3" height="4" rx="1"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><path d="M1 14h6M9 8h6M17 16h6"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></symbol>
+  <symbol id="i-chev-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-chev-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-chev-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></symbol>
+  <symbol id="i-alert-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v6l-4 2v-8Z"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 8.5a15 15 0 0 1 20 0M5.5 12a10 10 0 0 1 13 0M9 15.5a5 5 0 0 1 6 0"/><circle cx="12" cy="19" r="1" fill="currentColor"/></symbol>
+  <symbol id="i-battery" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="7" width="17" height="10" rx="2.5"/><path d="M21 10.5v3" stroke-linecap="round"/><rect x="4.5" y="9.5" width="10" height="5" rx="1" fill="currentColor" stroke="none"/></symbol>
+</svg>
+
+<main class="board">
+  <header class="board-head">
+    <span class="kicker"><i></i> PHASE 1 · MOBILE B</span>
+    <h1>خمس شاشات موبايل 390 — القائمة، الطلاب، الإضافة، الاختبار، الاستيراد</h1>
+    <p>
+      نفس مكوّنات B: أهداف لمس 44px، drawer منزلق، شريط إجراء ثابت أسفل النافذة،
+      ومؤقّت وزر تسليم ظاهران دائمًا. البيانات تجريبية بالكامل.
+    </p>
+  </header>
+
+  <div class="frames">
+
+    <!-- 1 · drawer -->
+    <figure class="frame-wrap">
+      <figcaption class="phone-title"><b>1 · القائمة (drawer)</b><span>تُفتح من الرأس وتُغلق باللمس أو Esc</span></figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="pstat"><span class="num">9:41</span><span class="notch"></span><span class="sig"><svg><use href="#i-wifi"/></svg><svg><use href="#i-battery"/></svg></span></div>
+
+          <header class="papp">
+            <button class="icon-btn" type="button" aria-label="فتح القائمة" aria-expanded="true" aria-controls="mobile-drawer" data-drawer-open><svg class="i"><use href="#i-menu"/></svg></button>
+            <div class="grow"><h2>لوحة التحكم</h2><div class="sub">مركز النبض التعليمي</div></div>
+            <button class="icon-btn" type="button" aria-label="الإشعارات"><svg class="i"><use href="#i-bell"/></svg></button>
+            <div class="avatar">م</div>
+          </header>
+
+          <div class="pbody">
+            <div class="hero">
+              <div><h2>مساء الخير، أ. محمد 👋</h2><p>3 مدفوعات مستحقة · امتحانان هذا الأسبوع</p></div>
+            </div>
+            <div class="stats" style="grid-template-columns:1fr 1fr">
+              <div class="card stat"><div class="k">إجمالي الطلاب</div><div class="v">248</div><div class="d">+12 هذا الشهر</div></div>
+              <div class="card stat"><div class="k">الحضور اليوم</div><div class="v">92%</div><div class="d">213 من 232</div></div>
+            </div>
+            <div class="card" style="padding:14px">
+              <div class="section-head" style="margin-bottom:6px"><div class="ic"><svg class="i"><use href="#i-receipt"/></svg></div><div><h2>آخر النشاطات</h2><p>دفعة نقدية · أحمد محمود</p></div></div>
+            </div>
+          </div>
+
+          <div class="drawer-layer" id="mobile-drawer" role="dialog" aria-modal="true" aria-label="القائمة الرئيسية">
+            <div class="drawer-scrim" aria-hidden="true" data-drawer-close></div>
+            <aside class="drawer">
+              <div class="drawer-h">
+                <div class="center-chip" style="flex:1">
+                  <div class="center-logo">ن</div>
+                  <div><b>مركز النبض التعليمي</b><small>إدارة السنتر</small></div>
+                </div>
+                <button class="icon-btn plain" type="button" aria-label="إغلاق القائمة" data-drawer-close><svg class="i"><use href="#i-x"/></svg></button>
+              </div>
+              <nav class="side-nav">
+                <div class="nav-cap">القائمة</div>
+                <a class="nav-item" href="#" aria-current="page"><svg class="i"><use href="#i-grid"/></svg><span>لوحة التحكم</span></a>
+                <a class="nav-item" href="#"><svg class="i"><use href="#i-users"/></svg><span>الطلاب</span></a>
+                <a class="nav-item" href="#"><svg class="i"><use href="#i-calendar"/></svg><span>المجموعات</span></a>
+                <a class="nav-item" href="#"><svg class="i"><use href="#i-check-circle"/></svg><span>الحضور</span><span class="nav-badge">3</span></a>
+                <a class="nav-item" href="#"><svg class="i"><use href="#i-wallet"/></svg><span>المالية</span></a>
+                <a class="nav-item" href="#"><svg class="i"><use href="#i-receipt"/></svg><span>المدفوعات</span></a>
+                <a class="nav-item" href="#"><svg class="i"><use href="#i-alert"/></svg><span>المتأخرون</span><span class="nav-badge">12</span></a>
+                <div class="nav-cap">أخرى</div>
+                <a class="nav-item" href="#"><svg class="i"><use href="#i-chart"/></svg><span>التقارير</span></a>
+                <a class="nav-item" href="#"><svg class="i"><use href="#i-sliders"/></svg><span>الإعدادات</span></a>
+              </nav>
+              <div class="side-foot">
+                <div class="drawer-user"><div class="avatar">م</div><div><b>محمد حسن</b><small>صاحب المركز</small></div></div>
+                <button class="side-link" type="button"><svg class="i"><use href="#i-moon"/></svg><span>الوضع الليلي</span></button>
+                <button class="side-link" type="button"><svg class="i"><use href="#i-logout"/></svg><span>تسجيل الخروج</span></button>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- 2 · students cards -->
+    <figure class="frame-wrap">
+      <figcaption class="phone-title"><b>2 · الطلاب — كروت</b><span>الاسم والحالة بارزان والإجراءات في ثلاث نقاط</span></figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="pstat"><span class="num">9:41</span><span class="notch"></span><span class="sig"><svg><use href="#i-wifi"/></svg><svg><use href="#i-battery"/></svg></span></div>
+
+          <header class="papp">
+            <button class="icon-btn" type="button" aria-label="فتح القائمة"><svg class="i"><use href="#i-menu"/></svg></button>
+            <div class="grow"><h2>الطلاب</h2><div class="sub">248 طالبًا · 214 نشط</div></div>
+            <button class="icon-btn" type="button" aria-label="إضافة طالب" style="background:var(--primary);color:var(--on-primary);border-color:var(--primary)"><svg class="i"><use href="#i-plus"/></svg></button>
+          </header>
+
+          <div class="pbody">
+            <div class="search">
+              <svg class="i"><use href="#i-search"/></svg>
+              <input class="input" type="search" placeholder="ابحث باسم الطالب أو رقم الهاتف..." aria-label="Search by student name or phone" />
+            </div>
+
+            <div class="search-row" style="display:flex;gap:8px">
+              <button class="btn btn-outline" type="button" aria-expanded="false" aria-controls="m-filters" style="flex:1">
+                <svg class="i"><use href="#i-filter"/></svg> الفلاتر <span class="filter-count" style="font-family:Manrope;font-size:10.5px;padding:1px 7px;border-radius:999px;background:var(--primary-soft);color:var(--primary);font-weight:800">2</span>
+              </button>
+              <button class="btn btn-outline" type="button" aria-label="ترتيب"><svg class="i"><use href="#i-sliders"/></svg></button>
+            </div>
+
+            <div class="chip-row" aria-label="فلاتر سريعة">
+              <button class="pill" type="button" aria-pressed="true">الكل</button>
+              <button class="pill" type="button" aria-pressed="false">نشط</button>
+              <button class="pill" type="button" aria-pressed="false">غير نشط</button>
+              <button class="pill" type="button" aria-pressed="false">متأخر</button>
+            </div>
+
+            <div class="sec-cap"><b>8 نتائج</b><span>ترتيب: الأحدث</span></div>
+
+            <div class="mcards">
+              <article class="mcard">
+                <div class="mcard-top">
+                  <div class="name"><div class="mini-avatar">أ</div><div><b>أحمد محمود</b><small>الصف الأول - أ · شهري</small></div></div>
+                  <span class="pill pill-ok"><i></i> نشط</span>
+                </div>
+                <div class="mcard-meta">
+                  <span><svg class="i-sm"><use href="#i-phone"/></svg> <span class="val num">01000000001</span></span>
+                  <span><svg class="i-sm"><use href="#i-phone"/></svg> <span class="val num">01000000011</span></span>
+                  <span><svg class="i-sm"><use href="#i-calendar"/></svg> <span class="val num">2026-09-12</span></span>
+                  <span><svg class="i-sm"><use href="#i-wallet"/></svg> <span class="val">مدفوع</span></span>
+                </div>
+                <div class="mcard-foot">
+                  <span class="pill pill-brand"><i></i> ولي الأمر: مفعّل</span>
+                  <button class="mcard-menu" type="button" aria-label="إجراءات أحمد محمود" aria-haspopup="menu"><svg class="i"><use href="#i-more"/></svg></button>
+                </div>
+              </article>
+              <article class="mcard">
+                <div class="mcard-top">
+                  <div class="name"><div class="mini-avatar">س</div><div><b>سلمى إبراهيم</b><small>الصف الأول - ب · شهري</small></div></div>
+                  <span class="pill pill-ok"><i></i> نشط</span>
+                </div>
+                <div class="mcard-meta">
+                  <span><svg class="i-sm"><use href="#i-phone"/></svg> <span class="val num">01000000002</span></span>
+                  <span><svg class="i-sm"><use href="#i-phone"/></svg> <span class="val num">01000000012</span></span>
+                  <span><svg class="i-sm"><use href="#i-calendar"/></svg> <span class="val num">2026-09-18</span></span>
+                  <span><svg class="i-sm"><use href="#i-wallet"/></svg> <span class="val">مدفوع</span></span>
+                </div>
+                <div class="mcard-foot">
+                  <span class="pill pill-brand"><i></i> ولي الأمر: مفعّل</span>
+                  <button class="mcard-menu" type="button" aria-label="إجراءات سلمى إبراهيم" aria-haspopup="menu"><svg class="i"><use href="#i-more"/></svg></button>
+                </div>
+              </article>
+              <article class="mcard">
+                <div class="mcard-top">
+                  <div class="name"><div class="mini-avatar">ي</div><div><b>يوسف علي</b><small>الصف الثاني - أ · حصة</small></div></div>
+                  <span class="pill pill-mute"><i></i> غير نشط</span>
+                </div>
+                <div class="mcard-meta">
+                  <span><svg class="i-sm"><use href="#i-phone"/></svg> <span class="val num">01000000003</span></span>
+                  <span><svg class="i-sm"><use href="#i-phone"/></svg> <span class="val num">01000000013</span></span>
+                  <span><svg class="i-sm"><use href="#i-calendar"/></svg> <span class="val num">2026-08-05</span></span>
+                  <span><svg class="i-sm"><use href="#i-wallet"/></svg> <span class="val">مستحق</span></span>
+                </div>
+                <div class="mcard-foot">
+                  <span class="pill pill-warn"><i></i> مدفوعات متأخرة</span>
+                  <button class="mcard-menu" type="button" aria-label="إجراءات يوسف علي" aria-haspopup="menu"><svg class="i"><use href="#i-more"/></svg></button>
+                </div>
+              </article>
+              <article class="mcard">
+                <div class="mcard-top">
+                  <div class="name"><div class="mini-avatar">م</div><div><b>مريم حسن</b><small>الصف الثالث - أ · شهري</small></div></div>
+                  <span class="pill pill-ok"><i></i> نشط</span>
+                </div>
+                <div class="mcard-meta">
+                  <span><svg class="i-sm"><use href="#i-phone"/></svg> <span class="val num">01000000004</span></span>
+                  <span><svg class="i-sm"><use href="#i-phone"/></svg> <span class="val num">01000000014</span></span>
+                  <span><svg class="i-sm"><use href="#i-calendar"/></svg> <span class="val num">2026-09-30</span></span>
+                  <span><svg class="i-sm"><use href="#i-wallet"/></svg> <span class="val">مدفوع</span></span>
+                </div>
+                <div class="mcard-foot">
+                  <span class="pill pill-brand"><i></i> ولي الأمر: مفعّل</span>
+                  <button class="mcard-menu" type="button" aria-label="إجراءات مريم حسن" aria-haspopup="menu"><svg class="i"><use href="#i-more"/></svg></button>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- 3 · add student bottom sheet -->
+    <figure class="frame-wrap">
+      <figcaption class="phone-title"><b>3 · إضافة طالب — bottom sheet</b><span>حقول بعرض كامل وزر الحفظ ثابت أسفل النافذة</span></figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="pstat"><span class="num">9:41</span><span class="notch"></span><span class="sig"><svg><use href="#i-wifi"/></svg><svg><use href="#i-battery"/></svg></span></div>
+
+          <header class="papp">
+            <button class="icon-btn" type="button" aria-label="فتح القائمة"><svg class="i"><use href="#i-menu"/></svg></button>
+            <div class="grow"><h2>الطلاب</h2><div class="sub">248 طالبًا · 214 نشط</div></div>
+            <button class="icon-btn" type="button" aria-label="إضافة طالب" style="background:var(--primary);color:var(--on-primary);border-color:var(--primary)"><svg class="i"><use href="#i-plus"/></svg></button>
+          </header>
+
+          <div class="pbody" aria-hidden="true">
+            <div class="search"><svg class="i"><use href="#i-search"/></svg><input class="input" type="search" placeholder="ابحث باسم الطالب أو رقم الهاتف..." /></div>
+            <div class="mcards">
+              <article class="mcard">
+                <div class="mcard-top"><div class="name"><div class="mini-avatar">أ</div><div><b>أحمد محمود</b><small>الصف الأول - أ · شهري</small></div></div><span class="pill pill-ok"><i></i> نشط</span></div>
+                <div class="mcard-meta"><span><svg class="i-sm"><use href="#i-phone"/></svg> <span class="val num">01000000001</span></span><span><svg class="i-sm"><use href="#i-wallet"/></svg> <span class="val">مدفوع</span></span></div>
+              </article>
+              <article class="mcard">
+                <div class="mcard-top"><div class="name"><div class="mini-avatar">س</div><div><b>سلمى إبراهيم</b><small>الصف الأول - ب · شهري</small></div></div><span class="pill pill-ok"><i></i> نشط</span></div>
+                <div class="mcard-meta"><span><svg class="i-sm"><use href="#i-phone"/></svg> <span class="val num">01000000002</span></span><span><svg class="i-sm"><use href="#i-wallet"/></svg> <span class="val">مدفوع</span></span></div>
+              </article>
+            </div>
+          </div>
+
+          <div class="sheet-layer" role="dialog" aria-modal="true" aria-labelledby="add-title">
+            <div class="drawer-scrim" aria-hidden="true"></div>
+            <div class="sheet">
+              <div class="sheet-handle"></div>
+              <div class="sheet-h">
+                <div><h3 id="add-title">إضافة طالب</h3><p>البيانات الأساسية ثم بيانات ولي الأمر</p></div>
+                <button class="icon-btn plain" type="button" aria-label="إغلاق"><svg class="i"><use href="#i-x"/></svg></button>
+              </div>
+              <div class="sheet-b">
+                <div class="form-grid">
+                  <div class="span2">
+                    <label class="label" for="s-name">اسم الطالب <span class="req">*</span></label>
+                    <input class="input" id="s-name" type="text" value="أحمد محمود السيد" />
+                  </div>
+                  <div>
+                    <label class="label" for="s-phone">رقم الهاتف <span class="req">*</span></label>
+                    <input class="input" id="s-phone" type="tel" inputmode="tel" value="01000000001" />
+                    <div class="hint">11 رقمًا تبدأ بـ 01</div>
+                  </div>
+                  <div>
+                    <label class="label" for="s-parent">هاتف ولي الأمر</label>
+                    <input class="input" id="s-parent" type="tel" inputmode="tel" value="01000000011" />
+                  </div>
+                  <div>
+                    <label class="label" for="s-group">المجموعة <span class="req">*</span></label>
+                    <select class="select" id="s-group"><option>الصف الأول - أ</option><option>الصف الأول - ب</option><option>الصف الثاني - أ</option></select>
+                  </div>
+                  <div>
+                    <label class="label" for="s-type">نوع الاشتراك</label>
+                    <select class="select" id="s-type"><option>شهري</option><option>حصة</option></select>
+                  </div>
+                  <div>
+                    <label class="label" for="s-date">تاريخ الانضمام</label>
+                    <input class="input" id="s-date" type="date" value="2026-11-10" />
+                  </div>
+                  <div>
+                    <label class="label" for="s-fee">الاشتراك الشهري</label>
+                    <input class="input" id="s-fee" type="number" inputmode="decimal" value="850" />
+                  </div>
+                  <div class="span2">
+                    <label class="label" for="s-note">ملاحظات</label>
+                    <textarea class="input" id="s-note" rows="2" style="height:auto;padding:10px 14px">طالب جديد — الصف الأول.</textarea>
+                  </div>
+                  <div class="span2">
+                    <label class="switch"><input type="checkbox" checked /> إرسال بيانات الدخول لولي الأمر</label>
+                  </div>
+                </div>
+              </div>
+              <div class="sheet-f">
+                <button class="btn btn-outline" type="button">إلغاء</button>
+                <button class="btn btn-primary" type="button">حفظ الطالب</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- 4 · exam -->
+    <figure class="frame-wrap">
+      <figcaption class="phone-title"><b>4 · الاختبار</b><span>المؤقّت وزر التسليم ظاهران دائمًا</span></figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="pstat"><span class="num">9:41</span><span class="notch"></span><span class="sig"><svg><use href="#i-wifi"/></svg><svg><use href="#i-battery"/></svg></span></div>
+
+          <header class="papp">
+            <button class="icon-btn" type="button" aria-label="رجوع"><svg class="i"><use href="#i-chev-right"/></svg></button>
+            <div class="grow"><h2>امتحان الوحدة الأولى</h2><div class="sub">رياضيات · الصف الأول</div></div>
+            <span class="timer-chip" role="timer" aria-label="الوقت المتبقي 24 دقيقة و51 ثانية"><svg><use href="#i-clock"/></svg><span id="exam-timer">00:24:51</span></span>
+          </header>
+
+          <div class="pbody">
+            <div class="exam-bar"><span>السؤال <b>7</b> من 20</span><span>تمت الإجابة عن <b>12</b></span></div>
+            <div class="progress" role="progressbar" aria-valuenow="12" aria-valuemin="0" aria-valuemax="20" aria-label="الأسئلة المجابة"><i style="width:60%"></i></div>
+
+            <div class="card qcard">
+              <div class="pill pill-brand" style="align-self:flex-start"><i></i> اختيار من متعدد</div>
+              <p>إذا كان ٣س + ٧ = ٢٢، فما قيمة س؟</p>
+              <div style="display:grid;gap:8px">
+                <label class="opt"><input type="radio" name="q7" /><span>3</span></label>
+                <label class="opt"><input type="radio" name="q7" checked /><span>5</span></label>
+                <label class="opt"><input type="radio" name="q7" /><span>7</span></label>
+                <label class="opt"><input type="radio" name="q7" /><span>9</span></label>
+              </div>
+            </div>
+
+            <div class="alert alert-info"><svg class="i"><use href="#i-info"/></svg><div><b>تنبيه</b><p>يمكنك الرجوع لأي سؤال قبل التسليم. لا يغلق المؤقّت عند ترك الصفحة.</p></div></div>
+
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-outline" type="button" style="flex:1"><svg class="i"><use href="#i-chev-right"/></svg> السابق</button>
+              <button class="btn btn-soft" type="button" style="flex:1">التالي <svg class="i"><use href="#i-chev-left"/></svg></button>
+            </div>
+          </div>
+
+          <div class="exam-foot">
+            <button class="btn btn-primary" type="button">تسليم الامتحان <svg class="i"><use href="#i-check"/></svg></button>
+            <small>أجبت عن 12 من 20 · يتبقى 8 أسئلة</small>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <!-- 5 · import preview -->
+    <figure class="frame-wrap">
+      <figcaption class="phone-title"><b>5 · استيراد Excel — المعاينة</b><span>الملخص ثم كل صف كبطاقة، والزر ثابت</span></figcaption>
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="pstat"><span class="num">9:41</span><span class="notch"></span><span class="sig"><svg><use href="#i-wifi"/></svg><svg><use href="#i-battery"/></svg></span></div>
+
+          <header class="papp">
+            <button class="icon-btn" type="button" aria-label="رجوع"><svg class="i"><use href="#i-chev-right"/></svg></button>
+            <div class="grow"><h2>استيراد من Excel</h2><div class="sub">students-november.xlsx</div></div>
+            <button class="icon-btn" type="button" aria-label="إغلاق"><svg class="i"><use href="#i-x"/></svg></button>
+          </header>
+
+          <div class="pbody">
+            <div class="alert alert-ok"><svg class="i"><use href="#i-check-circle"/></svg><div><b>تمت قراءة الملف</b><p>12 صفًا · 10 صالح · 2 يحتاج مراجعة</p></div></div>
+
+            <div class="imp-summary">
+              <div class="imp-stat"><b>12</b><small>إجمالي الصفوف</small></div>
+              <div class="imp-stat"><b style="color:var(--ok)">10</b><small>جاهز للاستيراد</small></div>
+              <div class="imp-stat"><b style="color:var(--err)">2</b><small>به أخطاء</small></div>
+            </div>
+
+            <div class="sec-cap"><b>معاينة الصفوف</b><span>اسحب للأسفل</span></div>
+
+            <div style="display:grid;gap:8px">
+              <div class="imp-card">
+                <div class="top"><b>أحمد محمود السيد</b><span class="pill pill-ok"><i></i> جاهز</span></div>
+                <small><span class="num">01000000001</span> · الصف الأول - أ · شهري</small>
+              </div>
+              <div class="imp-card">
+                <div class="top"><b>سلمى إبراهيم فؤاد</b><span class="pill pill-ok"><i></i> جاهز</span></div>
+                <small><span class="num">01000000002</span> · الصف الأول - ب · شهري</small>
+              </div>
+              <div class="imp-card">
+                <div class="top"><b>يوسف علي حسن</b><span class="pill pill-ok"><i></i> جاهز</span></div>
+                <small><span class="num">01000000003</span> · الصف الثاني - أ · حصة</small>
+              </div>
+              <div class="imp-card" style="border-color:var(--err)">
+                <div class="top"><b>مريم حسن عبد الله</b><span class="pill pill-err"><i></i> خطأ</span></div>
+                <small><span class="num">0100000004</span> · الصف الثالث - أ</small>
+                <div class="err-line"><svg><use href="#i-alert-circle"/></svg> رقم الهاتف يجب أن يكون 11 رقمًا</div>
+              </div>
+              <div class="imp-card">
+                <div class="top"><b>عمر خالد إبراهيم</b><span class="pill pill-ok"><i></i> جاهز</span></div>
+                <small><span class="num">01000000005</span> · الصف الثاني - أ · حصة</small>
+              </div>
+              <div class="imp-card" style="border-color:var(--err)">
+                <div class="top"><b>نور الدين سامي</b><span class="pill pill-err"><i></i> خطأ</span></div>
+                <small>بدون مجموعة · شهري</small>
+                <div class="err-line"><svg><use href="#i-alert-circle"/></svg> اختر مجموعة للطالب قبل الاستيراد</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="imp-foot">
+            <button class="btn btn-primary" type="button">استيراد 10 طلاب جاهزين</button>
+            <button class="btn btn-outline" type="button">تنزيل تقرير الأخطاء</button>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+  </div>
+</main>
+
+<script>
+  (function () {
+    // Tiny ticking clock so the "always visible" timer is real, not a label.
+    var el = document.getElementById("exam-timer");
+    if (!el) return;
+    var total = 24 * 60 + 51;
+    setInterval(function () {
+      total = Math.max(0, total - 1);
+      var m = String(Math.floor(total / 60)).padStart(2, "0");
+      var s = String(total % 60).padStart(2, "0");
+      el.textContent = "00:" + m + ":" + s;
+    }, 1000);
+  })();
+  (function () {
+    var layer = document.getElementById("mobile-drawer");
+    var opener = document.querySelector("[data-drawer-open]");
+    if (!layer || !opener) return;
+    function setDrawer(open) {
+      layer.hidden = !open;
+      opener.setAttribute("aria-expanded", String(open));
+      if (open) {
+        var close = layer.querySelector("[data-drawer-close]");
+        if (close) close.focus();
+      } else {
+        opener.focus();
+      }
+    }
+    opener.addEventListener("click", function () { setDrawer(true); });
+    layer.querySelectorAll("[data-drawer-close]").forEach(function (btn) {
+      btn.addEventListener("click", function () { setDrawer(false); });
+    });
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && !layer.hidden) setDrawer(false);
+    });
+  })();
+</script>
+</body>
+</html>

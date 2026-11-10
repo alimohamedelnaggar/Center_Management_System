@@ -1,0 +1,1263 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>الاتجاه A — «دفتر» | هوية نظام إدارة السنتر</title>
+<link rel="stylesheet" href="fonts/direction-a.css" />
+<script>
+  try {
+    var q = new URLSearchParams(location.search).get("theme");
+    if (q === "dark" || (!q && localStorage.getItem("dir-theme") === "dark")) {
+      document.documentElement.classList.add("dark");
+    }
+  } catch (e) {}
+</script>
+<style>
+  /* ==========================================================================
+     A — «دفتر» | تحريري ورقي، ثقة هادئة، أرقام بخط أحادي المسافة
+     palette: cream + deep teal + burnt orange · radius 6–8px · rule lines
+     ========================================================================== */
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    font-family: "IBM Plex Sans Arabic", system-ui, sans-serif;
+    background: var(--app-bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.7;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+  }
+  :root {
+    --app-bg: #E9E3D8;
+    --bg: #F6F2EA;
+    --card: #FFFDF8;
+    --muted: #ECE5D8;
+    --border: #D8CFBE;
+    --text: #1C2434;
+    --text2: #5B6472;
+    --primary: #1D4E5F;
+    --on-primary: #FFFFFF;
+    --accent: #A8541A;
+    --on-accent: #FFFFFF;
+    --ok: #1E6B3A;      --ok-bg: #E3F1E6;
+    --warn: #8A5A00;    --warn-bg: #FBF0D9;
+    --err: #A3262A;     --err-bg: #F8E3E2;
+    --info: #1E5A8A;    --info-bg: #E2EEF7;
+    --r: 8px;
+    --r-sm: 5px;
+    --shadow: 0 1px 2px rgba(28, 36, 52, .07);
+    --ring: 0 0 0 3px rgba(29, 78, 95, .18);
+  }
+  .dark {
+    --app-bg: #0A0F11;
+    --bg: #0E1416;
+    --card: #161F22;
+    --muted: #1F2B2E;
+    --border: #2C3B3F;
+    --text: #F3F0E8;
+    --text2: #A9B4B2;
+    --primary: #7FD1BE;
+    --on-primary: #08211D;
+    --accent: #E9A23B;
+    --on-accent: #241703;
+    --ok: #6EDB9A;      --ok-bg: #10281B;
+    --warn: #F2C14E;    --warn-bg: #2B2110;
+    --err: #FF8A84;     --err-bg: #2F1515;
+    --info: #7CC4F2;    --info-bg: #0F2230;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .45);
+    --ring: 0 0 0 3px rgba(127, 209, 190, .22);
+  }
+  .num {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    direction: ltr;
+    unicode-bidi: isolate;
+    letter-spacing: -.02em;
+  }
+  h1, h2, h3, h4, p { margin: 0; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  button { cursor: pointer; }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: var(--primary); color: var(--on-primary); }
+  :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+  /* ---------- Page scaffolding ---------- */
+  .topstrip {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 10px 20px;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+  }
+  .topstrip .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .topstrip .mark {
+    display: grid; place-items: center; width: 30px; height: 30px;
+    border-radius: var(--r-sm); background: var(--primary); color: var(--on-primary);
+    font-weight: 700; font-size: 15px;
+  }
+  .topstrip b { font-size: 13px; }
+  .topstrip small { display: block; font-size: 10px; color: var(--text2); letter-spacing: .04em; }
+  .topstrip .tools { display: flex; align-items: center; gap: 8px; }
+  .page { max-width: 1440px; margin: 0 auto; }
+  .block { border-top: 6px solid var(--app-bg); }
+  .sec-label {
+    display: flex; align-items: baseline; gap: 10px;
+    padding: 8px 20px;
+    background: var(--app-bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .sec-label span {
+    font-family: var(--mono, "IBM Plex Mono", monospace);
+    font-size: 10px; letter-spacing: .18em; color: var(--text2);
+  }
+  .sec-label b { font-size: 12px; color: var(--text2); font-weight: 600; }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    height: 42px; padding: 0 16px;
+    border-radius: var(--r-sm);
+    border: 1px solid transparent;
+    font-size: 13px; font-weight: 600;
+    transition: background .16s, border-color .16s, color .16s, box-shadow .16s;
+    white-space: nowrap;
+  }
+  .btn svg { width: 17px; height: 17px; }
+  .btn-primary { background: var(--primary); color: var(--on-primary); box-shadow: var(--shadow); }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-accent { background: var(--accent); color: var(--on-accent); }
+  .btn-outline { background: var(--card); border-color: var(--border); color: var(--text); }
+  .btn-outline:hover { background: var(--muted); }
+  .btn-ghost { background: transparent; color: var(--text2); }
+  .btn-ghost:hover { background: var(--muted); color: var(--text); }
+  .btn-danger { background: var(--err); color: #fff; }
+  .btn-sm { height: 34px; padding: 0 12px; font-size: 12px; gap: 6px; }
+  .btn-sm svg { width: 15px; height: 15px; }
+  .icon-btn {
+    display: inline-grid; place-items: center; width: 38px; height: 38px;
+    border: 1px solid var(--border); border-radius: var(--r-sm);
+    background: var(--card); color: var(--text2);
+  }
+  .icon-btn:hover { background: var(--muted); color: var(--text); }
+  .icon-btn svg { width: 18px; height: 18px; }
+
+  /* ---------- Fields ---------- */
+  .label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; }
+  .label .req { color: var(--err); }
+  .input, .select {
+    width: 100%; height: 42px; padding: 0 12px;
+    background: var(--card); color: var(--text);
+    border: 1px solid var(--border); border-radius: var(--r-sm);
+    outline: none; transition: border-color .15s, box-shadow .15s;
+  }
+  .input::placeholder { color: var(--text2); opacity: .75; }
+  .input:focus, .select:focus { border-color: var(--primary); box-shadow: var(--ring); }
+  .select { appearance: none; padding-inline-end: 34px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235B6472' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: left 12px center;
+  }
+  .search { position: relative; }
+  .search svg { position: absolute; top: 50%; inset-inline-start: 12px; transform: translateY(-50%); width: 17px; height: 17px; color: var(--text2); pointer-events: none; }
+  .search .input { padding-inline-start: 38px; }
+
+  /* ---------- Surfaces ---------- */
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--r); box-shadow: var(--shadow);
+  }
+  .card-h { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px 18px; border-bottom: 1px solid var(--border); }
+  .card-h h3 { font-size: 14px; font-weight: 700; }
+  .card-h p { font-size: 11px; color: var(--text2); }
+  .card-b { padding: 18px; }
+
+  /* ---------- Status ---------- */
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 9px; border-radius: 999px;
+    font-size: 11px; font-weight: 600; white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  .pill i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+  .pill-ok { color: var(--ok); background: var(--ok-bg); border-color: color-mix(in srgb, var(--ok) 22%, transparent); }
+  .pill-warn { color: var(--warn); background: var(--warn-bg); border-color: color-mix(in srgb, var(--warn) 22%, transparent); }
+  .pill-err { color: var(--err); background: var(--err-bg); border-color: color-mix(in srgb, var(--err) 22%, transparent); }
+  .pill-info { color: var(--info); background: var(--info-bg); border-color: color-mix(in srgb, var(--info) 22%, transparent); }
+  .pill-mute { color: var(--text2); background: var(--muted); border-color: var(--border); }
+  .pill-brand { color: var(--primary); background: color-mix(in srgb, var(--primary) 9%, transparent); border-color: color-mix(in srgb, var(--primary) 26%, transparent); }
+
+  /* ---------- Login ---------- */
+  .login { display: grid; grid-template-columns: 1.02fr .98fr; min-height: 660px; background: var(--card); }
+  .login-brand {
+    position: relative; overflow: hidden; padding: 44px 48px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    background: var(--primary); color: var(--on-primary);
+  }
+  .login-brand .dots {
+    position: absolute; inset: 0; opacity: .16;
+    background-image: radial-gradient(currentColor 1px, transparent 1px);
+    background-size: 18px 18px;
+  }
+  .login-brand .glow {
+    position: absolute; width: 460px; height: 460px; border-radius: 50%;
+    background: var(--accent); filter: blur(70px); opacity: .22;
+    inset-inline-start: -160px; bottom: -180px;
+  }
+  .login-brand > * { position: relative; }
+  .lb-mark { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+  .lb-mark .box { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid rgba(255,255,255,.4); border-radius: var(--r-sm); }
+  .login-brand h2 { font-size: 38px; line-height: 1.35; letter-spacing: -.02em; max-width: 430px; margin-bottom: 14px; }
+  .login-brand h2 em { font-style: normal; border-bottom: 3px solid var(--accent); }
+  .login-brand p.lead { max-width: 400px; font-size: 13.5px; line-height: 1.95; opacity: .85; }
+  .lb-points { display: grid; gap: 10px; margin-top: 28px; }
+  .lb-point { display: flex; align-items: center; gap: 10px; font-size: 12.5px; opacity: .92; }
+  .lb-point svg { width: 16px; height: 16px; }
+  .lb-foot { display: flex; align-items: center; gap: 8px; font-size: 11px; opacity: .7; border-top: 1px solid rgba(255,255,255,.22); padding-top: 14px; }
+  .login-form { padding: 44px 52px; display: flex; flex-direction: column; justify-content: center; }
+  .login-form .eyebrow { font-size: 10px; letter-spacing: .18em; color: var(--text2); margin-bottom: 6px; }
+  .login-form h1 { font-size: 26px; letter-spacing: -.02em; }
+  .login-form .sub { color: var(--text2); font-size: 12.5px; margin: 6px 0 24px; }
+  .login-form form { display: grid; gap: 14px; }
+  .row-between { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .check { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text2); }
+  .check input { width: 15px; height: 15px; accent-color: var(--primary); }
+  .link { color: var(--primary); font-size: 12px; font-weight: 600; }
+  .link:hover { text-decoration: underline; }
+  .or { display: flex; align-items: center; gap: 10px; color: var(--text2); font-size: 11px; margin: 4px 0; }
+  .or::before, .or::after { content: ""; height: 1px; flex: 1; background: var(--border); }
+  .login-note { margin-top: 18px; font-size: 11px; color: var(--text2); text-align: center; }
+
+  /* ---------- App shell ---------- */
+  .app { display: flex; min-height: 820px; background: var(--bg); }
+  .side {
+    width: 258px; flex: 0 0 258px;
+    background: var(--card); border-inline-end: 1px solid var(--border);
+    display: flex; flex-direction: column;
+  }
+  .side-head { padding: 18px 18px 14px; border-bottom: 1px solid var(--border); }
+  .center-chip { display: flex; align-items: center; gap: 10px; }
+  .center-logo {
+    display: grid; place-items: center; width: 38px; height: 38px; flex: 0 0 38px;
+    border-radius: var(--r-sm); border: 1px solid var(--border);
+    background: var(--muted); font-weight: 700; color: var(--primary);
+  }
+  .center-chip b { display: block; font-size: 13px; line-height: 1.4; }
+  .center-chip small { display: block; font-size: 10px; color: var(--text2); }
+  .side-nav { padding: 12px 10px; display: grid; gap: 2px; }
+  .nav-cap { font-size: 9.5px; letter-spacing: .16em; color: var(--text2); padding: 12px 10px 5px; }
+  .nav-item {
+    position: relative; display: flex; align-items: center; gap: 10px;
+    min-height: 40px; padding: 0 10px; border-radius: var(--r-sm);
+    color: var(--text2); font-size: 12.5px; font-weight: 500;
+  }
+  .nav-item svg { width: 18px; height: 18px; }
+  .nav-item:hover { background: var(--muted); color: var(--text); }
+  .nav-item[aria-current="page"] { background: var(--muted); color: var(--primary); font-weight: 700; }
+  .nav-item[aria-current="page"]::before {
+    content: ""; position: absolute; inset-inline-end: -10px; top: 8px; bottom: 8px;
+    width: 3px; border-radius: 2px; background: var(--primary);
+  }
+  .nav-badge { margin-inline-start: auto; font-size: 10px; padding: 1px 6px; border-radius: 999px; background: var(--err-bg); color: var(--err); }
+  .side-foot { margin-top: auto; padding: 12px 10px; border-top: 1px solid var(--border); display: grid; gap: 2px; }
+  .side-user { display: flex; align-items: center; gap: 9px; padding: 10px; border-radius: var(--r-sm); background: var(--muted); margin-bottom: 6px; }
+  .avatar { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--primary); color: var(--on-primary); font-size: 12px; font-weight: 700; flex: 0 0 32px; }
+  .side-user b { display: block; font-size: 12px; line-height: 1.4; }
+  .side-user small { display: block; font-size: 10px; color: var(--text2); }
+
+  .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .topbar {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 24px; background: var(--card);
+    border-bottom: 1px solid var(--border);
+  }
+  .crumb { font-size: 10px; color: var(--text2); letter-spacing: .06em; }
+  .topbar h1 { font-size: 19px; letter-spacing: -.02em; }
+  .topbar .grow { flex: 1; min-width: 0; }
+  .top-actions { display: flex; align-items: center; gap: 8px; }
+  .mob-menu { display: none; }
+
+  .content { padding: 22px 24px 28px; display: grid; gap: 18px; align-content: start; }
+  .hello { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .hello h2 { font-size: 20px; letter-spacing: -.02em; }
+  .hello p { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .range { display: flex; align-items: center; gap: 4px; padding: 4px; border: 1px solid var(--border); background: var(--card); border-radius: var(--r-sm); }
+  .range button { height: 28px; padding: 0 10px; border: 0; background: transparent; color: var(--text2); border-radius: 4px; font-size: 11px; }
+  .range button[aria-pressed="true"] { background: var(--muted); color: var(--text); font-weight: 700; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .stat { padding: 16px 18px; position: relative; overflow: hidden; }
+  .stat .k { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .stat .k span { font-size: 11px; color: var(--text2); font-weight: 600; }
+  .stat .k svg { width: 18px; height: 18px; color: var(--text2); }
+  .stat .v { margin-top: 6px; font-size: 26px; font-weight: 600; line-height: 1.2; }
+  .stat .v small { font-size: 12px; color: var(--text2); font-family: "IBM Plex Sans Arabic"; }
+  .stat .d { margin-top: 8px; display: flex; align-items: center; gap: 6px; font-size: 11px; }
+  .stat .d em { font-style: normal; color: var(--text2); }
+  .up { color: var(--ok); } .down { color: var(--err); }
+
+  .two { display: grid; grid-template-columns: 1.65fr 1fr; gap: 14px; }
+  .chart-wrap { padding: 8px 8px 2px; }
+  .chart-wrap svg { display: block; width: 100%; height: auto; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; padding: 0 18px 16px; font-size: 11px; color: var(--text2); }
+  .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-inline-end: 6px; }
+
+  .list { display: grid; gap: 0; }
+  .li { display: flex; align-items: center; gap: 10px; padding: 11px 18px; border-top: 1px solid var(--border); font-size: 12px; }
+  .li:first-child { border-top: 0; }
+  .li .t { flex: 1; min-width: 0; }
+  .li .t b { display: block; font-weight: 600; }
+  .li .t small { color: var(--text2); font-size: 10.5px; }
+  .li .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--primary); }
+
+  /* ---------- Filters + table ---------- */
+  .filters { display: grid; grid-template-columns: 1.4fr repeat(3, .8fr) auto; gap: 8px; align-items: end; }
+  .filters .label { font-size: 11px; margin-bottom: 5px; }
+  .filters .input, .filters .select { height: 38px; font-size: 12px; }
+  .tw { overflow-x: auto; }
+  table.tbl { width: 100%; border-collapse: collapse; text-align: right; font-size: 12.5px; }
+  .tbl th {
+    padding: 10px 14px; background: var(--muted);
+    font-size: 10px; letter-spacing: .08em; font-weight: 600; color: var(--text2);
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  .tbl td { padding: 11px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .tbl tbody tr:hover { background: color-mix(in srgb, var(--muted) 55%, transparent); }
+  .tbl tbody tr:last-child td { border-bottom: 0; }
+  .who { display: flex; align-items: center; gap: 9px; }
+  .who b { display: block; font-weight: 600; font-size: 12.5px; }
+  .who small { display: block; color: var(--text2); font-size: 10.5px; }
+  .row-act { display: flex; gap: 4px; justify-content: flex-end; }
+  .row-act button { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid transparent; border-radius: 4px; background: transparent; color: var(--text2); }
+  .row-act button:hover { background: var(--muted); border-color: var(--border); color: var(--text); }
+  .row-act svg { width: 15px; height: 15px; }
+  .tbl-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text2); }
+  .pager { display: flex; gap: 3px; }
+  .pager button { min-width: 28px; height: 28px; border: 1px solid var(--border); background: var(--card); border-radius: 4px; font-size: 11px; }
+  .pager button[aria-current="true"] { background: var(--primary); color: var(--on-primary); border-color: var(--primary); font-weight: 700; }
+
+  /* ---------- Mobile card list ---------- */
+  .mob-only { display: none; }
+  .mcards { gap: 0; }
+  .mcard { padding: 14px 16px; border-bottom: 1px solid var(--border); display: grid; gap: 9px; background: var(--card); }
+  .mcard-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .mcard .name { display: flex; align-items: center; gap: 9px; }
+  .mcard .name b { display: block; font-size: 13px; }
+  .mcard .name small { display: block; color: var(--text2); font-size: 10.5px; }
+  .mcard-meta { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 11px; color: var(--text2); }
+  .mcard-meta span { display: inline-flex; align-items: center; gap: 5px; }
+  .mcard-meta svg { width: 13px; height: 13px; }
+  .mcard-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .mcard-foot .row-act button { width: 34px; height: 34px; }
+
+  /* ---------- Modal ---------- */
+  .overlay {
+    position: relative; min-height: 720px; display: grid; place-items: center; padding: 32px 16px;
+    background: var(--bg);
+    background-image: radial-gradient(color-mix(in srgb, var(--text2) 16%, transparent) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+  .scrim { position: absolute; inset: 0; background: color-mix(in srgb, #101820 42%, transparent); }
+  .modal { position: relative; width: 100%; max-width: 560px; background: var(--card); border: 1px solid var(--border); border-radius: var(--r); box-shadow: 0 24px 60px rgba(12, 20, 24, .28); }
+  .modal-h { display: flex; align-items: flex-start; gap: 12px; padding: 18px 20px; border-bottom: 1px solid var(--border); }
+  .modal-h h3 { font-size: 16px; }
+  .modal-h p { font-size: 11.5px; color: var(--text2); }
+  .modal-h .icon-btn { margin-inline-start: auto; width: 32px; height: 32px; border-color: transparent; background: transparent; }
+  .modal-b { padding: 20px; display: grid; gap: 14px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .span2 { grid-column: 1 / -1; }
+  .hint { font-size: 10.5px; color: var(--text2); margin-top: 5px; }
+  .err-msg { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: var(--err); margin-top: 5px; }
+  .err-msg svg { width: 13px; height: 13px; }
+  .has-err { border-color: var(--err) !important; box-shadow: 0 0 0 3px color-mix(in srgb, var(--err) 16%, transparent) !important; }
+  .modal-f { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--border); background: var(--muted); border-radius: 0 0 var(--r) var(--r); }
+  .seg { display: inline-flex; padding: 3px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--muted); gap: 2px; }
+  .seg button { height: 30px; padding: 0 12px; border: 0; background: transparent; border-radius: 4px; font-size: 11.5px; color: var(--text2); }
+  .seg button[aria-pressed="true"] { background: var(--card); color: var(--text); font-weight: 700; box-shadow: var(--shadow); }
+
+  /* ---------- States ---------- */
+  .states { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .alert { display: flex; gap: 10px; padding: 12px 14px; border-radius: var(--r-sm); border: 1px solid; font-size: 12px; align-items: flex-start; }
+  .alert svg { width: 16px; height: 16px; flex: 0 0 16px; margin-top: 2px; }
+  .alert b { display: block; font-size: 12.5px; margin-bottom: 2px; }
+  .alert p { font-size: 11px; opacity: .92; }
+  .alert-ok { color: var(--ok); background: var(--ok-bg); border-color: color-mix(in srgb, var(--ok) 30%, transparent); }
+  .alert-warn { color: var(--warn); background: var(--warn-bg); border-color: color-mix(in srgb, var(--warn) 30%, transparent); }
+  .alert-err { color: var(--err); background: var(--err-bg); border-color: color-mix(in srgb, var(--err) 30%, transparent); }
+  .state-demo { display: grid; gap: 10px; }
+  .empty { display: grid; place-items: center; gap: 8px; padding: 30px 16px; text-align: center; }
+  .empty .ring { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; border: 1px dashed var(--border); background: var(--muted); color: var(--text2); }
+  .empty b { font-size: 12.5px; }
+  .empty p { font-size: 11px; color: var(--text2); }
+  .skel { border-radius: 4px; background: linear-gradient(90deg, var(--muted) 25%, color-mix(in srgb, var(--border) 55%, var(--muted)) 50%, var(--muted) 75%); background-size: 200% 100%; animation: shimmer 1.4s linear infinite; }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+  @media (prefers-reduced-motion: reduce) { .skel { animation: none; } }
+  .skels { display: grid; gap: 10px; }
+  .skels .skel { height: 12px; }
+
+  /* ---------- Phone mockups ---------- */
+  .phones { display: flex; gap: 26px; align-items: flex-start; padding: 26px 24px 34px; overflow-x: auto; }
+  .phone {
+    width: 390px; flex: 0 0 390px; border: 1px solid var(--border); border-radius: 26px;
+    background: var(--bg); overflow: hidden; box-shadow: 0 10px 30px rgba(12,20,24,.14);
+  }
+  .phone-top { height: 26px; display: grid; place-items: center; }
+  .phone-top i { width: 70px; height: 5px; border-radius: 99px; background: var(--border); }
+  .p-head { display: flex; align-items: center; gap: 10px; padding: 10px 14px 12px; background: var(--card); border-bottom: 1px solid var(--border); }
+  .p-head b { font-size: 12.5px; display: block; }
+  .p-head small { font-size: 9.5px; color: var(--text2); display: block; }
+  .p-head .icon-btn { width: 32px; height: 32px; border-color: transparent; background: var(--muted); }
+  .p-head .icon-btn svg { width: 16px; height: 16px; }
+  .p-body { padding: 12px 14px 18px; display: grid; gap: 12px; }
+  .p-title { display: flex; align-items: center; justify-content: space-between; }
+  .p-title b { font-size: 13px; }
+  .p-title span { font-size: 10px; color: var(--text2); }
+  .p-stat { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .p-stat .card { padding: 10px 12px; }
+  .p-stat .k { font-size: 10px; color: var(--text2); }
+  .p-stat .v { font-size: 18px; margin-top: 2px; }
+  .p-search { position: relative; }
+  .p-search svg { position: absolute; top: 50%; inset-inline-start: 10px; transform: translateY(-50%); width: 15px; height: 15px; color: var(--text2); }
+  .p-search .input { height: 38px; padding-inline-start: 32px; font-size: 11.5px; }
+  .p-chips { display: flex; gap: 6px; overflow: hidden; }
+  .chip { padding: 5px 10px; border: 1px solid var(--border); background: var(--card); border-radius: 999px; font-size: 10.5px; color: var(--text2); white-space: nowrap; }
+  .chip[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: var(--on-primary); font-weight: 600; }
+  .p-fab { position: relative; }
+  .fab {
+    position: absolute; inset-inline-end: 12px; bottom: 12px;
+    width: 48px; height: 48px; border-radius: 50%; border: 0;
+    background: var(--primary); color: var(--on-primary); display: grid; place-items: center;
+    box-shadow: 0 8px 18px rgba(12,20,24,.28);
+  }
+  .fab svg { width: 22px; height: 22px; }
+
+  /* ---------- Spec sheet ---------- */
+  .spec { background: var(--card); padding: 34px 28px 44px; display: grid; gap: 26px; }
+  .spec-h { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+  .spec-h h2 { font-size: 26px; letter-spacing: -.03em; }
+  .spec-h p { color: var(--text2); font-size: 12px; max-width: 640px; margin-top: 4px; }
+  .kicker { font-family: "IBM Plex Mono", monospace; font-size: 10px; letter-spacing: .2em; color: var(--text2); }
+  .swatches { display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 10px; }
+  .sw { border: 1px solid var(--border); border-radius: var(--r-sm); overflow: hidden; background: var(--bg); }
+  .sw i { display: block; height: 44px; }
+  .sw span { display: block; padding: 7px 8px; font-size: 9.5px; line-height: 1.5; }
+  .sw b { display: block; font-family: "IBM Plex Mono", monospace; font-size: 9px; direction: ltr; color: var(--text2); }
+  .type-row { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; border-top: 1px dashed var(--border); padding-top: 14px; }
+  .type-row .big { font-size: 40px; letter-spacing: -.03em; line-height: 1.1; }
+  .type-row .mid { font-size: 18px; }
+  .type-row .small { font-size: 11px; color: var(--text2); }
+  .notes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .notes div { border-inline-start: 2px solid var(--primary); padding-inline-start: 12px; }
+  .notes b { display: block; font-size: 12px; margin-bottom: 3px; }
+  .notes p { font-size: 11px; color: var(--text2); line-height: 1.8; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 1100px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .two { grid-template-columns: 1fr; }
+    .filters { grid-template-columns: 1fr 1fr; }
+    .filters .search-cell { grid-column: 1 / -1; }
+    .states { grid-template-columns: 1fr; }
+    .notes { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 860px) {
+    body { font-size: 13px; }
+    .topstrip { padding: 8px 12px; }
+    .sec-label { padding: 7px 14px; }
+    .side { display: none; }
+    .app { display: block; min-height: 0; }
+    .mob-menu { display: inline-grid; }
+    .topbar { padding: 10px 14px; gap: 10px; position: sticky; top: 0; z-index: 20; }
+    .topbar h1 { font-size: 16px; }
+    .topbar .crumb { display: none; }
+    .desk-only { display: none !important; }
+    .mob-only { display: block; }
+    .content { padding: 14px; gap: 12px; }
+    .hello h2 { font-size: 17px; }
+    .hello p { font-size: 11px; }
+    .stats { gap: 10px; }
+    .stat { padding: 12px 14px; }
+    .stat .v { font-size: 21px; }
+    .login { grid-template-columns: 1fr; min-height: 0; }
+    .login-brand { display: none; }
+    .login-form { padding: 30px 22px 36px; }
+    .login-form h1 { font-size: 22px; }
+    .form-grid { grid-template-columns: 1fr; }
+    .overlay { min-height: 0; padding: 18px 12px; }
+    .modal { max-width: 100%; }
+    .modal-f { position: sticky; bottom: 0; }
+    .phones { padding: 16px 12px 26px; gap: 14px; }
+    .phone { width: 100%; flex: 1 0 100%; }
+    .spec { padding: 24px 16px 34px; }
+    .spec-h h2 { font-size: 21px; }
+    .filters { grid-template-columns: 1fr; }
+    .filters .search-cell { grid-column: auto; }
+    .p-stat { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 420px) {
+    .stats { grid-template-columns: 1fr 1fr; }
+    .stat .k span { font-size: 10px; }
+    .stat .v { font-size: 19px; }
+    .btn { height: 44px; }
+    .btn-sm { height: 44px; min-width: 44px; }
+    .icon-btn, .row-act button, .pager button { min-width: 44px; min-height: 44px; }
+    .input, .select, .filters .input, .filters .select { height: 44px; }
+    .range button { height: 44px; min-width: 44px; }
+    .row-between .link { display: inline-flex; align-items: center; min-height: 44px; }
+    .check { min-height: 44px; }
+    .p-head .icon-btn { width: 44px; height: 44px; }
+    .seg button { height: 44px; }
+    .chip { min-height: 44px; display: inline-flex; align-items: center; padding: 0 12px; }
+    .p-search .input { height: 44px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topstrip">
+  <div class="brand">
+    <span class="mark">د</span>
+    <div>
+      <b>الاتجاه A — «دفتر»</b>
+      <small>EDITORIAL · PAPER · DEEP TEAL</small>
+    </div>
+  </div>
+  <div class="tools">
+    <span class="pill pill-mute desk-only"><i></i> خطوط محلية · OFL</span>
+    <button class="btn btn-outline btn-sm" type="button" data-theme-btn>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+      <span data-theme-label>الوضع الليلي</span>
+    </button>
+  </div>
+</header>
+
+<main class="page">
+<style>
+  .i { width: 18px; height: 18px; flex: 0 0 auto; }
+  .i-sm { width: 15px; height: 15px; flex: 0 0 auto; }
+  .i-lg { width: 22px; height: 22px; flex: 0 0 auto; }
+  .pw-wrap { position: relative; }
+  .pw-wrap .icon-btn { position: absolute; top: 50%; inset-inline-end: 5px; transform: translateY(-50%); border-color: transparent; background: transparent; width: 32px; height: 32px; }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5"/><path d="M16 13h.01"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6" rx="1"/><rect x="12.5" y="7" width="3" height="10" rx="1"/><rect x="18" y="13" width="3" height="4" rx="1"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><path d="M1 14h6M9 8h6M17 16h6"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></symbol>
+  <symbol id="i-chev-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-chev-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></symbol>
+  <symbol id="i-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-alert-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/></symbol>
+  <symbol id="i-qr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14h1M14 20h1M18 18h3v3"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v6l-4 2v-8Z"/></symbol>
+  <symbol id="i-trend-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/></symbol>
+  <symbol id="i-trend-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m3 7 6 6 4-4 8 8"/><path d="M21 17h-6v-6"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v18l-3-2-3 2-3-2-3 2Z"/><path d="M9 7h6M9 11h6M9 15h3"/></symbol>
+  <symbol id="i-school" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="M6 10.5V17c0 1.7 2.7 3 6 3s6-1.3 6-3v-6.5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></symbol>
+  <symbol id="i-card" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3Z"/><path d="M19 15v4M17 17h4M5 3v3M3.5 4.5h3"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-arrow-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></symbol>
+</svg>
+
+<!-- ============================== 01 · LOGIN ============================== -->
+<section class="block" id="login">
+  <div class="sec-label"><span>01 / LOGIN</span><b>شاشة الدخول</b></div>
+  <div class="login">
+    <div class="login-brand">
+      <div class="dots"></div><div class="glow"></div>
+      <div>
+        <div class="lb-mark"><span class="box"><svg class="i"><use href="#i-school"/></svg></span> نظام إدارة السنتر</div>
+        <div style="height:56px"></div>
+        <h2>كل ما يحتاجه <em>مركزك</em><br />في مكان واحد.</h2>
+        <p class="lead">الطلاب، الحضور، الاشتراكات، الامتحانات والتقارير — بدون جداول متفرقة ولا متابعة يدوية.</p>
+        <div class="lb-points">
+          <div class="lb-point"><svg><use href="#i-qr"/></svg> حضور بالـ QR في ثوانٍ</div>
+          <div class="lb-point"><svg><use href="#i-wallet"/></svg> متابعة مالية دقيقة لكل طالب</div>
+          <div class="lb-point"><svg><use href="#i-chart"/></svg> تقارير جاهزة لاتخاذ القرار</div>
+        </div>
+      </div>
+      <div class="lb-foot"><svg class="i-sm"><use href="#i-shield"/></svg> بيانات مركزك معزولة وآمنة</div>
+    </div>
+
+    <div class="login-form">
+      <div class="eyebrow">CENTER MANAGEMENT SYSTEM</div>
+      <h1>تسجيل الدخول</h1>
+      <p class="sub">أدخل بيانات حسابك للمتابعة إلى لوحة التحكم.</p>
+      <form onsubmit="return false">
+        <div>
+          <label class="label" for="a-phone">رقم الهاتف</label>
+          <div class="search">
+            <svg><use href="#i-phone"/></svg>
+            <input id="a-phone" class="input" dir="ltr" inputmode="tel" placeholder="01X XXX XXXX" style="text-align:right" />
+          </div>
+        </div>
+        <div>
+          <label class="label" for="a-pass">كلمة المرور</label>
+          <div class="pw-wrap">
+            <input id="a-pass" class="input" type="password" placeholder="••••••••" />
+            <button class="icon-btn" type="button" aria-label="إظهار كلمة المرور"><svg class="i"><use href="#i-eye"/></svg></button>
+          </div>
+        </div>
+        <div class="row-between">
+          <label class="check"><input type="checkbox" checked /> تذكرني</label>
+          <a class="link" href="#login">نسيت كلمة المرور؟</a>
+        </div>
+        <button class="btn btn-primary" type="submit" style="width:100%">دخول إلى لوحة التحكم <svg><use href="#i-arrow-left"/></svg></button>
+        <div class="or">أو</div>
+        <button class="btn btn-outline" type="button" style="width:100%"><svg><use href="#i-qr"/></svg> دخول الطالب بكود البطاقة</button>
+      </form>
+      <p class="login-note">بالمتابعة أنت توافق على شروط الاستخدام وسياسة الخصوصية.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 02 · APP ============================== -->
+<section class="block" id="app">
+  <div class="sec-label"><span>02 / APP SHELL + DASHBOARD</span><b>الهيكل، لوحة التحكم وجدول الطلاب</b></div>
+  <div class="app">
+    <aside class="side">
+      <div class="side-head">
+        <div class="center-chip">
+          <span class="center-logo">ن</span>
+          <div style="min-width:0">
+            <b>سنتر النور</b>
+            <small>الفرع الرئيسي · القاهرة</small>
+          </div>
+        </div>
+      </div>
+      <nav class="side-nav" aria-label="التنقل الرئيسي">
+        <div class="nav-cap">الرئيسية</div>
+        <a class="nav-item" href="#app" aria-current="page"><svg><use href="#i-grid"/></svg> لوحة التحكم</a>
+        <a class="nav-item" href="#students"><svg><use href="#i-users"/></svg> الطلاب</a>
+        <a class="nav-item" href="#students"><svg><use href="#i-calendar"/></svg> الحضور والغياب <span class="nav-badge num">12</span></a>
+        <a class="nav-item" href="#students"><svg><use href="#i-wallet"/></svg> المالية والاشتراكات</a>
+        <a class="nav-item" href="#students"><svg><use href="#i-chart"/></svg> التقارير</a>
+        <div class="nav-cap">الإدارة</div>
+        <a class="nav-item" href="#students"><svg><use href="#i-user"/></svg> المدرسون</a>
+        <a class="nav-item" href="#students"><svg><use href="#i-book"/></svg> المجموعات</a>
+        <a class="nav-item" href="#students"><svg><use href="#i-sliders"/></svg> الإعدادات</a>
+      </nav>
+      <div class="side-foot">
+        <div class="side-user">
+          <span class="avatar">أح</span>
+          <div style="min-width:0">
+            <b>أحمد محمود</b>
+            <small>صاحب المركز</small>
+          </div>
+          <svg class="i-sm" style="margin-inline-start:auto;color:var(--text2)"><use href="#i-more"/></svg>
+        </div>
+        <a class="nav-item" href="#login"><svg><use href="#i-moon"/></svg> الوضع الليلي</a>
+        <a class="nav-item" href="#login"><svg><use href="#i-logout"/></svg> تسجيل الخروج</a>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <button class="icon-btn mob-menu" type="button" aria-label="فتح القائمة"><svg><use href="#i-menu"/></svg></button>
+        <div>
+          <div class="crumb">الرئيسية / لوحة التحكم</div>
+          <h1>لوحة التحكم</h1>
+        </div>
+        <div class="grow"></div>
+        <div class="search desk-only" style="width:240px">
+          <svg><use href="#i-search"/></svg>
+          <input class="input" placeholder="بحث سريع…" style="height:36px" />
+        </div>
+        <div class="top-actions">
+          <button class="icon-btn" type="button" aria-label="الإشعارات" style="position:relative">
+            <svg><use href="#i-bell"/></svg>
+            <span style="position:absolute;top:7px;inset-inline-end:8px;width:6px;height:6px;border-radius:50%;background:var(--err)"></span>
+          </button>
+          <button class="icon-btn" type="button" aria-label="تبديل الوضع"><svg><use href="#i-moon"/></svg></button>
+          <span class="avatar desk-only">أح</span>
+        </div>
+      </header>
+
+      <div class="content">
+        <div class="hello">
+          <div>
+            <h2>صباح الخير، أحمد 👋</h2>
+            <p>هذا ملخص يوم <span class="num">09/11/2026</span> — كل شيء تحت السيطرة.</p>
+          </div>
+          <div class="range" data-seg>
+            <button type="button" aria-pressed="false">اليوم</button>
+            <button type="button" aria-pressed="true">هذا الشهر</button>
+            <button type="button" aria-pressed="false">هذا العام</button>
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="card stat">
+            <div class="k"><span>إجمالي الطلاب</span><svg><use href="#i-users"/></svg></div>
+            <div class="v num">248</div>
+            <div class="d"><span class="up"><svg class="i-sm" style="vertical-align:-3px"><use href="#i-trend-up"/></svg> 12</span><em>هذا الشهر</em></div>
+          </div>
+          <div class="card stat">
+            <div class="k"><span>نسبة الحضور</span><svg><use href="#i-calendar"/></svg></div>
+            <div class="v num">92<small>%</small></div>
+            <div class="d"><span class="up">+4.2%</span><em>مقارنة بالأسبوع الماضي</em></div>
+          </div>
+          <div class="card stat">
+            <div class="k"><span>تحصيل الشهر</span><svg><use href="#i-wallet"/></svg></div>
+            <div class="v num">12,450 <small>ج.م</small></div>
+            <div class="d"><span class="up">+8%</span><em>عن الشهر الماضي</em></div>
+          </div>
+          <div class="card stat">
+            <div class="k"><span>مدفوعات متأخرة</span><svg><use href="#i-alert"/></svg></div>
+            <div class="v num">7</div>
+            <div class="d"><span class="down">3</span><em>تحتاج متابعة</em></div>
+          </div>
+        </div>
+
+        <div class="two">
+          <div class="card">
+            <div class="card-h">
+              <div><h3>الإيراد والحضور</h3><p>آخر ستة أشهر</p></div>
+              <div class="legend" style="padding:0">
+                <span><i style="background:var(--primary)"></i>الإيراد</span>
+                <span><i style="background:var(--accent)"></i>الحضور</span>
+              </div>
+            </div>
+            <div class="chart-wrap">
+              <svg viewBox="0 0 640 220" role="img" aria-label="رسم يوضح الإيراد والحضور خلال ستة أشهر">
+                <line x1="34" y1="20" x2="620" y2="20" stroke="var(--border)" stroke-dasharray="3 4" />
+                <line x1="34" y1="60" x2="620" y2="60" stroke="var(--border)" stroke-dasharray="3 4" />
+                <line x1="34" y1="100" x2="620" y2="100" stroke="var(--border)" stroke-dasharray="3 4" />
+                <line x1="34" y1="140" x2="620" y2="140" stroke="var(--border)" stroke-dasharray="3 4" />
+                <line x1="34" y1="180" x2="620" y2="180" stroke="var(--border)" />
+                <g fill="var(--text2)" font-size="9" font-family="IBM Plex Mono, monospace" text-anchor="middle">
+                  <text x="80" y="204">يول</text><text x="180" y="204">أغس</text><text x="280" y="204">سبت</text>
+                  <text x="380" y="204">أكت</text><text x="480" y="204">نوف</text><text x="580" y="204">ديس</text>
+                </g>
+                <g fill="var(--primary)">
+                  <rect x="58" y="84" width="18" height="96" rx="2" />
+                  <rect x="158" y="60" width="18" height="120" rx="2" />
+                  <rect x="258" y="96" width="18" height="84" rx="2" />
+                  <rect x="358" y="44" width="18" height="136" rx="2" />
+                  <rect x="458" y="56" width="18" height="124" rx="2" />
+                  <rect x="558" y="36" width="18" height="144" rx="2" />
+                </g>
+                <g fill="var(--accent)" opacity=".9">
+                  <rect x="82" y="116" width="12" height="64" rx="2" />
+                  <rect x="182" y="132" width="12" height="48" rx="2" />
+                  <rect x="282" y="108" width="12" height="72" rx="2" />
+                  <rect x="382" y="124" width="12" height="56" rx="2" />
+                  <rect x="482" y="112" width="12" height="68" rx="2" />
+                  <rect x="582" y="96" width="12" height="84" rx="2" />
+                </g>
+                <polyline points="67,118 167,102 267,126 367,86 467,96 567,68" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+                <g fill="var(--card)" stroke="var(--primary)" stroke-width="2">
+                  <circle cx="67" cy="118" r="3.2" /><circle cx="167" cy="102" r="3.2" /><circle cx="267" cy="126" r="3.2" />
+                  <circle cx="367" cy="86" r="3.2" /><circle cx="467" cy="96" r="3.2" /><circle cx="567" cy="68" r="3.2" />
+                </g>
+              </svg>
+            </div>
+            <div class="legend">
+              <span><i style="background:var(--primary)"></i>الإيراد (ألف ج.م)</span>
+              <span><i style="background:var(--accent)"></i>الحضور (٪)</span>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-h">
+              <div><h3>حصص اليوم</h3><p>4 حصص قادمة</p></div>
+              <button class="btn btn-ghost btn-sm" type="button">عرض الكل</button>
+            </div>
+            <div class="list">
+              <div class="li"><span class="dot" style="background:var(--ok)"></span><div class="t"><b>رياضيات — الصف الثالث</b><small><span class="num">04:00</span> م · قاعة ١</small></div><span class="pill pill-ok"><i></i>جارٍ</span></div>
+              <div class="li"><span class="dot" style="background:var(--primary)"></span><div class="t"><b>فيزياء — الثانوية</b><small><span class="num">05:30</span> م · قاعة ٢</small></div><span class="pill pill-info"><i></i>قادم</span></div>
+              <div class="li"><span class="dot" style="background:var(--primary)"></span><div class="t"><b>لغة إنجليزية — إعدادي</b><small><span class="num">07:00</span> م · قاعة ١</small></div><span class="pill pill-info"><i></i>قادم</span></div>
+              <div class="li"><span class="dot" style="background:var(--warn)"></span><div class="t"><b>كيمياء — الثانوية</b><small><span class="num">08:30</span> م · قاعة ٣</small></div><span class="pill pill-warn"><i></i>تأخير</span></div>
+            </div>
+            <div class="card-b" style="border-top:1px solid var(--border);padding:14px 18px">
+              <div class="alert alert-info" style="padding:10px 12px">
+                <svg><use href="#i-info"/></svg>
+                <div><b>تذكير</b><p>3 طلاب لم يسددوا اشتراك نوفمبر.</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Students -->
+        <div class="card" id="students">
+          <div class="card-h">
+            <div><h3>الطلاب</h3><p><span class="num">248</span> طالبًا مسجلًا · <span class="num">12</span> مجموعة</p></div>
+            <div style="display:flex;gap:8px" class="desk-only">
+              <button class="btn btn-outline btn-sm" type="button"><svg><use href="#i-download"/></svg> تصدير</button>
+              <button class="btn btn-primary btn-sm" type="button"><svg><use href="#i-plus"/></svg> إضافة طالب</button>
+            </div>
+          </div>
+
+          <div class="card-b" style="padding-bottom:12px">
+            <div class="filters">
+              <div class="search-cell">
+                <label class="label" for="a-q">بحث</label>
+                <div class="search"><svg><use href="#i-search"/></svg><input id="a-q" class="input" placeholder="ابحث بالاسم أو رقم الهاتف…" /></div>
+              </div>
+              <div>
+                <label class="label" for="a-g">المجموعة</label>
+                <select id="a-g" class="select"><option>كل المجموعات</option><option>مجموعة أ</option><option>مجموعة ب</option><option>مجموعة ج</option></select>
+              </div>
+              <div>
+                <label class="label" for="a-s">الحالة</label>
+                <select id="a-s" class="select"><option>كل الحالات</option><option>نشط</option><option>موقوف</option><option>منتهي</option></select>
+              </div>
+              <div>
+                <label class="label" for="a-p">السداد</label>
+                <select id="a-p" class="select"><option>الكل</option><option>مدفوع</option><option>متأخر</option></select>
+              </div>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-outline btn-sm" type="button" aria-label="تصفية إضافية" style="height:44px"><svg><use href="#i-filter"/></svg></button>
+                <button class="btn btn-primary btn-sm mob-only" type="button" style="height:44px"><svg><use href="#i-plus"/></svg> طالب</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="tw desk-only">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th>الطالب</th><th>الهاتف</th><th>المجموعة</th><th>الاشتراك</th><th>الحالة</th><th style="text-align:left">إجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><div class="who"><span class="avatar" style="width:30px;height:30px;flex:0 0 30px;font-size:11px">أح</span><div><b>أحمد محمود</b><small>كود <span class="num">ST-1042</span></small></div></div></td>
+                  <td class="num" style="font-size:11.5px">0100 000 0001</td>
+                  <td>مجموعة أ</td>
+                  <td><span class="pill pill-brand"><i></i>شهري</span></td>
+                  <td><span class="pill pill-ok"><i></i>نشط</span></td>
+                  <td><div class="row-act"><button type="button" aria-label="عرض الطالب"><svg><use href="#i-eye"/></svg></button><button type="button" aria-label="تعديل"><svg><use href="#i-pencil"/></svg></button><button type="button" aria-label="المزيد"><svg><use href="#i-more"/></svg></button></div></td>
+                </tr>
+                <tr>
+                  <td><div class="who"><span class="avatar" style="width:30px;height:30px;flex:0 0 30px;font-size:11px;background:var(--accent);color:var(--on-accent)">مس</span><div><b>مريم سيد</b><small>كود <span class="num">ST-1043</span></small></div></div></td>
+                  <td class="num" style="font-size:11.5px">0100 000 0002</td>
+                  <td>مجموعة ب</td>
+                  <td><span class="pill pill-brand"><i></i>حصص</span></td>
+                  <td><span class="pill pill-warn"><i></i>متأخر</span></td>
+                  <td><div class="row-act"><button type="button" aria-label="عرض الطالب"><svg><use href="#i-eye"/></svg></button><button type="button" aria-label="تعديل"><svg><use href="#i-pencil"/></svg></button><button type="button" aria-label="المزيد"><svg><use href="#i-more"/></svg></button></div></td>
+                </tr>
+                <tr>
+                  <td><div class="who"><span class="avatar" style="width:30px;height:30px;flex:0 0 30px;font-size:11px;background:var(--info);color:#fff">يع</span><div><b>يوسف عادل</b><small>كود <span class="num">ST-1044</span></small></div></div></td>
+                  <td class="num" style="font-size:11.5px">0100 000 0003</td>
+                  <td>مجموعة أ</td>
+                  <td><span class="pill pill-brand"><i></i>شهري</span></td>
+                  <td><span class="pill pill-ok"><i></i>نشط</span></td>
+                  <td><div class="row-act"><button type="button" aria-label="عرض الطالب"><svg><use href="#i-eye"/></svg></button><button type="button" aria-label="تعديل"><svg><use href="#i-pencil"/></svg></button><button type="button" aria-label="المزيد"><svg><use href="#i-more"/></svg></button></div></td>
+                </tr>
+                <tr>
+                  <td><div class="who"><span class="avatar" style="width:30px;height:30px;flex:0 0 30px;font-size:11px;background:var(--muted);color:var(--text2)">سح</span><div><b>سلمى حسن</b><small>كود <span class="num">ST-1045</span></small></div></div></td>
+                  <td class="num" style="font-size:11.5px">0100 000 0004</td>
+                  <td>مجموعة ج</td>
+                  <td><span class="pill pill-mute"><i></i>منتهي</span></td>
+                  <td><span class="pill pill-err"><i></i>موقوف</span></td>
+                  <td><div class="row-act"><button type="button" aria-label="عرض الطالب"><svg><use href="#i-eye"/></svg></button><button type="button" aria-label="تعديل"><svg><use href="#i-pencil"/></svg></button><button type="button" aria-label="المزيد"><svg><use href="#i-more"/></svg></button></div></td>
+                </tr>
+                <tr>
+                  <td><div class="who"><span class="avatar" style="width:30px;height:30px;flex:0 0 30px;font-size:11px;background:var(--ok);color:#fff">عم</span><div><b>عمر خالد</b><small>كود <span class="num">ST-1046</span></small></div></div></td>
+                  <td class="num" style="font-size:11.5px">0100 000 0005</td>
+                  <td>مجموعة ب</td>
+                  <td><span class="pill pill-brand"><i></i>شهري</span></td>
+                  <td><span class="pill pill-ok"><i></i>نشط</span></td>
+                  <td><div class="row-act"><button type="button" aria-label="عرض الطالب"><svg><use href="#i-eye"/></svg></button><button type="button" aria-label="تعديل"><svg><use href="#i-pencil"/></svg></button><button type="button" aria-label="المزيد"><svg><use href="#i-more"/></svg></button></div></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- mobile cards -->
+          <div class="mob-only mcards">
+            <div class="mcard">
+              <div class="mcard-top">
+                <div class="name"><span class="avatar" style="width:34px;height:34px;flex:0 0 34px;font-size:12px">أح</span><div><b>أحمد محمود</b><small>مجموعة أ · <span class="num">ST-1042</span></small></div></div>
+                <span class="pill pill-ok"><i></i>نشط</span>
+              </div>
+              <div class="mcard-meta"><span><svg><use href="#i-phone"/></svg><span class="num">0100 000 0001</span></span><span><svg><use href="#i-card"/></svg>شهري</span></div>
+              <div class="mcard-foot"><span style="font-size:10.5px;color:var(--text2)">آخر حضور: اليوم</span><div class="row-act"><button type="button" aria-label="اتصال"><svg><use href="#i-phone"/></svg></button><button type="button" aria-label="تعديل"><svg><use href="#i-pencil"/></svg></button></div></div>
+            </div>
+            <div class="mcard">
+              <div class="mcard-top">
+                <div class="name"><span class="avatar" style="width:34px;height:34px;flex:0 0 34px;font-size:12px;background:var(--accent);color:var(--on-accent)">مس</span><div><b>مريم سيد</b><small>مجموعة ب · <span class="num">ST-1043</span></small></div></div>
+                <span class="pill pill-warn"><i></i>متأخر</span>
+              </div>
+              <div class="mcard-meta"><span><svg><use href="#i-phone"/></svg><span class="num">0100 000 0002</span></span><span><svg><use href="#i-card"/></svg>حصص</span></div>
+              <div class="mcard-foot"><span style="font-size:10.5px;color:var(--err)">مستحق: <span class="num">350</span> ج.م</span><div class="row-act"><button type="button" aria-label="اتصال"><svg><use href="#i-phone"/></svg></button><button type="button" aria-label="تعديل"><svg><use href="#i-pencil"/></svg></button></div></div>
+            </div>
+            <div class="mcard">
+              <div class="mcard-top">
+                <div class="name"><span class="avatar" style="width:34px;height:34px;flex:0 0 34px;font-size:12px;background:var(--info);color:#fff">يع</span><div><b>يوسف عادل</b><small>مجموعة أ · <span class="num">ST-1044</span></small></div></div>
+                <span class="pill pill-ok"><i></i>نشط</span>
+              </div>
+              <div class="mcard-meta"><span><svg><use href="#i-phone"/></svg><span class="num">0100 000 0003</span></span><span><svg><use href="#i-card"/></svg>شهري</span></div>
+              <div class="mcard-foot"><span style="font-size:10.5px;color:var(--text2)">آخر حضور: أمس</span><div class="row-act"><button type="button" aria-label="اتصال"><svg><use href="#i-phone"/></svg></button><button type="button" aria-label="تعديل"><svg><use href="#i-pencil"/></svg></button></div></div>
+            </div>
+          </div>
+
+          <div class="tbl-foot">
+            <span>عرض <span class="num">1–5</span> من <span class="num">248</span></span>
+            <div class="pager">
+              <button type="button" aria-label="السابق"><svg class="i-sm"><use href="#i-chev-right"/></svg></button>
+              <button type="button" aria-current="true">1</button>
+              <button type="button">2</button>
+              <button type="button">3</button>
+              <button type="button" aria-label="التالي"><svg class="i-sm"><use href="#i-chev-left"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- ============================== 03 · MODAL ============================== -->
+<section class="block" id="modal">
+  <div class="sec-label"><span>03 / MODAL</span><b>نافذة إضافة طالب + حالة خطأ في الحقل</b></div>
+  <div class="overlay">
+    <div class="scrim"></div>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="a-modal-title">
+      <div class="modal-h">
+        <span class="center-logo" style="background:var(--muted)"><svg class="i"><use href="#i-user"/></svg></span>
+        <div>
+          <h3 id="a-modal-title">إضافة طالب جديد</h3>
+          <p>البيانات الأساسية فقط — يمكن استكمال الباقي لاحقًا.</p>
+        </div>
+        <button class="icon-btn" type="button" aria-label="إغلاق"><svg><use href="#i-x"/></svg></button>
+      </div>
+      <div class="modal-b">
+        <div class="form-grid">
+          <div>
+            <label class="label" for="a-name">الاسم الكامل <span class="req">*</span></label>
+            <input id="a-name" class="input" value="نور الدين مصطفى" />
+          </div>
+          <div>
+            <label class="label" for="a-tel">رقم الهاتف <span class="req">*</span></label>
+            <input id="a-tel" class="input has-err" dir="ltr" value="0100 00" style="text-align:right" aria-invalid="true" aria-describedby="a-tel-err" />
+            <div class="err-msg" id="a-tel-err"><svg><use href="#i-alert-circle"/></svg> أدخل رقمًا صحيحًا من 11 رقمًا.</div>
+          </div>
+          <div>
+            <label class="label" for="a-parent">هاتف ولي الأمر</label>
+            <input id="a-parent" class="input" dir="ltr" placeholder="01X XXX XXXX" style="text-align:right" />
+            <div class="hint">اختياري — يُستخدم لإشعارات الحضور.</div>
+          </div>
+          <div>
+            <label class="label" for="a-group">المجموعة</label>
+            <select id="a-group" class="select"><option>مجموعة أ — السبت والثلاثاء</option><option>مجموعة ب — الأحد والأربعاء</option><option>مجموعة ج — الاثنين والخميس</option></select>
+          </div>
+          <div class="span2">
+            <span class="label">نوع الاشتراك</span>
+            <div class="seg" data-seg style="width:100%">
+              <button type="button" aria-pressed="true" style="flex:1">شهري</button>
+              <button type="button" aria-pressed="false" style="flex:1">حصص</button>
+            </div>
+          </div>
+          <div class="span2">
+            <span class="label">حالة السداد</span>
+            <div class="seg" data-seg style="width:100%">
+              <button type="button" aria-pressed="true" style="flex:1">مدفوع</button>
+              <button type="button" aria-pressed="false" style="flex:1">غير مدفوع</button>
+            </div>
+          </div>
+        </div>
+        <div class="alert alert-info" style="margin-top:2px">
+          <svg><use href="#i-info"/></svg>
+          <div><b>ملاحظة</b><p>سيتم إنشاء كود بطاقة تلقائيًا بعد الحفظ.</p></div>
+        </div>
+      </div>
+      <div class="modal-f">
+        <button class="btn btn-outline" type="button">إلغاء</button>
+        <button class="btn btn-primary" type="button"><svg><use href="#i-check"/></svg> حفظ الطالب</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 04 · STATES ============================== -->
+<section class="block" id="states">
+  <div class="sec-label"><span>04 / FEEDBACK</span><b>البحث والحالات: نجاح، تحذير، خطأ</b></div>
+  <div style="padding:22px 24px;background:var(--bg);display:grid;gap:14px">
+    <div class="card">
+      <div class="card-b">
+        <div class="search" style="max-width:420px">
+          <svg><use href="#i-search"/></svg>
+          <input class="input" value="أحمد" aria-label="بحث في الطلاب" />
+        </div>
+        <p style="font-size:11px;color:var(--text2);margin-top:8px"><span class="num">3</span> نتائج مطابقة لكلمة «أحمد»</p>
+      </div>
+    </div>
+
+    <div class="states">
+      <div class="state-demo">
+        <div class="alert alert-ok"><svg><use href="#i-check-circle"/></svg><div><b>تم الحفظ بنجاح</b><p>أُضيف الطالب «نور الدين» إلى مجموعة أ.</p></div></div>
+        <div class="alert alert-ok"><svg><use href="#i-check-circle"/></svg><div><b>تم تسجيل الحضور</b><p><span class="num">24</span> طالبًا · <span class="num">02:14</span> م</p></div></div>
+      </div>
+      <div class="state-demo">
+        <div class="alert alert-warn"><svg><use href="#i-alert"/></svg><div><b>اشتراك على وشك الانتهاء</b><p>ينتهي اشتراك «مريم سيد» بعد <span class="num">3</span> أيام.</p></div></div>
+        <div class="alert alert-warn"><svg><use href="#i-alert"/></svg><div><b>لا يمكن إتمام العملية</b><p>المجموعة مكتملة — الحد الأقصى <span class="num">25</span> طالبًا.</p></div></div>
+      </div>
+      <div class="state-demo">
+        <div class="alert alert-err"><svg><use href="#i-alert-circle"/></svg><div><b>تعذّر حفظ البيانات</b><p>تحقق من رقم الهاتف وحاول مرة أخرى.</p></div></div>
+        <div class="alert alert-err"><svg><use href="#i-alert-circle"/></svg><div><b>انقطع الاتصال</b><p>لم نتمكن من الوصول إلى الخادم. <a class="link" href="#states">إعادة المحاولة</a></p></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><div><h3>حالات الجدول</h3><p>تحميل / فراغ / خطأ</p></div><span class="pill pill-mute"><i></i><span data-theme-tag>نهاري</span></span></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0" class="states">
+        <div style="padding:16px;border-inline-end:1px solid var(--border)">
+          <p class="kicker" style="margin-bottom:10px">LOADING</p>
+          <div class="skels">
+            <div class="skel" style="width:70%"></div><div class="skel"></div><div class="skel" style="width:88%"></div><div class="skel" style="width:55%"></div>
+          </div>
+        </div>
+        <div style="padding:16px;border-inline-end:1px solid var(--border)">
+          <p class="kicker" style="margin-bottom:10px">EMPTY</p>
+          <div class="empty" style="padding:10px 0">
+            <span class="ring"><svg class="i-lg"><use href="#i-search"/></svg></span>
+            <b>لا توجد نتائج</b>
+            <p>جرّب كلمة بحث أخرى أو أزل الفلاتر.</p>
+            <button class="btn btn-outline btn-sm" type="button">مسح الفلاتر</button>
+          </div>
+        </div>
+        <div style="padding:16px">
+          <p class="kicker" style="margin-bottom:10px">ERROR</p>
+          <div class="empty" style="padding:10px 0">
+            <span class="ring" style="color:var(--err);border-color:color-mix(in srgb, var(--err) 40%, transparent);background:var(--err-bg)"><svg class="i-lg"><use href="#i-alert-circle"/></svg></span>
+            <b>فشل تحميل البيانات</b>
+            <p>حاول تحديث الصفحة أو أعد المحاولة.</p>
+            <button class="btn btn-outline btn-sm" type="button">إعادة المحاولة</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 05 · MOBILE ============================== -->
+<section class="block" id="mobile">
+  <div class="sec-label"><span>05 / MOBILE 390</span><b>تجربة الموبايل — لوحة التحكم وقائمة الطلاب</b></div>
+  <div class="phones">
+    <!-- phone 1 -->
+    <div class="phone">
+      <div class="phone-top"><i></i></div>
+      <div class="p-head">
+        <button class="icon-btn" type="button" aria-label="القائمة"><svg><use href="#i-menu"/></svg></button>
+        <div style="flex:1;min-width:0"><b>سنتر النور</b><small>لوحة التحكم</small></div>
+        <button class="icon-btn" type="button" aria-label="الإشعارات" style="position:relative"><svg><use href="#i-bell"/></svg><span style="position:absolute;top:6px;inset-inline-end:7px;width:6px;height:6px;border-radius:50%;background:var(--err)"></span></button>
+      </div>
+      <div class="p-body">
+        <div class="p-title"><b>صباح الخير، أحمد</b><span class="num">09/11</span></div>
+        <div class="p-stat">
+          <div class="card"><div class="k">الطلاب</div><div class="v num" style="font-weight:600">248</div><div style="font-size:9px;color:var(--ok)">+12 هذا الشهر</div></div>
+          <div class="card"><div class="k">الحضور</div><div class="v num" style="font-weight:600">92%</div><div style="font-size:9px;color:var(--ok)">+4.2%</div></div>
+          <div class="card"><div class="k">تحصيل الشهر</div><div class="v num" style="font-weight:600;font-size:15px">12,450</div><div style="font-size:9px;color:var(--text2)">ج.م</div></div>
+          <div class="card"><div class="k">متأخرات</div><div class="v num" style="font-weight:600">7</div><div style="font-size:9px;color:var(--err)">تحتاج متابعة</div></div>
+        </div>
+        <div class="card" style="padding:12px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <b style="font-size:11.5px">الحضور هذا الأسبوع</b><span class="pill pill-ok"><i></i>92%</span>
+          </div>
+          <svg viewBox="0 0 320 92" style="width:100%;height:auto" aria-label="رسم الحضور الأسبوعي">
+            <line x1="4" y1="72" x2="316" y2="72" stroke="var(--border)" />
+            <line x1="4" y1="44" x2="316" y2="44" stroke="var(--border)" stroke-dasharray="3 4" />
+            <polyline points="18,56 68,40 118,62 168,30 218,42 268,24 302,34" fill="none" stroke="var(--primary)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" />
+            <g fill="var(--card)" stroke="var(--primary)" stroke-width="2">
+              <circle cx="18" cy="56" r="3"/><circle cx="68" cy="40" r="3"/><circle cx="118" cy="62" r="3"/>
+              <circle cx="168" cy="30" r="3"/><circle cx="218" cy="42" r="3"/><circle cx="268" cy="24" r="3"/><circle cx="302" cy="34" r="3"/>
+            </g>
+            <g fill="var(--text2)" font-size="8" text-anchor="middle"><text x="18" y="86">س</text><text x="68" y="86">ح</text><text x="118" y="86">ن</text><text x="168" y="86">ث</text><text x="218" y="86">ر</text><text x="268" y="86">خ</text><text x="302" y="86">ج</text></g>
+          </svg>
+        </div>
+        <div class="card" style="overflow:hidden">
+          <div style="padding:10px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center"><b style="font-size:11.5px">حصص اليوم</b><span style="font-size:10px;color:var(--text2)">4 حصص</span></div>
+          <div style="padding:10px 12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border)">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>
+            <div style="flex:1"><div style="font-size:11px;font-weight:600">رياضيات — الثالث</div><div style="font-size:9.5px;color:var(--text2)"><span class="num">04:00</span> م · قاعة ١</div></div>
+            <span class="pill pill-ok" style="font-size:9px"><i></i>جارٍ</span>
+          </div>
+          <div style="padding:10px 12px;display:flex;align-items:center;gap:8px">
+            <span style="width:6px;height:6px;border-radius:50%;background:var(--primary)"></span>
+            <div style="flex:1"><div style="font-size:11px;font-weight:600">فيزياء — الثانوية</div><div style="font-size:9.5px;color:var(--text2)"><span class="num">05:30</span> م · قاعة ٢</div></div>
+            <span class="pill pill-info" style="font-size:9px"><i></i>قادم</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- phone 2 -->
+    <div class="phone">
+      <div class="phone-top"><i></i></div>
+      <div class="p-head">
+        <button class="icon-btn" type="button" aria-label="رجوع"><svg><use href="#i-chev-right"/></svg></button>
+        <div style="flex:1;min-width:0"><b>الطلاب</b><small><span class="num">248</span> طالبًا · <span class="num">12</span> مجموعة</small></div>
+        <button class="icon-btn" type="button" aria-label="تصدير"><svg><use href="#i-download"/></svg></button>
+      </div>
+      <div class="p-body">
+        <div class="p-search"><svg><use href="#i-search"/></svg><input class="input" placeholder="ابحث بالاسم أو الهاتف…" aria-label="بحث الطلاب" /></div>
+        <div class="p-chips">
+          <button class="chip" type="button" aria-pressed="true">الكل</button>
+          <button class="chip" type="button" aria-pressed="false">نشط</button>
+          <button class="chip" type="button" aria-pressed="false">متأخر</button>
+          <button class="chip" type="button" aria-pressed="false">موقوف</button>
+        </div>
+        <div class="card" style="overflow:hidden">
+          <div class="mcard" style="border-bottom:1px solid var(--border)">
+            <div class="mcard-top">
+              <div class="name"><span class="avatar" style="width:34px;height:34px;flex:0 0 34px;font-size:12px">أح</span><div><b>أحمد محمود</b><small>مجموعة أ · <span class="num">ST-1042</span></small></div></div>
+              <span class="pill pill-ok"><i></i>نشط</span>
+            </div>
+            <div class="mcard-meta"><span><svg><use href="#i-phone"/></svg><span class="num">0100 000 0001</span></span><span><svg><use href="#i-card"/></svg>شهري</span></div>
+            <div class="mcard-foot"><span style="font-size:10.5px;color:var(--text2)">آخر حضور: اليوم</span><div class="row-act"><button type="button" aria-label="اتصال"><svg><use href="#i-phone"/></svg></button><button type="button" aria-label="تعديل"><svg><use href="#i-pencil"/></svg></button></div></div>
+          </div>
+          <div class="mcard" style="border-bottom:1px solid var(--border)">
+            <div class="mcard-top">
+              <div class="name"><span class="avatar" style="width:34px;height:34px;flex:0 0 34px;font-size:12px;background:var(--accent);color:var(--on-accent)">مس</span><div><b>مريم سيد</b><small>مجموعة ب · <span class="num">ST-1043</span></small></div></div>
+              <span class="pill pill-warn"><i></i>متأخر</span>
+            </div>
+            <div class="mcard-meta"><span><svg><use href="#i-phone"/></svg><span class="num">0100 000 0002</span></span><span><svg><use href="#i-card"/></svg>حصص</span></div>
+            <div class="mcard-foot"><span style="font-size:10.5px;color:var(--err)">مستحق: <span class="num">350</span> ج.م</span><div class="row-act"><button type="button" aria-label="اتصال"><svg><use href="#i-phone"/></svg></button><button type="button" aria-label="تعديل"><svg><use href="#i-pencil"/></svg></button></div></div>
+          </div>
+          <div class="mcard">
+            <div class="mcard-top">
+              <div class="name"><span class="avatar" style="width:34px;height:34px;flex:0 0 34px;font-size:12px;background:var(--muted);color:var(--text2)">سح</span><div><b>سلمى حسن</b><small>مجموعة ج · <span class="num">ST-1045</span></small></div></div>
+              <span class="pill pill-err"><i></i>موقوف</span>
+            </div>
+            <div class="mcard-meta"><span><svg><use href="#i-phone"/></svg><span class="num">0100 000 0004</span></span><span><svg><use href="#i-card"/></svg>منتهي</span></div>
+            <div class="mcard-foot"><span style="font-size:10.5px;color:var(--text2)">آخر حضور: قبل 6 أيام</span><div class="row-act"><button type="button" aria-label="اتصال"><svg><use href="#i-phone"/></svg></button><button type="button" aria-label="تعديل"><svg><use href="#i-pencil"/></svg></button></div></div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:center">
+          <button class="btn btn-outline btn-sm" type="button">تحميل المزيد</button>
+        </div>
+      </div>
+      <div class="p-fab"><button class="fab" type="button" aria-label="إضافة طالب"><svg><use href="#i-plus"/></svg></button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================== 06 · SPEC ============================== -->
+<section class="block" id="spec">
+  <div class="sec-label"><span>06 / SPEC</span><b>الهوية واللوحة والخطوط</b></div>
+  <div class="spec">
+    <div class="spec-h">
+      <div>
+        <p class="kicker">DIRECTION A</p>
+        <h2>«دفتر» — تحريري ورقي</h2>
+        <p>مزاج: ثقة هادئة، دفتر حسابات مركز تعليمي. مساحات واسعة، خطوط فاصلة رقيقة، أرقام واضحة بخط أحادي المسافة، ولمسات برتقالية للأفعال الثانوية. مناسب لمركز يريد أن يبدو منظّمًا وموثوقًا لا «تطبيقًا تقنيًا».</p>
+      </div>
+      <span class="pill pill-brand"><i></i>الوضع الحالي: <span data-theme-tag>نهاري</span></span>
+    </div>
+
+    <div>
+      <p class="kicker" style="margin-bottom:10px">LIGHT PALETTE</p>
+      <div class="swatches">
+        <div class="sw"><i style="background:#F6F2EA"></i><span>خلفية<b>#F6F2EA</b></span></div>
+        <div class="sw"><i style="background:#FFFDF8"></i><span>بطاقة<b>#FFFDF8</b></span></div>
+        <div class="sw"><i style="background:#ECE5D8"></i><span>خافتة<b>#ECE5D8</b></span></div>
+        <div class="sw"><i style="background:#1D4E5F"></i><span>أساسي<b>#1D4E5F</b></span></div>
+        <div class="sw"><i style="background:#A8541A"></i><span>ثانوي<b>#A8541A</b></span></div>
+        <div class="sw"><i style="background:#1C2434"></i><span>نص<b>#1C2434</b></span></div>
+        <div class="sw"><i style="background:#1E6B3A"></i><span>نجاح<b>#1E6B3A</b></span></div>
+        <div class="sw"><i style="background:#8A5A00"></i><span>تحذير<b>#8A5A00</b></span></div>
+        <div class="sw"><i style="background:#A3262A"></i><span>خطأ<b>#A3262A</b></span></div>
+      </div>
+    </div>
+
+    <div>
+      <p class="kicker" style="margin-bottom:10px">DARK PALETTE</p>
+      <div class="swatches">
+        <div class="sw"><i style="background:#0E1416"></i><span>خلفية<b>#0E1416</b></span></div>
+        <div class="sw"><i style="background:#161F22"></i><span>بطاقة<b>#161F22</b></span></div>
+        <div class="sw"><i style="background:#1F2B2E"></i><span>خافتة<b>#1F2B2E</b></span></div>
+        <div class="sw"><i style="background:#7FD1BE"></i><span>أساسي<b>#7FD1BE</b></span></div>
+        <div class="sw"><i style="background:#E9A23B"></i><span>ثانوي<b>#E9A23B</b></span></div>
+        <div class="sw"><i style="background:#F3F0E8"></i><span>نص<b>#F3F0E8</b></span></div>
+        <div class="sw"><i style="background:#6EDB9A"></i><span>نجاح<b>#6EDB9A</b></span></div>
+        <div class="sw"><i style="background:#F2C14E"></i><span>تحذير<b>#F2C14E</b></span></div>
+        <div class="sw"><i style="background:#FF8A84"></i><span>خطأ<b>#FF8A84</b></span></div>
+      </div>
+    </div>
+
+    <div class="type-row">
+      <div>
+        <p class="kicker">ARABIC / IBM PLEX SANS ARABIC</p>
+        <div class="big">إدارة مركزك بوضوح</div>
+      </div>
+      <div>
+        <p class="kicker">NUMBERS / IBM PLEX MONO</p>
+        <div class="big num">12,450.00</div>
+      </div>
+      <div class="small">أوزان 400 / 500 / 600 / 700 · محلي WOFF2 · OFL</div>
+    </div>
+
+    <div class="notes">
+      <div><b>الشكل</b><p>استدارة 5–8px، حدود 1px، ظل خفيف جدًا. الأزرار مسطّحة وواضحة، والفصل بين الأقسام بخطوط لا بظلال.</p></div>
+      <div><b>الحركة</b><p>انتقالات 150–200ms على اللون والحدود فقط. لا حركة تلقائية، وتُعطَّل مع <span class="num">prefers-reduced-motion</span>.</p></div>
+      <div><b>لماذا يناسب</b><p>المراكز التي تريد إحساسًا رسميًا وهادئًا، مع قابلية طباعة ممتازة للإيصالات والتقارير بألوان أقل.</p></div>
+    </div>
+    <p style="font-size:10.5px;color:var(--text2);border-top:1px dashed var(--border);padding-top:12px">
+      فحص التباين الرقمي: كل أزواج النصوص (17 زوجًا × وضعين) تجتاز WCAG AA على الأقل — التفاصيل في <span class="num">contrast-report.md</span>. الخطوط محلية بالكامل ولا يوجد أي طلب لشبكة خارجية.
+    </p>
+  </div>
+</section>
+</main>
+
+<script>
+  (function () {
+    var root = document.documentElement;
+    function sync() {
+      var dark = root.classList.contains("dark");
+      document.querySelectorAll("[data-theme-btn]").forEach(function (b) {
+        b.setAttribute("aria-pressed", String(dark));
+        var l = b.querySelector("[data-theme-label]");
+        if (l) l.textContent = dark ? "الوضع النهاري" : "الوضع الليلي";
+      });
+      document.querySelectorAll("[data-theme-tag]").forEach(function (t) {
+        t.textContent = dark ? "ليلي" : "نهاري";
+      });
+    }
+    document.querySelectorAll("[data-theme-btn]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        root.classList.toggle("dark");
+        try { localStorage.setItem("dir-theme", root.classList.contains("dark") ? "dark" : "light"); } catch (e) {}
+        sync();
+      });
+    });
+    sync();
+    document.querySelectorAll("[data-seg] button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        b.parentElement.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
+        b.setAttribute("aria-pressed", "true");
+      });
+    });
+  })();
+</script>
+</body>
+</html>

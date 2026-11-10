@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>المرحلة 1 — لوحة التحكم: قبل / بعد</title>
+<link rel="stylesheet" href="app.css" />
+<link rel="stylesheet" href="compare.css" />
+<script>
+  try {
+    var q = new URLSearchParams(location.search);
+    var theme = q.get("theme") || localStorage.getItem("dir-theme") || "light";
+    if (theme === "dark") document.documentElement.classList.add("dark");
+    if (q.get("chrome") === "0") document.documentElement.classList.add("chrome-off");
+    document.addEventListener("DOMContentLoaded", function () {
+      var variant = q.get("variant") || "after";
+      document.body.className = "v-" + variant + (q.get("tweak") === "1" ? " tweak" : "");
+      document.querySelectorAll("[data-variant]").forEach(function (btn) {
+        btn.setAttribute("aria-current", btn.dataset.variant === variant ? "page" : "false");
+      });
+      document.querySelectorAll("[data-theme]").forEach(function (btn) {
+        btn.setAttribute("aria-current", (theme === "dark" ? "dark" : "light") === btn.dataset.theme ? "page" : "false");
+      });
+    });
+  } catch (e) {}
+</script>
+<style>
+  .donut {
+    width: 148px; height: 148px; border-radius: 50%; flex: 0 0 148px;
+    display: grid; place-items: center; position: relative;
+  }
+  .donut::after {
+    content: ""; position: absolute; inset: 24px; border-radius: 50%; background: var(--card);
+  }
+  .donut-hole { position: relative; z-index: 1; text-align: center; }
+  .donut-hole b { display: block; font-family: "Manrope", sans-serif; font-size: 24px; line-height: 1.2; }
+  .donut-hole span { font-size: 10.5px; color: var(--text2); }
+  .donut-row { display: flex; align-items: center; gap: 18px; padding: 4px 20px 20px; flex-wrap: wrap; }
+  .donut-legend { display: grid; gap: 7px; font-size: 11.5px; color: var(--text2); }
+  .donut-legend span { display: flex; align-items: center; gap: 7px; }
+  .donut-legend i { width: 9px; height: 9px; border-radius: 3px; }
+  .donut-legend b { color: var(--text); font-family: "Manrope", sans-serif; margin-inline-start: auto; }
+  .money-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+  .money { padding: 14px 16px; display: grid; gap: 6px; }
+  .money .k { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--text2); font-weight: 600; }
+  .money .k svg { width: 16px; height: 16px; }
+  .money .v { font-size: 21px; font-weight: 800; font-family: "Manrope", sans-serif; direction: ltr; unicode-bidi: isolate; }
+  .money .d { font-size: 10.5px; color: var(--text2); display: flex; align-items: center; gap: 4px; }
+  .money .d svg { width: 13px; height: 13px; }
+  @media (max-width: 900px) {
+    .money-grid { grid-template-columns: 1fr 1fr; }
+    .money .v { font-size: 18px; }
+    .donut { width: 126px; height: 126px; flex-basis: 126px; }
+    .donut::after { inset: 21px; }
+  }
+  @media (max-width: 380px) { .money-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body class="v-after">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5"/><path d="M16 13h.01"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6" rx="1"/><rect x="12.5" y="7" width="3" height="10" rx="1"/><rect x="18" y="13" width="3" height="4" rx="1"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/><path d="M1 14h6M9 8h6M17 16h6"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+  <symbol id="i-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></symbol>
+  <symbol id="i-chev-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-chev-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></symbol>
+  <symbol id="i-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-alert-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18l-7 8v6l-4 2v-8Z"/></symbol>
+  <symbol id="i-trend-up" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/></symbol>
+  <symbol id="i-trend-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m3 7 6 6 4-4 8 8"/><path d="M21 17h-6v-6"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v18l-3-2-3 2-3-2-3 2Z"/><path d="M9 7h6M9 11h6M9 15h3"/></symbol>
+  <symbol id="i-school" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="M6 10.5V17c0 1.7 2.7 3 6 3s6-1.3 6-3v-6.5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></symbol>
+  <symbol id="i-card" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3Z"/><path d="M19 15v4M17 17h4M5 3v3M3.5 4.5h3"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></symbol>
+</svg>
+
+<div class="demo-bar" role="note">
+  <span class="tag">PHASE 1 · DASHBOARD</span>
+  <div class="seg" aria-label="نسخة الصفحة">
+    <button type="button" data-variant="before" aria-current="false">قبل</button>
+    <button type="button" data-variant="after" aria-current="page">بعد</button>
+  </div>
+  <div class="seg" aria-label="الوضع">
+    <button type="button" data-theme="light" aria-current="page">فاتح</button>
+    <button type="button" data-theme="dark" aria-current="false">ليلي</button>
+  </div>
+  <span class="note">بيانات تجريبية · لا أرقام حقيقية</span>
+</div>
+
+<div class="app">
+  <aside class="side">
+    <div class="side-head">
+      <div class="center-chip">
+        <div class="center-logo">ن</div>
+        <div>
+          <b>مركز النبض التعليمي</b>
+          <small>إدارة السنتر</small>
+        </div>
+      </div>
+    </div>
+
+    <nav class="side-nav">
+      <div class="nav-cap">القائمة</div>
+      <a class="nav-item" href="#" aria-current="page"><svg class="i"><use href="#i-grid"/></svg><span>لوحة التحكم</span></a>
+      <a class="nav-item" href="#"><svg class="i"><use href="#i-users"/></svg><span>الطلاب</span></a>
+      <a class="nav-item" href="#"><svg class="i"><use href="#i-calendar"/></svg><span>المجموعات</span></a>
+      <a class="nav-item" href="#"><svg class="i"><use href="#i-check-circle"/></svg><span>الحضور</span><span class="nav-badge">3</span></a>
+      <a class="nav-item" href="#"><svg class="i"><use href="#i-wallet"/></svg><span>المالية</span></a>
+      <a class="nav-item" href="#"><svg class="i"><use href="#i-receipt"/></svg><span>المدفوعات</span></a>
+      <a class="nav-item" href="#"><svg class="i"><use href="#i-alert"/></svg><span>المتأخرون</span><span class="nav-badge">12</span></a>
+      <div class="nav-cap">أخرى</div>
+      <a class="nav-item" href="#"><svg class="i"><use href="#i-chart"/></svg><span>التقارير</span></a>
+      <a class="nav-item" href="#"><svg class="i"><use href="#i-sliders"/></svg><span>الإعدادات</span></a>
+    </nav>
+
+    <div class="side-foot">
+      <div class="side-user">
+        <div class="avatar">م</div>
+        <div>
+          <b>محمد حسن</b>
+          <small>صاحب المركز</small>
+        </div>
+      </div>
+      <button class="side-link" type="button"><svg class="i"><use href="#i-sun"/></svg><span>الوضع الليلي</span></button>
+      <button class="side-link" type="button"><svg class="i"><use href="#i-logout"/></svg><span>تسجيل الخروج</span></button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="icon-btn mob-menu" type="button" aria-label="فتح القائمة"><svg class="i"><use href="#i-menu"/></svg></button>
+      <div class="grow">
+        <div class="crumb">الرئيسية / لوحة التحكم</div>
+        <h1>لوحة التحكم</h1>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" type="button" aria-label="الإشعارات"><svg class="i"><use href="#i-bell"/></svg></button>
+        <button class="icon-btn" type="button" aria-label="الوضع الليلي"><svg class="i"><use href="#i-moon"/></svg></button>
+        <div class="avatar">م</div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- B only: welcome band (platform gradient, never recoloured by center colour) -->
+      <section class="hero only-after">
+        <span class="orb one"></span><span class="orb two"></span><span class="orb three"></span>
+        <div>
+          <h2>مساء الخير، أ. محمد 👋</h2>
+          <p>لديك <b>3</b> مدفوعات مستحقة، وامتحانان هذا الأسبوع. كل شيء تحت السيطرة.</p>
+        </div>
+        <div class="hero-actions">
+          <button class="btn btn-white" type="button"><svg class="i"><use href="#i-check-circle"/></svg> تسجيل حضور</button>
+          <button class="btn btn-glass" type="button"><svg class="i"><use href="#i-plus"/></svg> إضافة طالب</button>
+        </div>
+      </section>
+
+      <!-- Current UI only: plain page header -->
+      <div class="before-head only-before">
+        <div>
+          <h1>لوحة التحكم</h1>
+          <p>نظرة شاملة على أداء السنتر</p>
+        </div>
+        <div class="head-actions">
+          <div class="field"><label for="b-month">الشهر</label>
+            <select class="select" id="b-month"><option>نوفمبر</option><option>أكتوبر</option><option>سبتمبر</option></select>
+          </div>
+          <div class="field"><label for="b-year">السنة</label>
+            <select class="select" id="b-year"><option>2026</option><option>2025</option></select>
+          </div>
+          <button class="btn btn-primary" type="button"><svg class="i"><use href="#i-download"/></svg> تحديث</button>
+        </div>
+      </div>
+
+      <section>
+        <div class="section-head">
+          <div class="ic"><svg class="i"><use href="#i-users"/></svg></div>
+          <div>
+            <h2>نظرة عامة على الطلاب</h2>
+            <p>إحصائيات الطلاب لشهر نوفمبر 2026</p>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="card stat">
+            <div class="top">
+              <div class="chip tone-primary"><svg class="i"><use href="#i-users"/></svg></div>
+              <span class="pill pill-ok"><i></i> +12</span>
+            </div>
+            <div class="k">إجمالي الطلاب</div>
+            <div class="v">248</div>
+            <div class="d"><svg class="i-sm up"><use href="#i-trend-up"/></svg> 5.1% عن الشهر السابق</div>
+          </div>
+          <div class="card stat">
+            <div class="top">
+              <div class="chip tone-ok"><svg class="i"><use href="#i-check-circle"/></svg></div>
+              <span class="pill pill-ok"><i></i> 86%</span>
+            </div>
+            <div class="k">الطلاب النشطون</div>
+            <div class="v">214</div>
+            <div class="d">من إجمالي 248 طالبًا</div>
+          </div>
+          <div class="card stat">
+            <div class="top">
+              <div class="chip tone-warn"><svg class="i"><use href="#i-clock"/></svg></div>
+              <span class="pill pill-warn"><i></i> يحتاج متابعة</span>
+            </div>
+            <div class="k">الطلاب غير النشطين</div>
+            <div class="v">26</div>
+            <div class="d">آخر نشاط قبل 30 يومًا</div>
+          </div>
+          <div class="card stat">
+            <div class="top">
+              <div class="chip tone-err"><svg class="i"><use href="#i-trash"/></svg></div>
+              <span class="pill pill-mute"><i></i> مؤرشف</span>
+            </div>
+            <div class="k">الطلاب المحذوفون</div>
+            <div class="v">8</div>
+            <div class="d">يمكن استعادتهم من السجل</div>
+          </div>
+        </div>
+      </section>
+
+      <div class="two">
+        <div class="card">
+          <div class="card-h">
+            <div>
+              <h3>حركة الطلاب خلال السنة</h3>
+              <p>الطلاب الجدد والذين غادروا شهريًا</p>
+            </div>
+            <span class="pill pill-brand"><i></i> 2026</span>
+          </div>
+          <div class="chart-wrap">
+            <svg viewBox="0 0 640 230" role="img" aria-label="رسم أعمدة: الطلاب الجدد مقابل المغادرين لكل شهر">
+              <g stroke="var(--border)" stroke-width="1">
+                <line x1="42" y1="20" x2="42" y2="188"/><line x1="42" y1="188" x2="622" y2="188"/>
+                <line x1="42" y1="146" x2="622" y2="146" stroke-dasharray="3 5"/><line x1="42" y1="104" x2="622" y2="104" stroke-dasharray="3 5"/><line x1="42" y1="62" x2="622" y2="62" stroke-dasharray="3 5"/>
+              </g>
+              <g fill="var(--text2)" font-size="10" font-family="Manrope, sans-serif" text-anchor="end">
+                <text x="34" y="192">0</text><text x="34" y="150">10</text><text x="34" y="108">20</text><text x="34" y="66">30</text>
+              </g>
+              <g>
+                <rect x="70" y="130" width="16" height="58" rx="5" fill="var(--primary)"/><rect x="90" y="170" width="16" height="18" rx="5" fill="var(--accent)" opacity=".75"/>
+                <rect x="158" y="118" width="16" height="70" rx="5" fill="var(--primary)"/><rect x="178" y="174" width="16" height="14" rx="5" fill="var(--accent)" opacity=".75"/>
+                <rect x="246" y="140" width="16" height="48" rx="5" fill="var(--primary)"/><rect x="266" y="166" width="16" height="22" rx="5" fill="var(--accent)" opacity=".75"/>
+                <rect x="334" y="102" width="16" height="86" rx="5" fill="var(--primary)"/><rect x="354" y="172" width="16" height="16" rx="5" fill="var(--accent)" opacity=".75"/>
+                <rect x="422" y="122" width="16" height="66" rx="5" fill="var(--primary)"/><rect x="442" y="168" width="16" height="20" rx="5" fill="var(--accent)" opacity=".75"/>
+                <rect x="510" y="92" width="16" height="96" rx="5" fill="var(--primary)"/><rect x="530" y="176" width="16" height="12" rx="5" fill="var(--accent)" opacity=".75"/>
+              </g>
+              <g fill="var(--text2)" font-size="10.5" text-anchor="middle">
+                <text x="88" y="206">يناير</text><text x="176" y="206">فبراير</text><text x="264" y="206">مارس</text><text x="352" y="206">أبريل</text><text x="440" y="206">مايو</text><text x="528" y="206">يونيو</text>
+              </g>
+            </svg>
+          </div>
+          <div class="legend">
+            <span><i style="background:var(--primary)"></i> طلاب جدد</span>
+            <span><i style="background:var(--accent)"></i> طلاب غادروا</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-h">
+            <div>
+              <h3>حالة الطلاب</h3>
+              <p>النشط / غير النشط / المحذوف</p>
+            </div>
+          </div>
+          <div class="donut-row">
+            <div class="donut" style="background:conic-gradient(var(--ok) 0 86.3%, var(--warn) 86.3% 96.8%, var(--err) 96.8% 100%)">
+              <div class="donut-hole"><b>248</b><span>طالب</span></div>
+            </div>
+            <div class="donut-legend">
+              <span><i style="background:var(--ok)"></i> نشط <b>214</b></span>
+              <span><i style="background:var(--warn)"></i> غير نشط <b>26</b></span>
+              <span><i style="background:var(--err)"></i> محذوف <b>8</b></span>
+            </div>
+          </div>
+          <div style="padding:0 20px 18px">
+            <div class="alert alert-info"><svg class="i"><use href="#i-info"/></svg><div><b>ملاحظة</b><p>الحالة مكتوبة بجانب اللون دائمًا، ولا يُعتمد على اللون وحده.</p></div></div>
+          </div>
+        </div>
+      </div>
+
+      <section>
+        <div class="section-head">
+          <div class="ic"><svg class="i"><use href="#i-wallet"/></svg></div>
+          <div>
+            <h2>الوضع المالي</h2>
+            <p>الإيرادات والمصروفات والأرباح لشهر نوفمبر 2026</p>
+          </div>
+        </div>
+        <div class="money-grid">
+          <div class="card money">
+            <div class="k"><svg class="tone-ok" style="border-radius:6px;padding:2px"><use href="#i-trend-up"/></svg> إيرادات الشهر</div>
+            <div class="v">48,250</div>
+            <div class="d up"><svg class="i-sm"><use href="#i-trend-up"/></svg> 8.4% عن أكتوبر</div>
+          </div>
+          <div class="card money">
+            <div class="k"><svg class="tone-err" style="border-radius:6px;padding:2px"><use href="#i-trend-down"/></svg> مصروفات الشهر</div>
+            <div class="v">21,400</div>
+            <div class="d">ثابتة تقريبًا</div>
+          </div>
+          <div class="card money">
+            <div class="k"><svg class="tone-warn" style="border-radius:6px;padding:2px"><use href="#i-users"/></svg> مرتبات المساعدين</div>
+            <div class="v">9,800</div>
+            <div class="d">4 مساعدين</div>
+          </div>
+          <div class="card money">
+            <div class="k"><svg class="tone-primary" style="border-radius:6px;padding:2px"><use href="#i-wallet"/></svg> صافي الربح</div>
+            <div class="v">17,050</div>
+            <div class="d up"><svg class="i-sm"><use href="#i-trend-up"/></svg> +14.4%</div>
+          </div>
+        </div>
+      </section>
+
+      <div class="two">
+        <div class="card">
+          <div class="card-h">
+            <div>
+              <h3>الحضور — آخر 7 أيام</h3>
+              <p>معدل الحضور اليومي</p>
+            </div>
+            <span class="pill pill-ok"><i></i> 92% اليوم</span>
+          </div>
+          <div class="chart-wrap">
+            <svg viewBox="0 0 640 200" role="img" aria-label="رسم خطي لمعدل الحضور اليومي">
+              <defs>
+                <linearGradient id="area" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="var(--primary)" stop-opacity=".28"/>
+                  <stop offset="100%" stop-color="var(--primary)" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <g stroke="var(--border)" stroke-width="1">
+                <line x1="40" y1="30" x2="620" y2="30" stroke-dasharray="3 5"/>
+                <line x1="40" y1="80" x2="620" y2="80" stroke-dasharray="3 5"/>
+                <line x1="40" y1="130" x2="620" y2="130" stroke-dasharray="3 5"/>
+                <line x1="40" y1="168" x2="620" y2="168"/>
+              </g>
+              <path d="M60 82 L148 70 L236 96 L324 52 L412 64 L500 40 L588 54 L588 168 L60 168 Z" fill="url(#area)"/>
+              <polyline points="60,82 148,70 236,96 324,52 412,64 500,40 588,54" fill="none" stroke="var(--primary)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+              <g fill="var(--card)" stroke="var(--primary)" stroke-width="2.5">
+                <circle cx="60" cy="82" r="4"/><circle cx="148" cy="70" r="4"/><circle cx="236" cy="96" r="4"/><circle cx="324" cy="52" r="4"/><circle cx="412" cy="64" r="4"/><circle cx="500" cy="40" r="4"/><circle cx="588" cy="54" r="4"/>
+              </g>
+              <g fill="var(--text2)" font-size="10" font-family="Manrope, sans-serif" text-anchor="middle">
+                <text x="60" y="188">السبت</text><text x="148" y="188">الأحد</text><text x="236" y="188">الاثنين</text><text x="324" y="188">الثلاثاء</text><text x="412" y="188">الأربعاء</text><text x="500" y="188">الخميس</text><text x="588" y="188">الجمعة</text>
+              </g>
+            </svg>
+          </div>
+          <div class="legend">
+            <span><i style="background:var(--primary)"></i> نسبة الحضور اليومية</span>
+            <span>213 من 232 طالبًا اليوم</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-h">
+            <div>
+              <h3>آخر النشاطات</h3>
+              <p>أحدث العمليات المسجلة</p>
+            </div>
+            <button class="icon-btn plain" type="button" aria-label="عرض كل النشاطات"><svg class="i"><use href="#i-chev-left"/></svg></button>
+          </div>
+          <div class="list">
+            <div class="li">
+              <div class="sq tone-ok"><svg class="i"><use href="#i-receipt"/></svg></div>
+              <div class="t"><b>دفعة نقدية — أحمد محمود</b><small>اشتراك شهر نوفمبر · منذ 12 دقيقة</small></div>
+              <span class="amount">850</span>
+            </div>
+            <div class="li">
+              <div class="sq tone-primary"><svg class="i"><use href="#i-user"/></svg></div>
+              <div class="t"><b>طالب جديد — سلمى إبراهيم</b><small>الصف الأول - أ · منذ ساعة</small></div>
+            </div>
+            <div class="li">
+              <div class="sq tone-info"><svg class="i"><use href="#i-check-circle"/></svg></div>
+              <div class="t"><b>حضور — الصف الثالث أ</b><small>24 طالبًا · منذ ساعتين</small></div>
+            </div>
+            <div class="li">
+              <div class="sq tone-warn"><svg class="i"><use href="#i-clock"/></svg></div>
+              <div class="t"><b>تجديد اشتراك — يوسف علي</b><small>ينتهي خلال 3 أيام · منذ 3 ساعات</small></div>
+              <span class="amount">1,200</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  (function () {
+    var q = new URLSearchParams(location.search);
+    function go(patch) {
+      var next = new URLSearchParams(q);
+      Object.keys(patch).forEach(function (k) { next.set(k, patch[k]); });
+      location.search = next.toString();
+    }
+    document.querySelectorAll("[data-variant]").forEach(function (b) {
+      b.addEventListener("click", function () { go({ variant: b.dataset.variant }); });
+    });
+    document.querySelectorAll("[data-theme]").forEach(function (b) {
+      b.addEventListener("click", function () { go({ theme: b.dataset.theme }); });
+    });
+  })();
+</script>
+</body>
+</html>

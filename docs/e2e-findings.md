@@ -770,6 +770,46 @@ handler. The link was built (and discarded) during render, so no popup ever open
 
 ---
 
+## F-016 — The students table renders one heading with no matching cell
+
+**Severity:** Low (visual only; the row actions still work, but every table heading after the
+missing cell is misaligned and the empty header is read out by screen readers)
+
+**Found:** 2026-11-10 while rebuilding the students page for the design phase 1 comparison.
+
+**Symptom**
+
+The desktop students table (`/students`, `StudentTable.jsx`) renders **eight** `<th>` cells but
+only **seven** `<td>` cells per row:
+
+```
+COLUMNS = ["الطالب", "رقم الهاتف", "رقم هاتف ولي الأمر", "المجموعة",
+           "تاريخ الانضمام", "نوع الاشتراك", "الحالة", ""]
+```
+
+The row renders: name, phone, parent phone, group, join date, subscription type, then
+`<RowActions>` — there is no status cell. `الحالة` therefore has no data under it, the actions
+column sits under the `الحالة` heading, and the intentionally empty last heading has nothing under
+it. The mismatch is also why the row actions can look attached to the wrong column on wide screens.
+
+**Evidence**
+
+- `Frontend/CenterManagement/src/pages/StudentPage/StudentTable.jsx:4-13` — eight column labels,
+  the seventh being `الحالة` and the eighth an empty actions column.
+- `StudentTable.jsx:48-90` — seven `<td>` cells per row; no cell reads or renders a status.
+- The phase 1 comparison reproduces the defect on purpose: `compare-students.html?variant=before`
+  hides `.col-status` so the “before” table has the same 8-heading/7-cell shape, while
+  `variant=after` restores a visible status column.
+
+**Impact on the design phase**
+
+None on behaviour or the API; the comparison is CSS/HTML only and no application file was changed.
+The fixed version in the mock-up adds the status cell and keeps the actions column last.
+
+**Status: OPEN — logged, not fixed.** Planned for the students-page pass in phase 2.
+
+---
+
 ## Harness failures during the Stage C dry runs (not product defects)
 
 These stopped recordings before Stage C started. None of them is a product bug, and none of

@@ -39,6 +39,11 @@ API/CenterManagementCleanArchitecture/CenterManagement.Api/wwwroot/notes/
 .DS_Store
 Thumbs.db
 
+# Design audit artifacts: screenshots and downloaded font copies are large and
+# reproducible from the scripts in docs/design/.
+docs/design/shots/
+docs/design/fonts/
+
 # Visual Studio files
 *.suo
 *.user
