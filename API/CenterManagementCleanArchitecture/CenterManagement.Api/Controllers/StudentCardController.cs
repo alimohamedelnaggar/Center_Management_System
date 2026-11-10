@@ -1,3 +1,4 @@
+using CenterManagement.Api.RateLimiting;
 using CenterManagement.Core.Features.UsersFeature.Students.Queries.Models;
 
 namespace CenterManagement.Api.Controllers;
@@ -6,6 +7,7 @@ namespace CenterManagement.Api.Controllers;
 // normal phone camera and sees attendance + exam grades without an account.
 // Modules are enforced inside the handler (center resolved from the QR code).
 [SelfModuleChecked]
+[StudentCardRateLimited]
 public class StudentCardController : AppControllerBase
 {
     [HttpGet(Routing.StudentCardRouting.ByCode)]
