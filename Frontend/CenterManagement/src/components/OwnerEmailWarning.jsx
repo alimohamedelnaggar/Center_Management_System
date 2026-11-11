@@ -1,17 +1,54 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
 import { Mail, X } from "@/components/icons";
 import { useAuth } from "../context/useAuth";
 
 /**
+ * The reminder is hidden for two weeks after the owner dismisses it. The
+ * timestamp lives in localStorage so a reload does not bring it back, and the
+ * key is only written on an explicit dismiss.
+ */
+const DISMISS_KEY = "cm.ownerEmailWarning.dismissedAt";
+const DISMISS_WINDOW_MS = 14 * 24 * 60 * 60 * 1000;
+
+function isDismissedRecently() {
+  if (typeof window === "undefined" || !window.localStorage) return false;
+
+  try {
+    const timestamp = Number(window.localStorage.getItem(DISMISS_KEY));
+    if (!Number.isFinite(timestamp) || timestamp <= 0) return false;
+    return Date.now() - timestamp < DISMISS_WINDOW_MS;
+  } catch {
+    // Private mode / storage disabled: behave as if never dismissed.
+    return false;
+  }
+}
+
+function rememberDismissal() {
+  if (typeof window === "undefined" || !window.localStorage) return;
+
+  try {
+    window.localStorage.setItem(DISMISS_KEY, String(Date.now()));
+  } catch {
+    // Nothing to do: the banner still hides for this session.
+  }
+}
+
+/**
  * A quiet, dismissible reminder for the one account that can own the center but
  * has no recovery address: the owner (or a solo teacher). It is deliberately
- * non-blocking — the product still works without an email, it just cannot
- * recover itself — and it never shows to teachers, assistants or platform users.
+ * non-blocking - the product still works without an email, it just cannot
+ * recover itself - and it never shows to teachers, assistants or platform users,
+ * nor while a platform admin is impersonating the owner.
  */
 export default function OwnerEmailWarning() {
   const { role, isSoloTeacher, email, profileLoaded, impersonating } = useAuth();
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(isDismissedRecently);
+
+  const dismiss = useCallback(() => {
+    rememberDismissal();
+    setDismissed(true);
+  }, []);
 
   const isOwner = role === "CenterOwner" || isSoloTeacher === true;
 
@@ -47,7 +84,7 @@ export default function OwnerEmailWarning() {
       <button
         type="button"
         aria-label="إغلاق التنبيه"
-        onClick={() => setDismissed(true)}
+        onClick={dismiss}
         className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-status-info/25 transition-colors duration-150 hover:bg-status-info/10"
       >
         <X aria-hidden="true" className="h-4 w-4" />

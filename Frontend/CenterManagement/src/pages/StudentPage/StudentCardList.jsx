@@ -14,38 +14,45 @@ export default function StudentCardList({
   showPayment = true,
 }) {
   return (
-    <div className="divide-y divide-surface-border md:hidden">
-      {students.map((s) => (
-        <div key={s.id} className="p-4">
+    <div data-testid="students-cards" className="divide-y divide-surface-border md:hidden">
+      {students.map((student) => (
+        <article key={student.id} className="p-4">
           <div className="flex items-start justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div>
-                <p className="font-medium text-text-main">{s.fullName}</p>
-                <p className="text-xs text-text-muted">{s.groupName}</p>
-              </div>
+            <div className="min-w-0">
+              <p className="truncate font-bold text-text-main">
+                {student.fullName}
+              </p>
+              <p className="mt-0.5 truncate text-xs text-text-muted">
+                {student.groupName}
+                <span aria-hidden="true"> · </span>
+                {getStudentSubscriptionTypeName(student.subscriptionType)}
+              </p>
             </div>
-            <StatusBadge status={s.isActive} />
-            <span className="text-xs text-text-muted">
-              {getStudentSubscriptionTypeName(s.subscriptionType)}
-            </span>
+            <StatusBadge status={student.isActive} />
           </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
-            <div className="flex items-center gap-1.5 text-text-muted">
-              <Phone className="h-3.5 w-3.5" />
-              {s.phone}
+          <dl className="mt-3 grid grid-cols-1 gap-2 text-xs min-[420px]:grid-cols-2">
+            <div className="flex min-w-0 items-center gap-1.5 rounded-control bg-surface-muted/70 px-2.5 py-2 text-text-muted">
+              <Phone className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <dt className="sr-only">رقم هاتف الطالب</dt>
+              <dd dir="ltr" className="truncate text-start">
+                {student.phone}
+              </dd>
             </div>
-            <div className="flex items-center gap-1.5 text-text-muted">
-              <Phone className="h-3.5 w-3.5" />
-              {s.phoneParent}
-              <span className="text-text-muted/70">(ولي الأمر)</span>
+            <div className="flex min-w-0 items-center gap-1.5 rounded-control bg-surface-muted/70 px-2.5 py-2 text-text-muted">
+              <Phone className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <dt className="sr-only">هاتف ولي الأمر</dt>
+              <dd dir="ltr" className="truncate text-start">
+                {student.phoneParent}
+              </dd>
+              <span className="shrink-0 text-text-muted/70">(ولي الأمر)</span>
             </div>
-          </div>
+          </dl>
 
-          <div className="mt-3 flex items-center justify-between">
+          <div className="mt-3 flex items-center justify-end">
             <RowActions
-              student={s}
-              name={s.fullName}
+              student={student}
+              name={student.fullName}
               onView={onView}
               onEdit={onEdit}
               onDelete={onDelete}
@@ -55,7 +62,7 @@ export default function StudentCardList({
               showPayment={showPayment}
             />
           </div>
-        </div>
+        </article>
       ))}
     </div>
   );

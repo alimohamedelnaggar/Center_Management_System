@@ -6,6 +6,7 @@ export default function Pagination({
   totalItems,
   pageSize,
   name = "الكل",
+  testId,
   onPageChange,
 }) {
   const start = totalItems === 0 ? 0 : (currentPage - 1) * pageSize + 1;
@@ -38,58 +39,65 @@ export default function Pagination({
   };
 
   return (
-    <div className="flex items-center justify-between border-t border-surface-border px-4 py-4 sm:px-6">
-      {/* Mobile */}
-      <div className="flex flex-1 justify-between sm:hidden">
+    <nav
+      aria-label="ترقيم الصفحات"
+      data-testid={testId}
+      className="flex items-center justify-between gap-3 rounded-card border border-surface-border bg-surface-card px-4 py-3"
+    >
+      <div className="flex flex-1 justify-between gap-2 sm:hidden">
         <button
+          type="button"
           disabled={currentPage === 1}
           onClick={() => onPageChange(currentPage - 1)}
-          className="rounded-lg border border-surface-border bg-surface-card px-4 py-2 text-sm font-medium text-text-main transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50"
+          className="focus-ring inline-flex min-h-11 items-center justify-center rounded-control border border-surface-border bg-surface-card px-4 text-sm font-medium text-text-main transition-colors hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50"
         >
           السابق
         </button>
 
         <button
+          type="button"
           disabled={currentPage === totalPages}
           onClick={() => onPageChange(currentPage + 1)}
-          className="rounded-lg border border-surface-border bg-surface-card px-4 py-2 text-sm font-medium text-text-main transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50"
+          className="focus-ring inline-flex min-h-11 items-center justify-center rounded-control border border-surface-border bg-surface-card px-4 text-sm font-medium text-text-main transition-colors hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50"
         >
           التالي
         </button>
       </div>
 
-      {/* Desktop */}
-      <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+      <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between sm:gap-4">
         <p className="text-sm text-text-muted">
           عرض <span className="font-semibold text-text-main">{start}</span> إلى{" "}
-          <span className="font-semibold text-text-main">{end}</span> من أصل{" "}
+          <span className="font-semibold text-text-main">{end}</span> من{" "}
           <span className="font-semibold text-text-main">{totalItems}</span>{" "}
           {name}
         </p>
 
-        <nav className="inline-flex overflow-hidden rounded-lg border border-surface-border shadow-sm">
-          {/* Previous */}
+        <div className="inline-flex overflow-hidden rounded-control border border-surface-border">
           <button
+            type="button"
+            aria-label="الصفحة السابقة"
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className="flex h-10 w-10 items-center justify-center border-e border-surface-border bg-surface-card text-text-main transition hover:bg-primary-subtle hover:text-primary disabled:cursor-not-allowed disabled:text-text-muted disabled:opacity-50"
+            className="focus-ring flex h-11 w-11 items-center justify-center border-e border-surface-border bg-surface-card text-text-main transition-colors hover:bg-primary-subtle hover:text-primary disabled:cursor-not-allowed disabled:text-text-muted disabled:opacity-50"
           >
-            <ChevronLeft size={18} />
+            <ChevronLeft size={18} aria-hidden="true" />
           </button>
 
           {getPages().map((page, index) =>
             page === "..." ? (
               <span
-                key={index}
-                className="flex h-10 min-w-10 items-center justify-center border-e border-surface-border bg-surface-card px-3 text-text-muted"
+                key={`gap-${index}`}
+                className="flex h-11 min-w-11 items-center justify-center border-e border-surface-border bg-surface-card px-3 text-text-muted"
               >
                 ...
               </span>
             ) : (
               <button
+                type="button"
                 key={page}
+                aria-current={page === currentPage ? "page" : undefined}
                 onClick={() => onPageChange(page)}
-                className={`flex h-10 min-w-10 items-center justify-center border-e border-surface-border px-4 text-sm font-medium transition ${
+                className={`focus-ring flex h-11 min-w-11 items-center justify-center border-e border-surface-border px-4 text-sm font-medium transition-colors ${
                   page === currentPage
                     ? "bg-primary text-text-inverse"
                     : "bg-surface-card text-text-main hover:bg-primary-subtle hover:text-primary"
@@ -100,16 +108,17 @@ export default function Pagination({
             ),
           )}
 
-          {/* Next */}
           <button
+            type="button"
+            aria-label="الصفحة التالية"
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="flex h-10 w-10 items-center justify-center bg-surface-card text-text-main transition hover:bg-primary-subtle hover:text-primary disabled:cursor-not-allowed disabled:text-text-muted disabled:opacity-50"
+            className="focus-ring flex h-11 w-11 items-center justify-center bg-surface-card text-text-main transition-colors hover:bg-primary-subtle hover:text-primary disabled:cursor-not-allowed disabled:text-text-muted disabled:opacity-50"
           >
-            <ChevronRight size={18} />
+            <ChevronRight size={18} aria-hidden="true" />
           </button>
-        </nav>
+        </div>
       </div>
-    </div>
+    </nav>
   );
 }

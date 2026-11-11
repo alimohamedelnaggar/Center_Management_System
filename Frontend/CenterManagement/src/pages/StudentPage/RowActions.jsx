@@ -136,7 +136,7 @@ export default function RowActions({
           aria-label={`Actions for ${name}`}
           aria-expanded={menuOpen}
           aria-haspopup="menu"
-          className="flex h-9 w-9 items-center justify-center rounded-xl border border-surface-border text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main focus:outline-none focus:ring-2 focus:ring-primary/20"
+          className="focus-ring flex h-11 w-11 items-center justify-center rounded-control border border-surface-border text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
         >
           <MoreVertical className="h-5 w-5" />
         </button>
@@ -188,9 +188,10 @@ export default function RowActions({
                 <button
                   type="button"
                   onClick={() => setMenuOpen(false)}
-                  className="rounded-lg p-1.5 text-text-muted hover:bg-surface-muted"
+                  aria-label="إغلاق القائمة"
+                  className="focus-ring inline-flex h-11 w-11 items-center justify-center rounded-control text-text-muted hover:bg-surface-muted"
                 >
-                  <X size={18} />
+                  <X size={18} aria-hidden="true" />
                 </button>
               </div>
 

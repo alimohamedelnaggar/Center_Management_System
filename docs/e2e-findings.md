@@ -806,7 +806,7 @@ it. The mismatch is also why the row actions can look attached to the wrong colu
 None on behaviour or the API; the comparison is CSS/HTML only and no application file was changed.
 The fixed version in the mock-up adds the status cell and keeps the actions column last.
 
-**Status: OPEN — logged, not fixed.** Planned for the students-page pass in phase 2.
+**Status: FIXED (2026-11-11).** `StudentTable.jsx` now renders a `<StatusBadge status={student.isActive}>` cell under `الحالة`, so every row has eight cells matching the eight headings and the actions column stays last. Verified by `students-table` probe (8 headings / 8 cells at every viewport) and `studentsPage.integration.test.jsx` (asserts 8/8 plus the visible status text).
 
 ---
 
@@ -857,6 +857,47 @@ Product copy, variants, and the renew link are unchanged. Covered by
 `docs/design/phase3/batch1-verify.mjs`.
 
 **Status: FIXED** in phase 3 batch 1 (commit on `redesign/ui-identity`).
+
+---
+
+## F-018 — The “add your email” reminder came back after every reload
+
+**Severity:** Low (the reminder is non-blocking; it just reappeared on every page load, so an
+owner who had already seen and dismissed it could never get rid of it)
+
+**Found:** 2026-11-11 while adding the owner-email banner to the phase 3 batch 2 fixtures.
+
+**Symptom**
+
+`OwnerEmailWarning` kept its dismissed flag in component state only:
+
+```jsx
+const [dismissed, setDismissed] = useState(false);
+...
+<button onClick={() => setDismissed(true)} ... />
+```
+
+Any navigation that remounted the banner (or a reload) reset the flag, so the reminder returned
+immediately. It also rendered during an admin impersonation session, where the owner cannot act on
+it and the platform admin must not be nudged to edit someone else's recovery address.
+
+**Behaviour change (approved with this batch)**
+
+- The dismissal now records `cm.ownerEmailWarning.dismissedAt` in `localStorage` and stays hidden
+  for **14 days**; after that the reminder returns once. Storage failures (private mode) degrade to
+  the old session-only dismissal.
+- The banner still shows only for `role === "CenterOwner"` or a solo teacher **without an email**,
+  and now also returns `null` while `impersonating` is true. No copy, link or styling changed.
+
+**Evidence**
+
+- `Frontend/CenterManagement/src/components/OwnerEmailWarning.jsx` — `DISMISS_KEY`,
+  `DISMISS_WINDOW_MS`, and the `impersonating` guard.
+- `src/components/banners.integration.test.jsx` — dismissal persists after reload, expires after two
+  weeks, shows for a solo teacher without an email, and stays hidden for every other role plus the
+  impersonation session (13 banner tests total).
+
+**Status: FIXED** in phase 3 batch 2.
 
 ---
 

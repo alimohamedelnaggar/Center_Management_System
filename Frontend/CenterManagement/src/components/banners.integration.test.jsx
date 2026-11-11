@@ -65,6 +65,7 @@ const owner = (extra = {}) => ({
 });
 
 beforeEach(() => {
+  window.localStorage.clear();
   state.auth = owner();
 });
 
@@ -217,7 +218,7 @@ describe("owner email warning", () => {
     expect(container.textContent).toContain("PROFILE_ROUTE");
   });
 
-  it("can be dismissed for the rest of the session", async () => {
+  it("can be dismissed, and remembers the dismissal for two weeks", async () => {
     state.auth = ownerWithoutEmail;
 
     await render(h(MemoryRouter, null, h(OwnerEmailWarning)));
@@ -225,6 +226,71 @@ describe("owner email warning", () => {
     expect(container.textContent).toContain("أضف بريدك");
 
     await click('[aria-label="إغلاق التنبيه"]');
+
+    expect(container.textContent.trim()).toBe("");
+    expect(Number(window.localStorage.getItem("cm.ownerEmailWarning.dismissedAt")))
+      .toBeGreaterThan(0);
+  });
+
+  it("stays hidden after a reload while the dismissal is still fresh", async () => {
+    state.auth = ownerWithoutEmail;
+    window.localStorage.setItem(
+      "cm.ownerEmailWarning.dismissedAt",
+      String(Date.now() - 3 * 24 * 60 * 60 * 1000),
+    );
+
+    await render(h(MemoryRouter, null, h(OwnerEmailWarning)));
+
+    expect(container.textContent.trim()).toBe("");
+  });
+
+  it("comes back once the dismissal is older than two weeks", async () => {
+    state.auth = ownerWithoutEmail;
+    window.localStorage.setItem(
+      "cm.ownerEmailWarning.dismissedAt",
+      String(Date.now() - 15 * 24 * 60 * 60 * 1000),
+    );
+
+    await render(h(MemoryRouter, null, h(OwnerEmailWarning)));
+
+    expect(container.textContent).toContain("أضف بريدك");
+  });
+
+  it("never shows to an assistant, a student or a platform admin", async () => {
+    for (const role of ["Assistant", "Student", "SuperAdmin", "Teacher"]) {
+      state.auth = { ...ownerWithoutEmail, role };
+      await render(h(MemoryRouter, null, h(OwnerEmailWarning)));
+      expect(container.textContent.trim()).toBe("");
+    }
+  });
+
+  it("shows for a solo teacher and stops once an email is saved", async () => {
+    state.auth = {
+      ...ownerWithoutEmail,
+      role: "Teacher",
+      isSoloTeacher: true,
+    };
+    await render(h(MemoryRouter, null, h(OwnerEmailWarning)));
+    expect(container.textContent).toContain("أضف بريدك");
+
+    await act(async () => root.unmount());
+    container.remove();
+    root = null;
+
+    state.auth = {
+      ...ownerWithoutEmail,
+      role: "Teacher",
+      isSoloTeacher: true,
+      email: "solo@example.com",
+    };
+    await render(h(MemoryRouter, null, h(OwnerEmailWarning)));
+    expect(container.textContent.trim()).toBe("");
+  });
+
+  it("stays hidden while a platform admin is impersonating the owner", async () => {
+    state.auth = { ...ownerWithoutEmail, impersonating: true };
+
+    await render(h(MemoryRouter, null, h(OwnerEmailWarning)));
 
     expect(container.textContent.trim()).toBe("");
   });
