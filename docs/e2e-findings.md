@@ -883,21 +883,157 @@ it and the platform admin must not be nudged to edit someone else's recovery add
 
 **Behaviour change (approved with this batch)**
 
-- The dismissal now records `cm.ownerEmailWarning.dismissedAt` in `localStorage` and stays hidden
-  for **14 days**; after that the reminder returns once. Storage failures (private mode) degrade to
-  the old session-only dismissal.
+- The dismissal now records `cm.ownerEmailWarning.dismissedAt:<userId>` in `localStorage` (the
+  id comes from the token's `nameidentifier` claim) and stays hidden for **14 days**; after that the
+  reminder returns once. Because the key is per user, dismissing it on a shared browser never hides
+  the reminder for a different account. Storage failures (private mode) degrade to the old
+  session-only dismissal.
 - The banner still shows only for `role === "CenterOwner"` or a solo teacher **without an email**,
   and now also returns `null` while `impersonating` is true. No copy, link or styling changed.
 
 **Evidence**
 
-- `Frontend/CenterManagement/src/components/OwnerEmailWarning.jsx` — `DISMISS_KEY`,
-  `DISMISS_WINDOW_MS`, and the `impersonating` guard.
+- `Frontend/CenterManagement/src/components/OwnerEmailWarning.jsx` — `DISMISS_KEY`, the
+  `dismissKeyFor(userId)` helper, `DISMISS_WINDOW_MS`, and the `impersonating` guard.
+- `src/context/AuthContext.jsx` — exposes `userId` (decoded from the token) so browser-persisted UI
+  state can be scoped to the caller.
 - `src/components/banners.integration.test.jsx` — dismissal persists after reload, expires after two
-  weeks, shows for a solo teacher without an email, and stays hidden for every other role plus the
-  impersonation session (13 banner tests total).
+  weeks, shows for a solo teacher without an email, stays hidden for every other role plus the
+  impersonation session, and **does not leak owner A's dismissal to owner B on the same browser**
+  (14 banner tests total).
 
 **Status: FIXED** in phase 3 batch 2.
+
+---
+
+## F-019 — The receipt-counter concurrency test can fail inside Microsoft.Data.Sqlite's pooled-connection cleanup
+
+**Severity:** None for receipt numbering (no duplicate or reused number was ever observed). Low for
+test reliability: the SQLite-only failure can abort a full backend run even though the numbering
+assertions pass.
+
+**Classification:** test-harness / database-provider connection-lifecycle flake, **not** a numbering
+race, and **not** reproducible on SQL Server by design. No backend code or migration was changed in
+this design branch.
+
+**Found:** 2026-11-11 during the phase 3 batch 2 full backend run (first run after the students
+commit).
+
+**Symptom**
+
+One full run failed in
+`PaymentReceiptTests.Counter_Twenty_Parallel_Allocations_Are_Unique_And_Consecutive` with:
+
+```
+SQLite Error 5: 'unable to delete/modify collation sequence due to active statements'
+   at Microsoft.Data.Sqlite.SqliteConnectionPool.Return(...)
+   at Microsoft.Data.Sqlite.SqliteConnection.Open()/OpenAsync()
+   at CenterManagement.Infrustructure.Services.ReceiptNumberService.NextAsync(...)
+      ReceiptNumberService.cs:48
+```
+
+The failure is an exception thrown while the service opens the connection. It is **not** a failed
+assertion: no duplicate, gap, or reused receipt number was produced by that test.
+
+**Evidence**
+
+- **20 consecutive isolated runs** of exactly this test (`dotnet test --filter
+  "FullyQualifiedName~PaymentReceiptTests.Counter_Twenty_Parallel_Allocations_Are_Unique_And_Consecutive"
+  --no-build`, one process per run):
+
+  ```
+  RUN 1..20: exit=0 :: Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1
+  ```
+
+  **Failures in 20 runs: 0.** Each run took 5–7 s.
+- The original failure occurred once in the **first full run** of 356 tests. Re-running the same
+  full suite twice afterwards: **356/356 passed**, no exception. The failure is therefore
+  timing/concurrency dependent (20 parallel `Open`/`Close` calls on one SQLite connection string),
+  not deterministic.
+- In every observed failure the exception was the provider's `SqliteException` at `OpenAsync`
+  (line 48), i.e. *before* the first receipt SQL statement runs. It cannot allocate, skip, or
+  duplicate a number.
+
+**Why this happens (provider mechanism, verified in the 10.0 source)**
+
+1. EF Core's SQLite provider registers a custom `EF_DECIMAL` collation on **every** `SqliteConnection`
+   (`SqliteRelationalConnection.InitializeDbConnection` → `sqliteConnection.CreateCollation("EF_DECIMAL", …)`).
+2. Microsoft.Data.Sqlite pools connections. Returning one to the pool calls
+   `SqliteConnectionInternal.Deactivate()` → `SqliteConnection.Deactivate()`, which unregisters the
+   registered collations; opening a pooled handle re-registers them.
+3. SQLite returns `SQLITE_BUSY` — surfaced as error 5, “unable to delete/modify collation sequence
+   due to active statements” — when a collation is added/removed while a prepared statement is still
+   active on that handle.
+4. The test opens and closes 20 EF contexts concurrently against one SQLite file. A close/return can
+   overlap another open of the same pooled handle, hitting that SQLite guard. This is a
+   connection-lifecycle detail of `Microsoft.Data.Sqlite` + EF Core, only present because the tests
+   run on SQLite.
+
+**Why the numbering itself is safe (review of the actual code)**
+
+- `ReceiptNumberService.NextAsync` never reads the last number and writes `+1`. It uses one atomic
+  statement:
+  - SQL Server: `UPDATE CenterReceiptCounters SET LastNumber = LastNumber + 1 OUTPUT INSERTED.LastNumber WHERE CenterId = @centerId`
+  - SQLite: `UPDATE CenterReceiptCounters SET LastNumber = LastNumber + 1 WHERE CenterId = @centerId RETURNING LastNumber`
+- If no counter row exists yet, it inserts `(CenterId, 1)`; a losing concurrent insert hits the
+  primary key, is caught, and the atomic update is retried, so one request gets 1 and the other gets 2.
+- `AddPaymentCommandHandler` reserves the number inside the same transaction as the payment insert
+  (`CreateExecutionStrategy` → `BeginTransactionAsync` → `NextAsync` → payment `SaveChanges` →
+  `Commit`). If the payment fails, the counter increment rolls back with it.
+- `IX_Payments_CenterId_ReceiptNumber` is a **unique** index on `(CenterId, ReceiptNumber)` (the
+  migration creates it filtered on non-null values). Even if the application logic were wrong, the
+  database would reject a second identical `(center, receipt)` row instead of storing a duplicate.
+- SQL Server additionally serialises concurrent updates on the same counter row with an exclusive
+  row lock; under RCSI an update conflict would surface as error 3960 (request fails, no duplicate),
+  not as a repeated number. SQLite has a single writer at a time and a 30 s busy timeout, so the same
+  guarantee holds there; contention surfaces as `SQLITE_BUSY`, which is exactly the flake observed.
+
+**Verdict**
+
+Not a race in receipt-number generation. A duplicate number would require the atomic `UPDATE` to
+return the same value twice or the unique index to be missing; neither happened, and the failing
+frame is a connection open/return inside the SQLite provider. **No fix or migration is applied in
+this design branch.**
+
+**Optional follow-up (separate backend branch, not required for correctness)**
+
+- Make this test deterministic by opening the SQLite test database with `Pooling=False` (or retry
+  `OpenAsync` on `SQLITE_BUSY` in test setup), which removes the pooled-handle reuse that triggers
+  the provider error.
+- Production runs SQL Server, so no product availability change is expected from this entry.
+
+---
+
+## F-020 — The bulk parent-accounts "skip already linked" label contained Chinese characters
+
+**Severity:** Low (visible copy defect; the checkbox still worked)
+
+**Found:** 2026-11-11 while rebuilding `/bulk-parent-accounts` for phase 3 batch 3.
+
+**Symptom**
+
+The checkbox label rendered literal CJK characters in the middle of the Arabic sentence:
+
+```
+تخطي الطلاب الذين跟他们 ولي أمر مرتبط بالفعل
+```
+
+The bug predates this branch (`git show HEAD:Frontend/.../BulkParentAccountsPage.jsx` has the same
+line), so it was a latent translation/paste defect that only became visible once the page was
+audited at every viewport.
+
+**Fix**
+
+Copy-only change in `Frontend/CenterManagement/src/pages/BulkParentAccountsPage.jsx`:
+
+```
+تخطي الطلاب المرتبطين بالفعل بحساب ولي أمر
+```
+
+Behaviour, `name`/`id`, and the request body (`skipAlreadyLinked`) are unchanged. The new copy is
+recorded in `docs/ui-text-changes.md` (row 29).
+
+**Status: FIXED** in phase 3 batch 3.
 
 ---
 

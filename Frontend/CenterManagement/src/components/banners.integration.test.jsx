@@ -191,6 +191,7 @@ describe("owner email warning", () => {
     email: null,
     profileLoaded: true,
     impersonating: false,
+    userId: "owner-a",
     logout: vi.fn(),
   };
 
@@ -228,14 +229,19 @@ describe("owner email warning", () => {
     await click('[aria-label="إغلاق التنبيه"]');
 
     expect(container.textContent.trim()).toBe("");
-    expect(Number(window.localStorage.getItem("cm.ownerEmailWarning.dismissedAt")))
-      .toBeGreaterThan(0);
+    expect(
+      Number(
+        window.localStorage.getItem(
+          "cm.ownerEmailWarning.dismissedAt:owner-a",
+        ),
+      ),
+    ).toBeGreaterThan(0);
   });
 
   it("stays hidden after a reload while the dismissal is still fresh", async () => {
     state.auth = ownerWithoutEmail;
     window.localStorage.setItem(
-      "cm.ownerEmailWarning.dismissedAt",
+      "cm.ownerEmailWarning.dismissedAt:owner-a",
       String(Date.now() - 3 * 24 * 60 * 60 * 1000),
     );
 
@@ -247,13 +253,37 @@ describe("owner email warning", () => {
   it("comes back once the dismissal is older than two weeks", async () => {
     state.auth = ownerWithoutEmail;
     window.localStorage.setItem(
-      "cm.ownerEmailWarning.dismissedAt",
+      "cm.ownerEmailWarning.dismissedAt:owner-a",
       String(Date.now() - 15 * 24 * 60 * 60 * 1000),
     );
 
     await render(h(MemoryRouter, null, h(OwnerEmailWarning)));
 
     expect(container.textContent).toContain("أضف بريدك");
+  });
+
+  it("never leaks one user's dismissal to another account on the same browser", async () => {
+    state.auth = ownerWithoutEmail;
+    window.localStorage.setItem(
+      "cm.ownerEmailWarning.dismissedAt:owner-a",
+      String(Date.now() - 60 * 1000),
+    );
+
+    // Owner A dismissed it recently: hidden for A.
+    await render(h(MemoryRouter, null, h(OwnerEmailWarning)));
+    expect(container.textContent.trim()).toBe("");
+
+    await act(async () => root.unmount());
+    container.remove();
+    root = null;
+
+    // Owner B on the same browser must still see the reminder.
+    state.auth = { ...ownerWithoutEmail, userId: "owner-b" };
+    await render(h(MemoryRouter, null, h(OwnerEmailWarning)));
+    expect(container.textContent).toContain("أضف بريدك");
+    expect(
+      window.localStorage.getItem("cm.ownerEmailWarning.dismissedAt:owner-b"),
+    ).toBeNull();
   });
 
   it("never shows to an assistant, a student or a platform admin", async () => {

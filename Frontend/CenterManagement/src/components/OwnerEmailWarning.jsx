@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Mail, X } from "@/components/icons";
 import { useAuth } from "../context/useAuth";
@@ -6,16 +6,21 @@ import { useAuth } from "../context/useAuth";
 /**
  * The reminder is hidden for two weeks after the owner dismisses it. The
  * timestamp lives in localStorage so a reload does not bring it back, and the
- * key is only written on an explicit dismiss.
+ * key is scoped to the signed-in user so dismissing it on a shared browser
+ * never hides it for someone else.
  */
 const DISMISS_KEY = "cm.ownerEmailWarning.dismissedAt";
 const DISMISS_WINDOW_MS = 14 * 24 * 60 * 60 * 1000;
 
-function isDismissedRecently() {
-  if (typeof window === "undefined" || !window.localStorage) return false;
+function dismissKeyFor(userId) {
+  return userId ? `${DISMISS_KEY}:${userId}` : null;
+}
+
+function isDismissedRecently(key) {
+  if (!key || typeof window === "undefined" || !window.localStorage) return false;
 
   try {
-    const timestamp = Number(window.localStorage.getItem(DISMISS_KEY));
+    const timestamp = Number(window.localStorage.getItem(key));
     if (!Number.isFinite(timestamp) || timestamp <= 0) return false;
     return Date.now() - timestamp < DISMISS_WINDOW_MS;
   } catch {
@@ -24,11 +29,11 @@ function isDismissedRecently() {
   }
 }
 
-function rememberDismissal() {
-  if (typeof window === "undefined" || !window.localStorage) return;
+function rememberDismissal(key) {
+  if (!key || typeof window === "undefined" || !window.localStorage) return;
 
   try {
-    window.localStorage.setItem(DISMISS_KEY, String(Date.now()));
+    window.localStorage.setItem(key, String(Date.now()));
   } catch {
     // Nothing to do: the banner still hides for this session.
   }
@@ -42,13 +47,23 @@ function rememberDismissal() {
  * nor while a platform admin is impersonating the owner.
  */
 export default function OwnerEmailWarning() {
-  const { role, isSoloTeacher, email, profileLoaded, impersonating } = useAuth();
-  const [dismissed, setDismissed] = useState(isDismissedRecently);
+  const { role, isSoloTeacher, email, profileLoaded, impersonating, userId } =
+    useAuth();
+  const dismissKey = dismissKeyFor(userId);
+  const [dismissed, setDismissed] = useState(() =>
+    isDismissedRecently(dismissKey),
+  );
+
+  // A different account on the same browser (or the end of an impersonation
+  // session) must be evaluated against its own key, never the previous user's.
+  useEffect(() => {
+    setDismissed(isDismissedRecently(dismissKey));
+  }, [dismissKey]);
 
   const dismiss = useCallback(() => {
-    rememberDismissal();
+    rememberDismissal(dismissKey);
     setDismissed(true);
-  }, []);
+  }, [dismissKey]);
 
   const isOwner = role === "CenterOwner" || isSoloTeacher === true;
 

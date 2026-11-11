@@ -15,7 +15,17 @@ import { studentsService } from "../../services/studentService";
 import { exportBothFormats } from "../../utils/bulkCredentialsExport";
 import { useAuth } from "../../context/useAuth";
 import ConfirmModal from "../../components/common/ConfirmModal";
-import Spinner from "../../components/common/Spinner";
+import Button from "../../components/ui/Button";
+import Card, { CardBody } from "../../components/ui/Card";
+import StatusPill from "../../components/ui/StatusPill";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+} from "../../components/ui/Table";
 
 class WizardErrorBoundary extends Component {
   constructor(props){ super(props); this.state={hasError:false}; }
@@ -44,6 +54,18 @@ const STEPS = [
 ];
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB as reasonable default, backend enforces
+
+const STATUS_META = {
+  valid: { label: "صالح", tone: "success" },
+  duplicate: { label: "مكرر", tone: "warning" },
+  error: { label: "خطأ", tone: "danger" },
+};
+
+const statusMetaFor = (status) =>
+  STATUS_META[status] ?? {
+    label: status || "-",
+    tone: "neutral",
+  };
 
 function formatBytes(bytes) {
   if (!bytes) return "0 B";
@@ -435,74 +457,106 @@ function StudentImportWizardInner({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" dir="rtl" lang="ar">
-      <div className="relative flex h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-xl bg-surface-card shadow-xl">
+    <div
+      className="fixed inset-0 z-[9999] flex items-end justify-center bg-black/45 backdrop-blur-xs sm:items-center sm:p-4"
+      dir="rtl"
+      lang="ar"
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="import-wizard-title"
+        data-testid="import-wizard"
+        className="relative flex max-h-[100dvh] w-full max-w-6xl flex-col overflow-hidden rounded-t-card border border-surface-border bg-surface-card text-text-main shadow-2xl sm:max-h-[92dvh] sm:rounded-card"
+      >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-surface-border px-6 py-4">
-          <div>
-            <h2 className="text-lg font-bold text-text-main">معالج استيراد الطلاب من Excel</h2>
-            <p className="text-sm text-text-muted">
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-surface-border px-4 py-3 sm:px-6 sm:py-4">
+          <div className="min-w-0">
+            <h2
+              id="import-wizard-title"
+              className="truncate text-base font-bold sm:text-lg"
+            >
+              معالج استيراد الطلاب من Excel
+            </h2>
+            <p className="text-xs text-text-muted sm:text-sm">
               الخطوة {step} من 4: {STEPS[step - 1]?.title}
             </p>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={handleClose}
-            className="rounded-lg p-2 text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
             aria-label="إغلاق"
+            className="-me-1 shrink-0"
           >
-            <X className="h-5 w-5" />
-          </button>
+            <X className="h-5 w-5" aria-hidden="true" />
+          </Button>
         </div>
 
         {/* Steps */}
-        <div className="flex items-center gap-2 border-b border-surface-border px-6 py-3">
+        <div className="grid shrink-0 grid-cols-4 gap-1 border-b border-surface-border px-3 py-2 sm:flex sm:items-center sm:gap-2 sm:px-6 sm:py-3">
           {STEPS.map((s, idx) => (
-            <div key={s.id} className="flex flex-1 items-center gap-2">
+            <div
+              key={s.id}
+              className="flex flex-col items-center gap-1 sm:flex-1 sm:flex-row sm:gap-2"
+            >
               <div
-                className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium ${
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold sm:h-8 sm:w-8 sm:text-sm ${
                   step >= s.id
-                    ? "bg-primary text-text-inverse"
+                    ? "bg-primary text-primary-contrast"
                     : "bg-surface-muted text-text-muted"
                 }`}
               >
-                {step > s.id ? <Check className="h-4 w-4" /> : s.id}
+                {step > s.id ? (
+                  <Check className="h-4 w-4" aria-hidden="true" />
+                ) : (
+                  s.id
+                )}
               </div>
               <span
-                className={`text-sm ${
+                className={`text-center text-[10px] leading-tight sm:text-sm ${
                   step >= s.id ? "text-text-main" : "text-text-muted"
                 }`}
               >
                 {s.title}
               </span>
               {idx < STEPS.length - 1 && (
-                <div className="mx-2 h-px flex-1 bg-surface-border" />
+                <div className="mx-2 hidden h-px flex-1 bg-surface-border sm:block" />
               )}
             </div>
           ))}
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto px-6 py-4">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-6">
           {/* Step 1 */}
           {step === 1 && (
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <button
+            <div className="space-y-4" data-testid="import-step-1">
+              <div className="flex flex-col gap-3 rounded-card border border-surface-border bg-surface-muted/40 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-text-main">
+                    ابدأ بقالب جاهز
+                  </p>
+                  <p className="break-words text-sm text-text-muted">
+                    صيغة الملف المطلوبة: .xlsx فقط | الحد الأقصى للحجم:{" "}
+                    {formatBytes(MAX_FILE_SIZE)}
+                  </p>
+                </div>
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={handleDownloadTemplate}
-                  className="inline-flex items-center gap-2 rounded-lg border border-surface-border bg-surface-card px-4 py-2 text-sm font-medium text-text-main shadow-sm transition-colors hover:bg-surface-muted"
+                  className="w-full shrink-0 sm:w-auto"
                 >
-                  <Download className="h-4 w-4" />
+                  <Download className="h-4 w-4" aria-hidden="true" />
                   تنزيل قالب Excel
-                </button>
-                <p className="text-sm text-text-muted">
-                  صيغة الملف المطلوبة: .xlsx فقط | الحد الأقصى للحجم: {formatBytes(MAX_FILE_SIZE)}
-                </p>
+                </Button>
               </div>
 
               <div
-                className={`relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-10 text-center transition-colors ${
+                className={`relative flex flex-col items-center justify-center rounded-card border-2 border-dashed p-6 text-center transition-colors sm:p-10 ${
                   dragActive
-                    ? "border-primary bg-primary/5"
+                    ? "border-primary bg-primary-subtle/40"
                     : "border-surface-border bg-surface-bg"
                 }`}
                 onDragEnter={handleDrag}
@@ -510,18 +564,21 @@ function StudentImportWizardInner({
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
               >
-                <Upload className="mb-3 h-10 w-10 text-text-muted" />
-                <p className="text-base font-medium text-text-main">
+                <Upload
+                  className="mb-3 h-10 w-10 text-text-muted"
+                  aria-hidden="true"
+                />
+                <p className="text-base font-semibold text-text-main">
                   اسحب وأفلت الملف هنا
                 </p>
                 <p className="mt-1 text-sm text-text-muted">أو</p>
-                <button
+                <Button
+                  className="mt-3"
                   onClick={() => fileInputRef.current?.click()}
-                  className="mt-3 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-text-inverse transition-colors hover:bg-primary-hover"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-4 w-4" aria-hidden="true" />
                   اختيار ملف
-                </button>
+                </Button>
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -535,74 +592,112 @@ function StudentImportWizardInner({
               </div>
 
               {file && (
-                <div className="flex items-center justify-between rounded-lg border border-surface-border bg-surface-card p-4">
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-8 w-8 text-primary" />
-                    <div>
-                      <p className="font-medium text-text-main">{file.name}</p>
-                      <p className="text-sm text-text-muted">{formatBytes(file.size)}</p>
+                <div className="flex flex-col gap-3 rounded-card border border-surface-border bg-surface-card p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <FileText
+                      className="h-8 w-8 shrink-0 text-primary"
+                      aria-hidden="true"
+                    />
+                    <div className="min-w-0">
+                      <p className="break-all font-semibold text-text-main">
+                        {file.name}
+                      </p>
+                      <p className="text-sm text-text-muted">
+                        {formatBytes(file.size)}
+                      </p>
                     </div>
                   </div>
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => {
                       setFile(null);
                       if (fileInputRef.current) fileInputRef.current.value = "";
                     }}
-                    className="rounded-lg p-2 text-text-muted transition-colors hover:bg-surface-muted hover:text-red-500"
                     aria-label="إزالة الملف"
+                    className="self-end sm:self-auto"
                   >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  </Button>
                 </div>
               )}
 
-              <div className="flex justify-end">
-                <button
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                <Button
                   onClick={handleUploadAndPreview}
-                  disabled={!file || uploading}
-                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-text-inverse transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={!file}
+                  loading={uploading}
+                  className="w-full sm:w-auto"
                 >
                   {uploading ? (
-                    <>
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                      جاري الرفع والمعالجة...
-                    </>
+                    "جاري الرفع والمعالجة..."
                   ) : (
                     <>
                       متابعة
-                      <ArrowRight className="h-4 w-4 rotate-180" />
+                      <ArrowRight
+                        className="h-4 w-4 rotate-180"
+                        aria-hidden="true"
+                      />
                     </>
                   )}
-                </button>
+                </Button>
               </div>
             </div>
           )}
 
           {/* Step 2 */}
           {step === 2 && preview && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <div className="rounded-lg border border-surface-border bg-surface-card p-4 text-center">
-                  <p data-testid="summary-total" className="text-2xl font-bold text-text-main">{summary.total}</p>
-                  <p className="text-sm text-text-muted">إجمالي الصفوف</p>
+            <div className="space-y-4" data-testid="import-step-2">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+                <div className="rounded-card border border-surface-border bg-surface-card p-3 text-center shadow-soft sm:p-4">
+                  <p
+                    data-testid="summary-total"
+                    className="num text-2xl font-bold text-text-main"
+                  >
+                    {summary.total}
+                  </p>
+                  <p className="text-xs font-semibold text-text-muted sm:text-sm">
+                    إجمالي الصفوف
+                  </p>
                 </div>
-                <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-center dark:border-green-800 dark:bg-green-900/20">
-                  <p data-testid="summary-valid" className="text-2xl font-bold text-green-600">{summary.valid}</p>
-                  <p className="text-sm text-green-700 dark:text-green-400">صالح</p>
+                <div className="rounded-card border border-surface-border bg-status-success-bg p-3 text-center sm:p-4">
+                  <p
+                    data-testid="summary-valid"
+                    className="num text-2xl font-bold text-status-success"
+                  >
+                    {summary.valid}
+                  </p>
+                  <p className="text-xs font-semibold text-status-success sm:text-sm">
+                    صالح
+                  </p>
                 </div>
-                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-center dark:border-amber-800 dark:bg-amber-900/20">
-                  <p data-testid="summary-duplicate" className="text-2xl font-bold text-amber-600">{summary.duplicate}</p>
-                  <p className="text-sm text-amber-700 dark:text-amber-400">مكرر</p>
+                <div className="rounded-card border border-surface-border bg-status-warning-bg p-3 text-center sm:p-4">
+                  <p
+                    data-testid="summary-duplicate"
+                    className="num text-2xl font-bold text-status-warning"
+                  >
+                    {summary.duplicate}
+                  </p>
+                  <p className="text-xs font-semibold text-status-warning sm:text-sm">
+                    مكرر
+                  </p>
                 </div>
-                <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-center dark:border-red-800 dark:bg-red-900/20">
-                  <p data-testid="summary-error" className="text-2xl font-bold text-red-600">{summary.error}</p>
-                  <p className="text-sm text-red-700 dark:text-red-400">خطأ</p>
+                <div className="rounded-card border border-surface-border bg-status-danger-bg p-3 text-center sm:p-4">
+                  <p
+                    data-testid="summary-error"
+                    className="num text-2xl font-bold text-status-danger"
+                  >
+                    {summary.error}
+                  </p>
+                  <p className="text-xs font-semibold text-status-danger sm:text-sm">
+                    خطأ
+                  </p>
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <label className="flex items-center gap-2 text-sm text-text-main">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="flex min-h-11 cursor-pointer items-center gap-2 rounded-control border border-surface-border bg-surface-card px-3 text-sm font-semibold text-text-main">
                     <input
                       type="checkbox"
                       checked={filterErrorsOnly}
@@ -610,40 +705,42 @@ function StudentImportWizardInner({
                         setFilterErrorsOnly(e.target.checked);
                         setPreviewPage(1);
                       }}
-                      className="rounded border-surface-border"
+                      className="h-4 w-4 rounded border-surface-border"
                     />
                     عرض الأخطاء فقط
                   </label>
                   {summary.hasGroupWillBeCreated && (
-                    <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                    <StatusPill tone="info" dot={false}>
                       ستُنشأ مجموعة
-                    </span>
+                    </StatusPill>
                   )}
                 </div>
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={resetToUpload}
-                  className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
+                  className="justify-start sm:justify-center"
                 >
-                  <RefreshCw className="h-4 w-4" />
+                  <RefreshCw className="h-4 w-4" aria-hidden="true" />
                   رجوع ورفع ملف آخر
-                </button>
+                </Button>
               </div>
 
-              <div className="overflow-x-auto rounded-lg border border-surface-border">
-                <table className="w-full text-right text-sm">
-                  <thead className="bg-surface-muted">
+              <div className="hidden md:block">
+                <Table>
+                  <TableHead>
                     <tr>
-                      <th className="whitespace-nowrap px-4 py-2.5 text-xs font-semibold text-text-muted">#</th>
-                      <th className="whitespace-nowrap px-4 py-2.5 text-xs font-semibold text-text-muted">الاسم</th>
-                      <th className="whitespace-nowrap px-4 py-2.5 text-xs font-semibold text-text-muted">رقم الهاتف</th>
-                      <th className="whitespace-nowrap px-4 py-2.5 text-xs font-semibold text-text-muted">رقم هاتف ولي الأمر</th>
-                      <th className="whitespace-nowrap px-4 py-2.5 text-xs font-semibold text-text-muted">المجموعة</th>
-                      <th className="whitespace-nowrap px-4 py-2.5 text-xs font-semibold text-text-muted">الحالة</th>
-                      <th className="whitespace-nowrap px-4 py-2.5 text-xs font-semibold text-text-muted">رسالة الخطأ</th>
-                      <th className="whitespace-nowrap px-4 py-2.5 text-xs font-semibold text-text-muted">إجراء</th>
+                      <TableHeaderCell className="w-12">#</TableHeaderCell>
+                      <TableHeaderCell>الاسم</TableHeaderCell>
+                      <TableHeaderCell>رقم الهاتف</TableHeaderCell>
+                      <TableHeaderCell>رقم هاتف ولي الأمر</TableHeaderCell>
+                      <TableHeaderCell>المجموعة</TableHeaderCell>
+                      <TableHeaderCell>الحالة</TableHeaderCell>
+                      <TableHeaderCell>رسالة الخطأ</TableHeaderCell>
+                      <TableHeaderCell>إجراء</TableHeaderCell>
                     </tr>
-                  </thead>
-                  <tbody>
+                  </TableHead>
+                  <TableBody>
                     {pagedRows.map((row, idx) => {
                       const status = row.status || "";
                       const isError = status === "error";
@@ -652,133 +749,256 @@ function StudentImportWizardInner({
                       const canUpdate = row.canUpdate === true;
                       const groupWillBeCreated = row.groupWillBeCreated === true;
                       const errorMsg = row.errorMessage || "";
+                      const meta = statusMetaFor(status);
 
                       return (
-                        <tr
+                        <TableRow
                           key={idx}
-                          className={`border-t border-surface-border ${
+                          className={
                             isError
-                              ? "bg-red-50/50 dark:bg-red-900/10"
+                              ? "bg-status-danger-bg/40"
                               : isDuplicate
-                              ? "bg-amber-50/50 dark:bg-amber-900/10"
-                              : isValid
-                              ? "bg-green-50/50 dark:bg-green-900/10"
-                              : ""
-                          }`}
+                                ? "bg-status-warning-bg/40"
+                                : isValid
+                                  ? "bg-status-success-bg/40"
+                                  : ""
+                          }
                         >
-                          <td className="px-4 py-2.5 text-text-muted">{(previewPage - 1) * previewPageSize + idx + 1}</td>
-                          <td className="whitespace-nowrap px-4 py-2.5 text-text-main">{row.fullName || "-"}</td>
-                          <td className="whitespace-nowrap px-4 py-2.5 text-text-muted">{row.phone || "-"}</td>
-                          <td className="whitespace-nowrap px-4 py-2.5 text-text-muted">{row.phoneParent || "-"}</td>
-                          <td className="whitespace-nowrap px-4 py-2.5 text-text-main">
-                            {row.groupName || "-"}
+                          <TableCell className="tabular-nums text-text-muted">
+                            {(previewPage - 1) * previewPageSize + idx + 1}
+                          </TableCell>
+                          <TableCell className="font-semibold text-text-main">
+                            {row.fullName || "-"}
+                          </TableCell>
+                          <TableCell dir="ltr" className="text-right font-mono text-text-muted">
+                            {row.phone || "-"}
+                          </TableCell>
+                          <TableCell dir="ltr" className="text-right font-mono text-text-muted">
+                            {row.phoneParent || "-"}
+                          </TableCell>
+                          <TableCell className="text-text-main">
+                            <span className="break-words">{row.groupName || "-"}</span>
                             {groupWillBeCreated && (
-                              <span className="mr-2 rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                              <StatusPill tone="info" dot={false} className="ms-2">
                                 ستُنشأ مجموعة
-                              </span>
+                              </StatusPill>
                             )}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-2.5">
-                            <span
-                              className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                                isError
-                                  ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
-                                  : isDuplicate
-                                  ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-                                  : isValid
-                                  ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                                  : "bg-surface-muted text-text-muted"
-                              }`}
-                            >
-                              {isError ? "خطأ" : isDuplicate ? "مكرر" : isValid ? "صالح" : status || "-"}
-                            </span>
-                          </td>
-                          <td className="max-w-xs truncate px-4 py-2.5 text-xs text-red-600 dark:text-red-400" title={errorMsg}>
+                          </TableCell>
+                          <TableCell>
+                            <StatusPill tone={meta.tone}>{meta.label}</StatusPill>
+                          </TableCell>
+                          <TableCell
+                            className="max-w-xs truncate text-xs text-status-danger"
+                            title={errorMsg}
+                          >
                             {errorMsg || "-"}
-                          </td>
-                          <td className="whitespace-nowrap px-4 py-2.5 text-text-main">
-                            {canUpdate ? <span className="text-xs text-primary">يمكن التحديث</span> : "-"}
-                          </td>
-                        </tr>
+                          </TableCell>
+                          <TableCell className="text-text-main">
+                            {canUpdate ? (
+                              <span className="text-xs font-semibold text-primary">
+                                يمكن التحديث
+                              </span>
+                            ) : (
+                              "-"
+                            )}
+                          </TableCell>
+                        </TableRow>
                       );
                     })}
-                  </tbody>
-                </table>
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Phones turn each preview row into a labelled card. */}
+              <div
+                className="space-y-3 md:hidden"
+                data-testid="import-preview-cards"
+              >
+                {pagedRows.map((row, idx) => {
+                  const status = row.status || "";
+                  const canUpdate = row.canUpdate === true;
+                  const groupWillBeCreated = row.groupWillBeCreated === true;
+                  const errorMsg = row.errorMessage || "";
+                  const meta = statusMetaFor(status);
+
+                  return (
+                    <div
+                      key={idx}
+                      data-testid="import-preview-card"
+                      className="rounded-card border border-surface-border bg-surface-card p-4 shadow-soft"
+                    >
+                      <div className="mb-3 flex items-start justify-between gap-2 border-b border-surface-border pb-2">
+                        <p className="min-w-0 break-words text-sm font-bold text-text-main">
+                          {row.fullName || "-"}
+                        </p>
+                        <div className="flex shrink-0 flex-col items-end gap-1">
+                          <span className="text-xs tabular-nums text-text-muted">
+                            #{(previewPage - 1) * previewPageSize + idx + 1}
+                          </span>
+                          <StatusPill tone={meta.tone}>{meta.label}</StatusPill>
+                        </div>
+                      </div>
+
+                      <dl className="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <dt className="text-xs text-text-muted">رقم الهاتف</dt>
+                          <dd dir="ltr" className="break-all text-right font-mono text-text-main">
+                            {row.phone || "-"}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs text-text-muted">رقم هاتف ولي الأمر</dt>
+                          <dd dir="ltr" className="break-all text-right font-mono text-text-main">
+                            {row.phoneParent || "-"}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs text-text-muted">المجموعة</dt>
+                          <dd className="break-words text-text-main">
+                            {row.groupName || "-"}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs text-text-muted">إجراء</dt>
+                          <dd className="text-text-main">
+                            {canUpdate ? (
+                              <span className="text-xs font-semibold text-primary">
+                                يمكن التحديث
+                              </span>
+                            ) : (
+                              "-"
+                            )}
+                          </dd>
+                        </div>
+                        {groupWillBeCreated && (
+                          <div className="col-span-2">
+                            <StatusPill tone="info" dot={false}>
+                              ستُنشأ مجموعة
+                            </StatusPill>
+                          </div>
+                        )}
+                        {errorMsg && (
+                          <div className="col-span-2">
+                            <dt className="text-xs text-text-muted">رسالة الخطأ</dt>
+                            <dd className="break-words text-xs text-status-danger">
+                              {errorMsg}
+                            </dd>
+                          </div>
+                        )}
+                      </dl>
+                    </div>
+                  );
+                })}
               </div>
 
               {filteredRows.length > previewPageSize && (
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-sm text-text-muted">
                     عرض {(previewPage - 1) * previewPageSize + 1} -{" "}
-                    {Math.min(previewPage * previewPageSize, filteredRows.length)} من {filteredRows.length}
+                    {Math.min(previewPage * previewPageSize, filteredRows.length)} من{" "}
+                    {filteredRows.length}
                   </p>
                   <div className="flex items-center gap-2">
-                    <button
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={() => setPreviewPage((p) => Math.max(1, p - 1))}
                       disabled={previewPage === 1}
-                      className="rounded-lg border border-surface-border px-3 py-1.5 text-sm disabled:opacity-50"
                     >
                       السابق
-                    </button>
-                    <span className="text-sm text-text-muted">
+                    </Button>
+                    <span className="px-1 text-sm font-semibold text-text-muted">
                       {previewPage} / {totalPages}
                     </span>
-                    <button
-                      onClick={() => setPreviewPage((p) => Math.min(totalPages, p + 1))}
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() =>
+                        setPreviewPage((p) => Math.min(totalPages, p + 1))
+                      }
                       disabled={previewPage === totalPages}
-                      className="rounded-lg border border-surface-border px-3 py-1.5 text-sm disabled:opacity-50"
                     >
                       التالي
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}
 
-              <div className="flex items-center justify-between">
-                <button
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <Button
+                  variant="outline"
                   onClick={() => setStep(1)}
-                  className="inline-flex items-center gap-2 rounded-lg border border-surface-border px-4 py-2 text-sm font-medium text-text-main hover:bg-surface-muted"
+                  className="w-full sm:w-auto"
                 >
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   رجوع
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={goToOptions}
                   disabled={!canProceedFromPreview}
-                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-text-inverse transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full sm:w-auto"
                 >
                   متابعة
-                  <ArrowRight className="h-4 w-4 rotate-180" />
-                </button>
+                  <ArrowRight className="h-4 w-4 rotate-180" aria-hidden="true" />
+                </Button>
               </div>
             </div>
           )}
 
           {/* Step 3 */}
           {step === 3 && (
-            <div className="space-y-6">
-              <div className="rounded-lg border border-surface-border bg-surface-card p-4">
-                <h3 className="mb-3 font-medium text-text-main">خيارات الاستيراد</h3>
-                <div className="space-y-4">
+            <div className="space-y-4" data-testid="import-step-3">
+              <Card>
+                <CardBody className="space-y-4">
+                  <h3 className="text-base font-bold text-text-main">
+                    خيارات الاستيراد
+                  </h3>
+
                   <div>
-                    <p className="mb-2 text-sm font-medium text-text-main">التعامل مع الطلاب المكررين</p>
-                    <div className="flex flex-col gap-2 sm:flex-row">
-                      <label className="flex items-center gap-2 rounded-lg border border-surface-border p-3 text-sm text-text-main">
+                    <p className="mb-2 text-sm font-bold text-text-main">
+                      التعامل مع الطلاب المكررين
+                    </p>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <label
+                        className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-control border p-3 text-sm font-semibold transition-colors ${
+                          options.duplicateHandling === "skip"
+                            ? "border-primary bg-primary-subtle/40 text-text-main"
+                            : "border-surface-border bg-surface-card text-text-main"
+                        }`}
+                      >
                         <input
                           type="radio"
                           name="duplicate"
                           checked={options.duplicateHandling === "skip"}
-                          onChange={() => setOptions((prev) => ({ ...prev, duplicateHandling: "skip" }))}
+                          onChange={() =>
+                            setOptions((prev) => ({
+                              ...prev,
+                              duplicateHandling: "skip",
+                            }))
+                          }
+                          className="h-4 w-4"
                         />
                         تخطي (افتراضي)
                       </label>
                       {rows.some((row) => row.canUpdate === true) && (
-                        <label className="flex items-center gap-2 rounded-lg border border-surface-border p-3 text-sm text-text-main">
+                        <label
+                          className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-control border p-3 text-sm font-semibold transition-colors ${
+                            options.duplicateHandling === "update"
+                              ? "border-primary bg-primary-subtle/40 text-text-main"
+                              : "border-surface-border bg-surface-card text-text-main"
+                          }`}
+                        >
                           <input
                             type="radio"
                             name="duplicate"
                             checked={options.duplicateHandling === "update"}
-                            onChange={() => setOptions((prev) => ({ ...prev, duplicateHandling: "update" }))}
+                            onChange={() =>
+                              setOptions((prev) => ({
+                                ...prev,
+                                duplicateHandling: "update",
+                              }))
+                            }
+                            className="h-4 w-4"
                           />
                           تحديث (الاسم وبيانات التواصل فقط)
                         </label>
@@ -789,163 +1009,209 @@ function StudentImportWizardInner({
                     </p>
                   </div>
 
-                  {summary.hasGroupWillBeCreated && summary.canCreateGroupsOverall && (
-                    <label className="flex items-start gap-3 rounded-lg border border-surface-border p-3">
-                      <input
-                        type="checkbox"
-                        checked={options.createMissingGroups}
-                        onChange={(e) =>
-                          setOptions((prev) => ({ ...prev, createMissingGroups: e.target.checked }))
-                        }
-                        className="mt-0.5 rounded border-surface-border"
-                      />
-                      <div>
-                        <p className="text-sm font-medium text-text-main">إنشاء المجموعات الناقصة</p>
-                        <p className="text-xs text-text-muted">(افتراضي معطّل)</p>
-                      </div>
-                    </label>
-                  )}
+                  {summary.hasGroupWillBeCreated &&
+                    summary.canCreateGroupsOverall && (
+                      <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-control border border-surface-border bg-surface-card p-3">
+                        <input
+                          type="checkbox"
+                          checked={options.createMissingGroups}
+                          onChange={(e) =>
+                            setOptions((prev) => ({
+                              ...prev,
+                              createMissingGroups: e.target.checked,
+                            }))
+                          }
+                          className="mt-0.5 h-4 w-4 rounded border-surface-border"
+                        />
+                        <div>
+                          <p className="text-sm font-bold text-text-main">
+                            إنشاء المجموعات الناقصة
+                          </p>
+                          <p className="text-xs text-text-muted">
+                            (افتراضي معطّل)
+                          </p>
+                        </div>
+                      </label>
+                    )}
 
-                  <label className="flex items-start gap-3 rounded-lg border border-surface-border p-3">
+                  <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-control border border-surface-border bg-surface-card p-3">
                     <input
                       type="checkbox"
                       checked={options.createStudentAccounts}
                       onChange={(e) =>
-                        setOptions((prev) => ({ ...prev, createStudentAccounts: e.target.checked }))
+                        setOptions((prev) => ({
+                          ...prev,
+                          createStudentAccounts: e.target.checked,
+                        }))
                       }
-                      className="mt-0.5 rounded border-surface-border"
+                      className="mt-0.5 h-4 w-4 rounded border-surface-border"
                     />
                     <div>
-                      <p className="text-sm font-medium text-text-main">إنشاء حسابات الطلاب</p>
+                      <p className="text-sm font-bold text-text-main">
+                        إنشاء حسابات الطلاب
+                      </p>
                     </div>
                   </label>
 
                   {canCreateParentAccounts && (
-                    <label className="flex items-start gap-3 rounded-lg border border-surface-border p-3">
+                    <label className="flex min-h-11 cursor-pointer items-start gap-3 rounded-control border border-surface-border bg-surface-card p-3">
                       <input
                         type="checkbox"
                         checked={options.createParentAccounts}
                         onChange={(e) =>
-                          setOptions((prev) => ({ ...prev, createParentAccounts: e.target.checked }))
+                          setOptions((prev) => ({
+                            ...prev,
+                            createParentAccounts: e.target.checked,
+                          }))
                         }
-                        className="mt-0.5 rounded border-surface-border"
+                        className="mt-0.5 h-4 w-4 rounded border-surface-border"
                       />
                       <div>
-                        <p className="text-sm font-medium text-text-main">إنشاء حسابات أولياء الأمور</p>
+                        <p className="text-sm font-bold text-text-main">
+                          إنشاء حسابات أولياء الأمور
+                        </p>
                       </div>
                     </label>
                   )}
-                </div>
-              </div>
+                </CardBody>
+              </Card>
 
-              <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
-                <p className="text-sm text-amber-800 dark:text-amber-300">
+              <div className="rounded-card border border-status-warning/30 bg-status-warning-bg p-4">
+                <p className="text-sm font-semibold leading-relaxed text-status-warning">
                   الباسورد المبدئي = رقم الهاتف وسيُطلب تغييره عند أول دخول
                 </p>
               </div>
 
-              <div className="rounded-lg border border-surface-border bg-surface-card p-4">
-                <h3 className="mb-3 font-medium text-text-main">ملخص ما سيحدث</h3>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                  <div className="text-center">
-                    <p className="text-lg font-bold text-text-main">{summary.valid}</p>
-                    <p className="text-xs text-text-muted">طالب جديد (تقريبي)</p>
+              <Card>
+                <CardBody>
+                  <h3 className="mb-3 text-base font-bold text-text-main">
+                    ملخص ما سيحدث
+                  </h3>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+                    <div className="rounded-control border border-surface-border bg-surface-muted/40 p-3 text-center">
+                      <p className="num text-lg font-bold text-text-main">
+                        {summary.valid}
+                      </p>
+                      <p className="text-xs text-text-muted">
+                        طالب جديد (تقريبي)
+                      </p>
+                    </div>
+                    <div className="rounded-control border border-surface-border bg-surface-muted/40 p-3 text-center">
+                      <p className="num text-lg font-bold text-text-main">
+                        {updatableCount}
+                      </p>
+                      <p className="text-xs text-text-muted">قابل للتحديث</p>
+                    </div>
+                    <div className="rounded-control border border-surface-border bg-surface-muted/40 p-3 text-center">
+                      <p className="num text-lg font-bold text-text-main">
+                        {options.createStudentAccounts
+                          ? summary.valid + updatableCount
+                          : 0}
+                      </p>
+                      <p className="text-xs text-text-muted">حساب طالب</p>
+                    </div>
+                    <div className="rounded-control border border-surface-border bg-surface-muted/40 p-3 text-center">
+                      <p className="num text-lg font-bold text-text-main">
+                        {options.createParentAccounts
+                          ? summary.valid + updatableCount
+                          : 0}
+                      </p>
+                      <p className="text-xs text-text-muted">حساب ولي أمر</p>
+                    </div>
                   </div>
-                  <div className="text-center">
-                    <p className="text-lg font-bold text-text-main">{updatableCount}</p>
-                    <p className="text-xs text-text-muted">قابل للتحديث</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-lg font-bold text-text-main">
-                      {options.createStudentAccounts ? summary.valid + updatableCount : 0}
-                    </p>
-                    <p className="text-xs text-text-muted">حساب طالب</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-lg font-bold text-text-main">
-                      {options.createParentAccounts ? summary.valid + updatableCount : 0}
-                    </p>
-                    <p className="text-xs text-text-muted">حساب ولي أمر</p>
-                  </div>
-                </div>
-              </div>
+                </CardBody>
+              </Card>
 
-              <div className="flex items-center justify-between">
-                <button
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <Button
+                  variant="outline"
                   onClick={() => setStep(2)}
-                  className="inline-flex items-center gap-2 rounded-lg border border-surface-border px-4 py-2 text-sm font-medium text-text-main hover:bg-surface-muted"
+                  className="w-full sm:w-auto"
                 >
-                  <ArrowRight className="h-4 w-4" />
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   رجوع
-                </button>
-                <button
+                </Button>
+                <Button
                   onClick={handleCommit}
-                  disabled={committing}
-                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-2.5 text-sm font-medium text-text-inverse transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+                  loading={committing}
+                  className="w-full sm:w-auto"
                 >
-                  {committing ? (
-                    <>
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                      جاري التنفيذ...
-                    </>
-                  ) : (
-                    "تأكيد الاستيراد"
-                  )}
-                </button>
+                  {committing ? "جاري التنفيذ..." : "تأكيد الاستيراد"}
+                </Button>
               </div>
             </div>
           )}
 
           {/* Step 4 */}
           {step === 4 && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-center dark:border-green-800 dark:bg-green-900/20">
-                  <p className="text-2xl font-bold text-green-600">{createdCount}</p>
-                  <p className="text-sm text-green-700 dark:text-green-400">مضاف</p>
+            <div className="space-y-4" data-testid="import-step-4">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+                <div className="rounded-card border border-surface-border bg-status-success-bg p-3 text-center sm:p-4">
+                  <p className="num text-2xl font-bold text-status-success">
+                    {createdCount}
+                  </p>
+                  <p className="text-xs font-semibold text-status-success sm:text-sm">
+                    مضاف
+                  </p>
                 </div>
-                <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-center dark:border-blue-800 dark:bg-blue-900/20">
-                  <p className="text-2xl font-bold text-blue-600">{updatedCount}</p>
-                  <p className="text-sm text-blue-700 dark:text-blue-400">محدّث</p>
+                <div className="rounded-card border border-surface-border bg-status-info-bg p-3 text-center sm:p-4">
+                  <p className="num text-2xl font-bold text-status-info">
+                    {updatedCount}
+                  </p>
+                  <p className="text-xs font-semibold text-status-info sm:text-sm">
+                    محدّث
+                  </p>
                 </div>
-                <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-center dark:border-amber-800 dark:bg-amber-900/20">
-                  <p className="text-2xl font-bold text-amber-600">{skippedCount}</p>
-                  <p className="text-sm text-amber-700 dark:text-amber-400">متخطّى</p>
+                <div className="rounded-card border border-surface-border bg-status-warning-bg p-3 text-center sm:p-4">
+                  <p className="num text-2xl font-bold text-status-warning">
+                    {skippedCount}
+                  </p>
+                  <p className="text-xs font-semibold text-status-warning sm:text-sm">
+                    متخطّى
+                  </p>
                 </div>
-                <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-center dark:border-red-800 dark:bg-red-900/20">
-                  <p className="text-2xl font-bold text-red-600">{failedCount}</p>
-                  <p className="text-sm text-red-700 dark:text-red-400">فاشل</p>
+                <div className="rounded-card border border-surface-border bg-status-danger-bg p-3 text-center sm:p-4">
+                  <p className="num text-2xl font-bold text-status-danger">
+                    {failedCount}
+                  </p>
+                  <p className="text-xs font-semibold text-status-danger sm:text-sm">
+                    فاشل
+                  </p>
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center justify-center gap-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center">
                 {failedCount > 0 && (
-                  <button
+                  <Button
+                    variant="secondary"
                     onClick={handleDownloadErrors}
-                    className="inline-flex items-center gap-2 rounded-lg border border-surface-border bg-surface-card px-4 py-2 text-sm font-medium text-text-main shadow-sm transition-colors hover:bg-surface-muted"
+                    className="w-full sm:w-auto"
                   >
-                    <Download className="h-4 w-4" />
+                    <Download className="h-4 w-4" aria-hidden="true" />
                     تنزيل تقرير الأخطاء (Excel)
-                  </button>
+                  </Button>
                 )}
                 {createdAccounts.length > 0 && (
-                  <button
+                  <Button
+                    variant="secondary"
                     onClick={handleExportCreatedAccounts}
-                    className="inline-flex items-center gap-2 rounded-lg border border-surface-border bg-surface-card px-4 py-2 text-sm font-medium text-text-main shadow-sm transition-colors hover:bg-surface-muted"
+                    className="w-full sm:w-auto"
                   >
-                    <Download className="h-4 w-4" />
+                    <Download className="h-4 w-4" aria-hidden="true" />
                     تصدير بيانات الدخول (Excel/PDF)
-                  </button>
+                  </Button>
                 )}
               </div>
 
               <div className="flex justify-center">
-                <button
+                <Button
                   onClick={handleFinish}
-                  className="rounded-lg bg-primary px-8 py-2.5 text-sm font-medium text-text-inverse transition-colors hover:bg-primary-hover"
+                  size="lg"
+                  className="w-full sm:w-auto sm:px-10"
+                  data-testid="import-finish"
                 >
                   إغلاق
-                </button>
+                </Button>
               </div>
             </div>
           )}
