@@ -688,6 +688,23 @@
   }
 }
 
+/* One shared entrance for the locked / error / blocked screens. Short enough
+   to feel immediate; the reduced-motion block below disables it globally. */
+@keyframes state-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.state-card {
+  animation: state-enter var(--duration-base) var(--ease-standard) both;
+}
+
 /* ============================= */
 /* Respect reduced-motion        */
 /* ============================= */

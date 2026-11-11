@@ -810,6 +810,56 @@ The fixed version in the mock-up adds the status cell and keeps the actions colu
 
 ---
 
+## F-017 — The subscription banner never rendered for real center owners
+
+**Severity:** Medium (an owner whose subscription is in its grace period or about to expire never
+saw the banner or its renew call to action)
+
+**Found:** 2026-11-11 while building the phase 3 batch 1 banner fixtures.
+
+**Symptom**
+
+`SubscriptionBanner` asked the auth context for a field that does not exist:
+
+```jsx
+// before
+const { subscription, isCenterOwner, impersonating, ... } = useAuth();
+...
+if (!isCenterOwner && !soloTeacher && !impersonating) return null;
+```
+
+`AuthContext` exposes `role` (`"CenterOwner"`, `"Teacher"`, `"SuperAdmin"`, …) and never
+`isCenterOwner`, so the flag was always `undefined`. The `soloTeacher` escape hatch only covers a
+teacher who is alone in the center, which means a real owner on any normal account had
+`isCenterOwner === undefined` **and** `soloTeacher === false`, and the component returned `null`
+before reading `subscription` at all.
+
+**Evidence**
+
+- `Frontend/CenterManagement/src/context/AuthContext.jsx` — the context value contains `role`,
+  `subscription`, `modulesLoaded`, `impersonating`, `stopImpersonation`; no `isCenterOwner`.
+- `Frontend/CenterManagement/src/components/common/SubscriptionBanner.jsx` — the guard read
+  `isCenterOwner` directly from `useAuth()`.
+- The visual audit fixture for `/my-subscription` as a `CenterOwner` produced no
+  `[data-testid="subscription-banner"]` node until the guard was changed.
+
+**Fix applied**
+
+The guard now derives the flag from the field the context actually provides:
+
+```jsx
+const isCenterOwner = role === "CenterOwner";
+```
+
+Product copy, variants, and the renew link are unchanged. Covered by
+`src/components/banners.integration.test.jsx` (the grace and expiring cases mount with
+`role: "CenterOwner"`) and by the `subscription-grace` / `subscription-expiring` scenarios in
+`docs/design/phase3/batch1-verify.mjs`.
+
+**Status: FIXED** in phase 3 batch 1 (commit on `redesign/ui-identity`).
+
+---
+
 ## Harness failures during the Stage C dry runs (not product defects)
 
 These stopped recordings before Stage C started. None of them is a product bug, and none of

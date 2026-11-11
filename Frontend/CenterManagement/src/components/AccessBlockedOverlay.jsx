@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
-import { ShieldAlert } from "@/components/icons";
+import { LogOut, ShieldAlert } from "@/components/icons";
+import ScreenState from "@/components/ui/ScreenState";
 import { useAuth } from "../context/useAuth";
 
+/**
+ * Full-screen sheet raised by `axios` when the API rejects a request with a
+ * center/account lifecycle code (suspended, expired, deleted…). It has one job:
+ * explain why the session is unusable and sign the user out.
+ */
 export default function AccessBlockedOverlay() {
   const { logout } = useAuth();
   const [blocked, setBlocked] = useState(null);
@@ -17,25 +23,27 @@ export default function AccessBlockedOverlay() {
   if (!blocked) return null;
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/60 p-4">
-      <div className="w-full max-w-md rounded-2xl border border-surface-border bg-surface-card p-6 text-center shadow-2xl">
-        <div className="mb-4 flex justify-center text-status-danger">
-          <ShieldAlert size={48} />
-        </div>
-        <h2 className="mb-2 text-lg font-extrabold text-text-main">
-          تم إيقاف الوصول
-        </h2>
-        <p className="mb-5 text-sm text-text-muted">{blocked.message}</p>
-        <button
-          onClick={() => {
+    <ScreenState
+      surface="overlay"
+      tone="danger"
+      role="alertdialog"
+      icon={ShieldAlert}
+      eyebrow="انتهى الوصول"
+      title="تم إيقاف الوصول"
+      description={blocked.message}
+      actions={[
+        {
+          label: "تسجيل الخروج",
+          icon: LogOut,
+          variant: "danger",
+          testId: "access-blocked-logout",
+          onClick: () => {
             setBlocked(null);
             logout();
-          }}
-          className="w-full rounded-xl bg-primary py-2.5 font-bold text-white hover:bg-primary-hover"
-        >
-          تسجيل الخروج
-        </button>
-      </div>
-    </div>
+          },
+        },
+      ]}
+      testId="access-blocked"
+    />
   );
 }

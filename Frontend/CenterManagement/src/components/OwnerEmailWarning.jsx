@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { AlertCircle, Mail, X } from "@/components/icons";
+import { Mail, X } from "@/components/icons";
 import { useAuth } from "../context/useAuth";
 
 /**
@@ -21,17 +21,25 @@ export default function OwnerEmailWarning() {
   return (
     <div
       role="status"
-      className="flex flex-wrap items-center gap-3 border-b border-status-info/30 bg-status-info-bg px-4 py-2.5 text-sm text-status-info"
+      data-testid="owner-email-warning"
+      className="relative flex flex-wrap items-center gap-2 border-b border-status-info/30 bg-status-info-bg px-4 py-2.5 text-sm text-status-info"
     >
-      <Mail className="h-5 w-5 shrink-0" />
-      <AlertCircle className="h-4 w-4 shrink-0" />
-      <span className="flex-1">
+      <span
+        aria-hidden="true"
+        className="absolute inset-y-0 start-0 w-1 bg-status-info"
+      />
+
+      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control bg-status-info/15">
+        <Mail aria-hidden="true" className="h-5 w-5" />
+      </span>
+
+      <span className="min-w-0 flex-1 leading-relaxed">
         أضف بريدك لتتمكن من استعادة كلمة المرور.
       </span>
 
       <Link
         to="/profile"
-        className="rounded-lg bg-status-info px-3 py-1.5 text-xs font-semibold text-text-inverse transition-opacity hover:opacity-90"
+        className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full bg-status-info px-4 py-2 text-xs font-bold text-text-inverse transition-opacity duration-150 hover:opacity-90"
       >
         إضافة بريد إلكتروني
       </Link>
@@ -40,9 +48,9 @@ export default function OwnerEmailWarning() {
         type="button"
         aria-label="إغلاق التنبيه"
         onClick={() => setDismissed(true)}
-        className="rounded-lg p-1 transition-opacity hover:opacity-70"
+        className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-status-info/25 transition-colors duration-150 hover:bg-status-info/10"
       >
-        <X className="h-4 w-4" />
+        <X aria-hidden="true" className="h-4 w-4" />
       </button>
     </div>
   );

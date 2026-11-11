@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>المرحلة 3 — دفعة 1: معرض اللقطات</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f4f5fb;
+        --fg: #101528;
+        --muted: #5b6178;
+        --card: #ffffff;
+        --border: #e2e5f1;
+        --accent: #4f46e5;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #080b18;
+          --fg: #f2f4ff;
+          --muted: #9aa1bd;
+          --card: #121831;
+          --border: #232a4a;
+          --accent: #8b93ff;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 24px;
+        background: var(--bg);
+        color: var(--fg);
+        font: 15px/1.6 "Segoe UI", Tahoma, sans-serif;
+      }
+      h1 { margin: 0 0 4px; font-size: 22px; }
+      h2 { margin: 40px 0 12px; font-size: 17px; }
+      p { margin: 0 0 8px; color: var(--muted); }
+      .meta { max-width: 70ch; }
+      .grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      }
+      figure {
+        margin: 0;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: var(--card);
+        overflow: hidden;
+      }
+      figcaption {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 8px 12px;
+        font-size: 13px;
+        border-bottom: 1px solid var(--border);
+      }
+      .tag { color: var(--accent); font-weight: 600; }
+      img {
+        display: block;
+        width: 100%;
+        height: auto;
+        background: var(--bg);
+      }
+      .missing {
+        padding: 40px 12px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>المرحلة 3 — دفعة 1: شاشات القفل والأخطاء والبانرات</h1>
+    <p class="meta">
+      لقطات من التشغيل الكامل لسكربت الفحص: 9 مقاسات × وضعين × 9 حالات (198 تشغيلًا). يعرض هذا
+      المعرض المقاسات الأساسية 360 / 390 / 768 / 1280 / 1920. اللقطات تُولَّد محليًا ولا تُحفظ في
+      المستودع (<code>docs/design/shots/</code> مستثنى).
+    </p>
+
+    <div id="root"></div>
+
+    <script>
+      const pages = [
+        ["not-found", "404 — الصفحة غير موجودة"],
+        ["module-locked", "وحدة مقفولة"],
+        ["student-gate", "بوابة الطالب غير متاحة"],
+        ["parent-gate", "بوابة ولي الأمر غير متاحة"],
+        ["access-blocked", "حجب الوصول (overlay)"],
+        ["subscription-grace", "بانر فترة السماح"],
+        ["subscription-expiring", "بانر قرب الانتهاء"],
+        ["impersonation", "بانر الانتحال"],
+        ["app-error", "شاشة الخطأ العامة"],
+      ];
+      const viewports = [
+        ["360", "360×800"],
+        ["390", "390×844"],
+        ["768", "768×1024"],
+        ["1280", "1280×800"],
+        ["1920", "1920×1080"],
+      ];
+      const themes = [
+        ["light", "فاتح"],
+        ["dark", "ليلي"],
+      ];
+
+      const root = document.getElementById("root");
+      for (const [theme, themeLabel] of themes) {
+        const heading = document.createElement("h2");
+        heading.textContent = `الوضع ${themeLabel}`;
+        root.appendChild(heading);
+        const grid = document.createElement("div");
+        grid.className = "grid";
+        for (const [page, pageLabel] of pages) {
+          for (const [vp, vpLabel] of viewports) {
+            const figure = document.createElement("figure");
+            const caption = document.createElement("figcaption");
+            caption.innerHTML = `<span>${pageLabel}</span><span class="tag">${vpLabel}</span>`;
+            const img = document.createElement("img");
+            img.loading = "lazy";
+            img.alt = `${pageLabel} — ${vpLabel} — ${themeLabel}`;
+            img.src = `../shots/phase3b1/${page}-${vp}-${theme}.png`;
+            img.addEventListener("error", () => {
+              img.replaceWith(
+                Object.assign(document.createElement("div"), {
+                  className: "missing",
+                  textContent: "اللقطة غير موجودة — شغّل سكربت الفحص لتوليدها",
+                }),
+              );
+            });
+            figure.append(caption, img);
+            grid.appendChild(figure);
+          }
+        }
+        root.appendChild(grid);
+      }
+    </script>
+  </body>
+</html>

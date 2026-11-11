@@ -12,6 +12,26 @@ function daysUntil(endDate) {
   return Math.round((end - today) / 86400000);
 }
 
+const BANNER =
+  "relative flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-status-warning/30 bg-status-warning-bg px-4 py-2.5 text-sm text-status-warning";
+
+function RenewLink({ contactUrl }) {
+  if (!contactUrl) return null;
+
+  return (
+    <a
+      href={contactUrl}
+      target="_blank"
+      rel="noreferrer"
+      data-testid="subscription-renew"
+      className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-1.5 rounded-full bg-status-warning px-4 py-2 text-xs font-bold text-text-inverse transition-all duration-150 hover:opacity-90 active:scale-[0.98] sm:w-auto"
+    >
+      <Phone aria-hidden="true" className="h-4 w-4" />
+      تجديد الاشتراك
+    </a>
+  );
+}
+
 /**
  * Billing banner, shown ONLY to the center owner / solo teacher:
  * - a 14-day pre-expiry warning,
@@ -19,7 +39,10 @@ function daysUntil(endDate) {
  * Regular teachers/assistants/students never receive a subscription snapshot.
  */
 export default function SubscriptionBanner() {
-  const { subscription, isCenterOwner, isSoloTeacher, impersonating } = useAuth();
+  // NOTE: the auth context exposes `role`, not an `isCenterOwner` flag. Reading
+  // the flag here silently hid the banner from every real owner.
+  const { subscription, role, isSoloTeacher, impersonating } = useAuth();
+  const isCenterOwner = role === "CenterOwner";
 
   if (!subscription) return null;
   // Impersonation shows exactly what the center sees, so it is allowed here.
@@ -31,22 +54,25 @@ export default function SubscriptionBanner() {
   if (state === "ingrace") {
     const days = Number(subscription.daysLeftInGrace ?? 0);
     return (
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-status-warning/30 bg-status-warning-bg px-4 py-2.5 text-sm text-status-warning">
-        <span className="flex items-center gap-2">
-          <CalendarClock className="h-5 w-5 shrink-0" />
-          انتهى اشتراكك وأنت في فترة السماح — يتبقى {days} يوم قبل الإيقاف.
+      <div
+        role="status"
+        data-testid="subscription-banner"
+        data-variant="grace"
+        className={BANNER}
+      >
+        <span
+          aria-hidden="true"
+          className="absolute inset-y-0 start-0 w-1 bg-status-warning"
+        />
+        <span className="flex min-w-0 flex-1 items-start gap-2">
+          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-control bg-status-warning/15">
+            <CalendarClock aria-hidden="true" className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1 pt-1 leading-relaxed">
+            انتهى اشتراكك وأنت في فترة السماح — يتبقى {days} يوم قبل الإيقاف.
+          </span>
         </span>
-        {contactUrl && (
-          <a
-            href={contactUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-status-warning px-3 py-1.5 text-xs font-medium text-text-inverse"
-          >
-            <Phone className="h-4 w-4" />
-            تجديد الاشتراك
-          </a>
-        )}
+        <RenewLink contactUrl={contactUrl} />
       </div>
     );
   }
@@ -61,24 +87,27 @@ export default function SubscriptionBanner() {
     if (left === null || left > 14) return null;
 
     return (
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-status-warning/30 bg-status-warning-bg px-4 py-2.5 text-sm text-status-warning">
-        <span className="flex items-center gap-2">
-          <CalendarClock className="h-5 w-5 shrink-0" />
-          {left <= 0
-            ? "اشتراكك ينتهي اليوم."
-            : `اشتراكك ينتهي خلال ${left} يوم.`}
+      <div
+        role="status"
+        data-testid="subscription-banner"
+        data-variant="expiring"
+        className={BANNER}
+      >
+        <span
+          aria-hidden="true"
+          className="absolute inset-y-0 start-0 w-1 bg-status-warning"
+        />
+        <span className="flex min-w-0 flex-1 items-start gap-2">
+          <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-control bg-status-warning/15">
+            <CalendarClock aria-hidden="true" className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1 pt-1 leading-relaxed">
+            {left <= 0
+              ? "اشتراكك ينتهي اليوم."
+              : `اشتراكك ينتهي خلال ${left} يوم.`}
+          </span>
         </span>
-        {contactUrl && (
-          <a
-            href={contactUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-status-warning px-3 py-1.5 text-xs font-medium text-text-inverse"
-          >
-            <Phone className="h-4 w-4" />
-            تجديد الاشتراك
-          </a>
-        )}
+        <RenewLink contactUrl={contactUrl} />
       </div>
     );
   }

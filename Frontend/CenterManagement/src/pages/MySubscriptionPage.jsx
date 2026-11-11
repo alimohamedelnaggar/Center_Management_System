@@ -135,7 +135,7 @@ export default function MySubscriptionPage() {
             href={upgradeUrl}
             target="_blank"
             rel="noreferrer"
-            className="mt-5 inline-flex items-center gap-2 rounded-xl border border-primary bg-primary-subtle px-4 py-2.5 text-sm font-medium text-primary shadow-sm transition hover:opacity-90 active:scale-95"
+            className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-xl border border-primary bg-primary-subtle px-4 py-2.5 text-sm font-medium text-primary shadow-sm transition hover:opacity-90 active:scale-95"
           >
             <Phone className="h-5 w-5" />
             رقّي سنترك إلى متعدد المدرسين
@@ -147,7 +147,7 @@ export default function MySubscriptionPage() {
             href={contactUrl}
             target="_blank"
             rel="noreferrer"
-            className="mt-5 ms-2 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-text-inverse shadow-sm transition hover:opacity-90 active:scale-95"
+            className="mt-5 ms-2 inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-medium text-text-inverse shadow-sm transition hover:opacity-90 active:scale-95"
           >
             <Phone className="h-5 w-5" />
             تواصل مع الإدارة للترقية
