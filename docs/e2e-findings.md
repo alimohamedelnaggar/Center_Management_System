@@ -909,19 +909,20 @@ it and the platform admin must not be nudged to edit someone else's recovery add
 ## F-019 — The receipt-counter concurrency test can fail inside Microsoft.Data.Sqlite's pooled-connection cleanup
 
 **Severity:** None for receipt numbering (no duplicate or reused number was ever observed). Low for
-test reliability: the SQLite-only failure can abort a full backend run even though the numbering
-assertions pass.
+test reliability: the SQLite-only failure can abort a full backend run before the numbering
+assertions execute.
 
-**Classification:** test-harness / database-provider connection-lifecycle flake, **not** a numbering
-race, and **not** reproducible on SQL Server by design. No backend code or migration was changed in
-this design branch.
+**Classification:** an **unreproduced Microsoft.Data.Sqlite connection-lifecycle failure**, not a
+receipt-number race. The database has two independent guards against duplicates (the atomic counter
+update and a unique index), and the recorded stack never reached a numbering statement. No backend
+code, test, or migration was changed in this design branch.
 
 **Found:** 2026-11-11 during the phase 3 batch 2 full backend run (first run after the students
 commit).
 
 **Symptom**
 
-One full run failed in
+One full run (batch 2) failed in
 `PaymentReceiptTests.Counter_Twenty_Parallel_Allocations_Are_Unique_And_Consecutive` with:
 
 ```
@@ -935,26 +936,35 @@ SQLite Error 5: 'unable to delete/modify collation sequence due to active statem
 The failure is an exception thrown while the service opens the connection. It is **not** a failed
 assertion: no duplicate, gap, or reused receipt number was produced by that test.
 
-**Evidence**
+**Evidence (re-run on 2026-11-11, 17:43–17:56)**
 
-- **20 consecutive isolated runs** of exactly this test (`dotnet test --filter
-  "FullyQualifiedName~PaymentReceiptTests.Counter_Twenty_Parallel_Allocations_Are_Unique_And_Consecutive"
-  --no-build`, one process per run):
+- **20 consecutive isolated runs** of exactly this test, one OS process per run, using the already
+  built test assembly:
 
   ```
-  RUN 1..20: exit=0 :: Passed! - Failed: 0, Passed: 1, Skipped: 0, Total: 1
+  dotnet test --no-build --filter "FullyQualifiedName~PaymentReceiptTests.Counter_Twenty_Parallel_Allocations_Are_Unique_And_Consecutive"
   ```
 
-  **Failures in 20 runs: 0.** Each run took 5–7 s.
-- The original failure occurred once in the **first full run** of 356 tests. Re-running the same
-  full suite twice afterwards: **356/356 passed**, no exception. The failure is therefore
-  timing/concurrency dependent (20 parallel `Open`/`Close` calls on one SQLite connection string),
-  not deterministic.
-- In every observed failure the exception was the provider's `SqliteException` at `OpenAsync`
-  (line 48), i.e. *before* the first receipt SQL statement runs. It cannot allocate, skip, or
-  duplicate a number.
+  | Metric | Result |
+  |---|---|
+  | Passed | **20 / 20** |
+  | Failed | **0** |
+  | Exit code | 0 on every run |
+  | Duration per run | 9.7–11.5 s (median 10.5 s) |
+  | Failure messages / stack lines | **none** — no run failed, so there is no message or line to record |
 
-**Why this happens (provider mechanism, verified in the 10.0 source)**
+  The per-run logs (plus `summary.json`) were kept outside the repo under
+  `%TEMP%\opencode\f019\run-01.log` … `run-20.log`.
+- The only failure on record is the single batch-2 occurrence quoted above. Its exception is thrown
+  at `ReceiptNumberService.cs:48` (`OpenAsync`) **before** the first SQL statement runs, so that
+  attempt never read or incremented the counter.
+- Full-suite runs after the batch-3 commit: **356/356 passed** (1.54 min) and a second **356/356**
+  pass. No exception in either run.
+- The test file is unchanged: `git diff HEAD -- PaymentReceiptTests.cs` is empty. It still starts
+  20 parallel tasks, asserts 20 distinct numbers, asserts the exact `1..20` sequence, and asserts
+  that the counter ends at 20. It was neither weakened nor disabled.
+
+**Likely mechanism (provider source); not reproduced in round 2**
 
 1. EF Core's SQLite provider registers a custom `EF_DECIMAL` collation on **every** `SqliteConnection`
    (`SqliteRelationalConnection.InitializeDbConnection` → `sqliteConnection.CreateCollation("EF_DECIMAL", …)`).
@@ -990,17 +1000,35 @@ assertion: no duplicate, gap, or reused receipt number was produced by that test
 
 **Verdict**
 
-Not a race in receipt-number generation. A duplicate number would require the atomic `UPDATE` to
-return the same value twice or the unique index to be missing; neither happened, and the failing
-frame is a connection open/return inside the SQLite provider. **No fix or migration is applied in
-this design branch.**
+There **is** a database-level guarantee, so this is not a race:
 
-**Optional follow-up (separate backend branch, not required for correctness)**
+1. `CenterReceiptCounters` has a primary key on `CenterId`, so one counter row per center.
+2. `NextAsync` increments and reads in one statement (`UPDATE … OUTPUT INSERTED` on SQL Server,
+   `UPDATE … RETURNING` on SQLite). SQL Server holds an exclusive row lock on that counter row until
+   the surrounding transaction ends, so two concurrent payments serialise on the row and receive
+   consecutive values.
+3. The “first payment for this center” insert race is resolved by the primary key: the loser gets a
+   duplicate-key exception and retries the same atomic update.
+4. `IX_Payments_CenterId_ReceiptNumber` is a **unique** index on `(CenterId, ReceiptNumber)`
+   (filtered to non-null values). Even a hypothetical bug in step 2 could not persist two identical
+   numbers: the payment insert would fail and the transaction would roll back, returning the
+   counter value.
+5. The counter update and the payment insert share one transaction under
+   `CreateExecutionStrategy`, so a failed payment never consumes a number.
 
-- Make this test deterministic by opening the SQLite test database with `Pooling=False` (or retry
-  `OpenAsync` on `SQLITE_BUSY` in test setup), which removes the pooled-handle reuse that triggers
-  the provider error.
-- Production runs SQL Server, so no product availability change is expected from this entry.
+A duplicate number would require the atomic `UPDATE` to return the same value twice **and** the
+unique index to be missing; neither is possible in the current schema, and no duplicate was ever
+observed. The failing frame is a connection open/return inside the SQLite provider.
+**No fix or migration is applied in this design branch.**
+
+**Follow-up rule (separate backend branch, not applied here)**
+
+- Do **not** apply `Pooling=False` as a fix without a diagnosis. If the failure recurs, first capture
+  the full exception (including inner exceptions), the provider version, the concurrent test list,
+  and run the same test against SQL Server (LocalDB or a throwaway SQL Server database). Only then
+  decide whether the mitigation belongs in the test harness or the provider configuration.
+- `Pooling=False` in `BuildOptions` would be a **test-only** diagnostic. Production runs SQL Server,
+  so this entry has no expected product-availability impact.
 
 ---
 
@@ -1034,6 +1062,23 @@ Behaviour, `name`/`id`, and the request body (`skipAlreadyLinked`) are unchanged
 recorded in `docs/ui-text-changes.md` (row 29).
 
 **Status: FIXED** in phase 3 batch 3.
+
+**Regression guard (added 2026-11-11)**
+
+- A full source scan found **no other occurrence** of a non-Arabic/non-Latin script or mojibake:
+  - `Frontend/CenterManagement/src/**` — **303 files** (`.js`, `.jsx`, `.css`, `.json`, plus
+    `.ts`/`.tsx`): **0 hits**.
+  - `API/CenterManagementCleanArchitecture/**/*.cs` — **832 files**, including the Arabic error
+    and notification strings the API returns: **0 hits**.
+- The scan covers CJK, Hangul, Kana, Cyrillic, Greek, Hebrew, the Indic scripts, Thai, Georgian,
+  Ethiopic, fullwidth forms, U+FFFD, and the common UTF-8→Latin-1 / Windows-1256 mojibake signatures.
+- `src/utils/uiTextCharacters.js` holds the detector (ASCII-only, so it cannot flag itself) and
+  `src/utils/uiTextCharacters.test.js` runs with Vitest:
+  - self-tests the detector against planted CJK/Hangul/Cyrillic and mojibake samples;
+  - fails if any product file under `src/` contains a forbidden script or mojibake;
+  - also scans the backend `.cs` tree when the API solution is present, and skips that part in a
+    standalone frontend checkout.
+- No backend file was modified.
 
 ---
 
