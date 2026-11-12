@@ -106,7 +106,7 @@ function IconButton({
       aria-label={label}
       onClick={onClick}
       disabled={disabled}
-      className={`inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]}`}
+      className={`inline-flex h-11 w-11 items-center justify-center rounded-lg transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${variants[variant]}`}
     >
       {children}
     </button>
@@ -323,7 +323,7 @@ export default function ExpensesTab() {
         <p className="text-sm text-text-muted">{totalExpense} مصروف إجمالاً</p>
         <button
           type="button"
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover"
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 min-h-11 py-2.5 text-sm font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover"
           onClick={handleAdd}
         >
           <Plus className="h-4 w-4" />
@@ -332,14 +332,14 @@ export default function ExpensesTab() {
       </div>
 
       {/* Filters */}
-      <div className="mb-5 flex items-end gap-3 overflow-x-auto pb-1">
+      <div className="mb-5 flex flex-wrap items-end gap-3 pb-1">
         <div className="relative min-w-[280px] flex-1">
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="ابحث عن مصروف..."
-            className="w-full rounded-lg border border-surface-border bg-surface-card py-2.5 ps-9 pe-3 text-sm text-text-main placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
+            className="w-full rounded-lg border border-surface-border bg-surface-card min-h-11 py-2.5 ps-9 pe-3 text-sm text-text-main placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
           />
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
         </div>
@@ -348,7 +348,7 @@ export default function ExpensesTab() {
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full appearance-none rounded-lg border border-surface-border bg-surface-card py-2.5 ps-9 pe-3 text-sm text-text-main focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
+            className="w-full appearance-none rounded-lg border border-surface-border bg-surface-card min-h-11 py-2.5 ps-9 pe-3 text-sm text-text-main focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
           >
             <option value="">كل الفئات</option>
 
@@ -367,7 +367,7 @@ export default function ExpensesTab() {
             type="date"
             value={startDate || ""}
             onChange={(e) => setStartDate(e.target.value)}
-            className="w-full rounded-lg border border-surface-border bg-surface-card py-2.5 ps-3 pe-3 text-sm text-text-main focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
+            className="w-full rounded-lg border border-surface-border bg-surface-card min-h-11 py-2.5 ps-3 pe-3 text-sm text-text-main focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
           />
 
           {/* <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" /> */}
@@ -379,21 +379,21 @@ export default function ExpensesTab() {
             type="date"
             value={endDate || ""}
             onChange={(e) => setEndDate(e.target.value)}
-            className="w-full rounded-lg border border-surface-border bg-surface-card py-2.5 ps-3 pe-3 text-sm text-text-main focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
+            className="w-full rounded-lg border border-surface-border bg-surface-card min-h-11 py-2.5 ps-3 pe-3 text-sm text-text-main focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
           />
 
           {/* <Calendar className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" /> */}
         </div>
 
         {/* Buttons */}
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => {
               setPage(1);
               loadExpenses();
             }}
-            className="rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-text-inverse transition-colors hover:bg-primary-hover"
+            className="rounded-lg bg-primary px-5 min-h-11 py-2.5 text-sm font-medium text-text-inverse transition-colors hover:bg-primary-hover"
           >
             بحث
           </button>
@@ -418,7 +418,7 @@ export default function ExpensesTab() {
                 });
               }
             }}
-            className="rounded-lg border border-surface-border bg-surface-card px-5 py-2.5 text-sm font-medium text-text-main transition-colors hover:bg-surface-muted"
+            className="rounded-lg border border-surface-border bg-surface-card px-5 min-h-11 py-2.5 text-sm font-medium text-text-main transition-colors hover:bg-surface-muted"
           >
             إعادة تعيين
           </button>
@@ -434,13 +434,13 @@ export default function ExpensesTab() {
           <table className="w-full min-w-180 text-right">
             <thead>
               <tr className="border-b border-surface-border bg-surface-muted text-xs font-semibold text-text-muted">
-                <th className="w-12 px-4 py-3">#</th>
-                <th className="px-4 py-3">اسم المصروف</th>
-                <th className="px-4 py-3">الفئة</th>
-                <th className="px-4 py-3">المبلغ</th>
-                <th className="px-4 py-3">التاريخ</th>
-                <th className="px-4 py-3">ملاحظات</th>
-                <th className="px-4 py-3">الإجراءات</th>
+                <th className="w-12 px-4 py-3 text-xs">#</th>
+                <th className="px-4 py-3 text-xs">اسم المصروف</th>
+                <th className="px-4 py-3 text-xs">الفئة</th>
+                <th className="px-4 py-3 text-xs">المبلغ</th>
+                <th className="px-4 py-3 text-xs">التاريخ</th>
+                <th className="px-4 py-3 text-xs">ملاحظات</th>
+                <th className="px-4 py-3 text-xs">الإجراءات</th>
               </tr>
             </thead>
             <tbody>

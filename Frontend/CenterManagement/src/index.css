@@ -661,6 +661,14 @@
   }
 }
 
+/* react-select draws its text cursor as an inline-sized input (`min-width:
+   2px`) inside the control. Keep that focus target at 44px so touch and 200%
+   text zoom can hit it. */
+#payment-student {
+  min-width: 2.75rem !important;
+  min-height: 2.75rem !important;
+}
+
 /* Segmented control used by the internal components gallery. */
 @layer components {
   .segmented {

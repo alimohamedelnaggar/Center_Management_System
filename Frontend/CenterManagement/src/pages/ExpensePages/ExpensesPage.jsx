@@ -14,6 +14,7 @@ export default function ExpensesPage() {
   return (
     <div
       dir="rtl"
+      data-testid="expenses-page"
       className="min-h-screen bg-surface-bg font-sans text-text-main"
     >
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
@@ -31,7 +32,7 @@ export default function ExpensesPage() {
         </div>
 
         {/* Tabs */}
-        <div className="mb-6 flex items-center gap-2 border-b border-surface-border">
+        <div className="mb-6 flex flex-wrap items-center gap-2 border-b border-surface-border">
           {TABS.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.key;

@@ -57,6 +57,18 @@ export const AUDIT = String.raw`(() => {
     }
     return false;
   };
+  // A wide data table (or a filter strip) is meant to scroll inside its own
+  // box; its columns are not "outside the viewport" in the broken-layout
+  // sense, exactly like a clipped box. Only horizontal scrollers count here.
+  const insideScrollContainer = (el) => {
+    let n = el.parentElement;
+    while (n && n !== document.documentElement) {
+      const cs = getComputedStyle(n);
+      if (/auto|scroll/.test(cs.overflowX)) return true;
+      n = n.parentElement;
+    }
+    return false;
+  };
 
   /* 1 - anything sticking out of the viewport ------------------------ */
   const outside = [];
@@ -65,8 +77,8 @@ export const AUDIT = String.raw`(() => {
     if (el.closest("svg, symbol, defs, [aria-hidden='true'], .sr-only")) return;
     // The printed student card is a fixed, deliberately tiny-print design that
     // must not change in this batch; it is measured by the print probe instead.
-    if (el.closest(".qr-card")) return;
-    if (clippedByAncestor(el)) return;
+    if (el.closest(".qr-card, #receipt-print-root")) return;
+    if (clippedByAncestor(el) || insideScrollContainer(el)) return;
     const r = el.getBoundingClientRect();
     if (r.right > vw + 1.5 || r.left < -1.5) {
       outside.push({ ...describe(el), left: round(r.left), right: round(r.right) });
@@ -159,7 +171,7 @@ export const AUDIT = String.raw`(() => {
   const primary = [];
   qa(PRIMARY_SEL).forEach((el) => {
     if (!visible(el)) return;
-    if (el.closest("[aria-hidden='true'], .sr-only, .qr-card")) return;
+    if (el.closest("[aria-hidden='true'], .sr-only, .qr-card, #receipt-print-root")) return;
     if (el.closest("[aria-label='مسار التنقل']")) return;
     if (el.closest(".mobile-bottom-nav")) return;
     // A radio/checkbox has a value, not rendered text; its label carries the
@@ -184,7 +196,7 @@ export const AUDIT = String.raw`(() => {
   const clipped = [];
   qa("body *").forEach((el) => {
     if (!visible(el) || !hasDirectText(el)) return;
-    if (el.closest("[aria-hidden='true'], .sr-only, .qr-card, .truncate, [class*='line-clamp'], [title], [data-scroll-region]"))
+    if (el.closest("[aria-hidden='true'], .sr-only, .qr-card, #receipt-print-root, .truncate, [class*='line-clamp'], [title], [data-scroll-region]"))
       return;
     const cs = getComputedStyle(el);
     if (/hidden|clip/.test(cs.overflowX) && el.scrollWidth > el.clientWidth + 1) {
@@ -294,7 +306,7 @@ export const AUDIT = String.raw`(() => {
   qa("p, li, td, th, h1, h2, h3, h4, label, button, a[href], span, div")
     .forEach((el) => {
       if (!visible(el) || !hasDirectText(el)) return;
-      if (el.closest("[aria-hidden='true'], .sr-only, svg, .qr-card")) return;
+      if (el.closest("[aria-hidden='true'], .sr-only, svg, .qr-card, #receipt-print-root")) return;
       if (gradientAncestor(el)) return;
       const fg = parse(getComputedStyle(el).color);
       const bg = bgOf(el);
