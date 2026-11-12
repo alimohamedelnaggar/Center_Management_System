@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "../context/useAuth";
+import PageHeader from "../components/ui/PageHeader";
 import GroupSubNav from "../components/groups/GroupSubNav";
 import AddGroupForm from "../components/groups/AddGroupForm";
 import GroupsList from "../components/groups/GroupsList";
@@ -11,15 +12,15 @@ export default function SettingsPage() {
   // A plain teacher / assistant only browses his own groups, read-only.
   if (!canManageGroups) {
     return (
-      <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6 dir-rtl" dir="rtl">
-        <div className="pb-2">
-          <h2 className="text-lg md:text-xl font-bold text-text-main">
-            مجموعاتي
-          </h2>
-          <p className="text-xs text-text-muted mt-0.5">
-            استعراض المجموعات المرتبطة بك ومواعيد الحصص
-          </p>
-        </div>
+      <div
+        data-testid="settings-page"
+        className="dir-rtl mx-auto w-full min-w-0 max-w-7xl space-y-6 p-4 md:p-6"
+        dir="rtl"
+      >
+        <PageHeader
+          title="مجموعاتي"
+          subtitle="استعراض المجموعات المرتبطة بك ومواعيد الحصص."
+        />
 
         <GroupsList readOnly />
       </div>
@@ -27,21 +28,17 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-6 dir-rtl" dir="rtl">
-      {/* Top Bar Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2">
-        <div>
-          <h2 className="text-lg md:text-xl font-bold text-text-main">إدارة المجموعات</h2>
-          <p className="text-xs text-text-muted mt-0.5">
-            التحكم في المجموعات الدراسية، إضافة مجموعات جديدة وتعديل المجموعات الحالية
-          </p>
-        </div>
+    <div
+      data-testid="settings-page"
+      className="dir-rtl mx-auto w-full min-w-0 max-w-7xl space-y-6 p-4 md:p-6"
+      dir="rtl"
+    >
+      <PageHeader
+        title="إدارة المجموعات"
+        subtitle="التحكم في المجموعات الدراسية، وإضافة مجموعات جديدة وتعديل المجموعات الحالية."
+        actions={<GroupSubNav activeTab={activeTab} setActiveTab={setActiveTab} />}
+      />
 
-        {/* Navigation Tabs */}
-        <GroupSubNav activeTab={activeTab} setActiveTab={setActiveTab} />
-      </div>
-
-      {/* Main View Container */}
       <div className="transition-all duration-300">
         {activeTab === "add" ? (
           <AddGroupForm onSuccess={() => setActiveTab("list")} />

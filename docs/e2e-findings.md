@@ -1082,6 +1082,116 @@ recorded in `docs/ui-text-changes.md` (row 29).
 
 ---
 
+## F-021 — Editing a group could not be saved without re-entering the price per session and the whole weekly schedule
+
+**Severity:** High (the edit dialog was blocked and the workaround silently zeroed the per-session price of future sessions)
+
+**Found:** 2026-11-11 while rebuilding the groups screens for phase 3 batch 4.
+
+**Symptom**
+
+Opening **تعديل** on an existing group filled the name, the monthly price and the sessions per
+month, but left **سعر الحصة** empty and the weekly schedule with no selected days. Pressing
+**حفظ التعديلات** always failed validation with `أدخل سعر الحصة` and `اختر يومًا واحدًا على الأقل`,
+so a centre owner could not change any other field without retyping the price and re-picking the
+whole schedule. When they did retype them, the future sessions were recreated with a session
+price of **0** and the group list then showed **0 ج.م** as the price per session.
+
+**Root cause** — three separate gaps in the same edit flow:
+
+1. `GroupsList.openEditModal` built `initialData` from `id`, `name`, `monthlyPrice`,
+   `sessionsPerMonth` and `teacherId` only, so `GroupForm` never received `perSessionPrice` or
+   `schedule`. `GroupForm` is a zod form where `perSessionPrice` is a required number and
+   `schedule` needs at least one slot, hence the two validation errors.
+2. `GroupsList.handleUpdate` posted only `Id`, `Name`, `MonthlyPrice`, `SessionsPerMonth`
+   (plus `TeacherId` on multi-teacher centres). `UpdateGroupCommand.PerSessionPrice` is a
+   non-nullable `decimal` (default 0) and `Schedule` defaults to an empty list.
+3. The API replaces every **future** session of the group when `Schedule` is non-empty
+   (`GroupCommandHandler`, `UpdateGroupCommand` branch) and stamps each new row with
+   `SessionPrice = request.PerSessionPrice`. Re-saving with the price the user retyped — or with
+   the default `0` — therefore rewrote the price of all future sessions, and the list query
+   derives the displayed `PerSessionPrice` from the first session of the group.
+
+The API side is correct as written: it trusts the client to send the full group. The defect was
+that this client never did.
+
+**Fix** — frontend only, no API and no migration:
+
+- `GroupForm` now accepts `perSessionPrice`, `schedule` and `sessionsPerMonth` from `initialData`.
+- `GroupsList` preloads `perSessionPrice` and maps the API day indexes to the form order with
+  `apiDayToFormDay` (`(dayOfWeek + 1) % 7`); `handleUpdate` now sends `PerSessionPrice`,
+  `SessionsPerMonth` and `Schedule`, and the page refetches after a successful update instead of
+  trusting the SignalR echo alone (`GroupUpdated` is merged, not substituted).
+- `AddGroupForm` now sends `SessionsPerMonth` on create as well — the form already collected it but
+  the request dropped it, so new groups always took the server default.
+
+**Regression guard**
+
+`Frontend/CenterManagement/src/components/groups/groups.batch4.test.jsx` (Vitest, 2 tests):
+
+1. opens the edit dialog, asserts the preloaded price `40`, sessions `4` and the two schedule rows
+   (`17:00–19:00` on Saturday, `16:00–18:00` on Monday), changes only the monthly price, and
+   asserts the exact update payload still carries `PerSessionPrice: 40`, `SessionsPerMonth: 4` and
+   both `DayIndex` values;
+2. creates a group and asserts `SessionsPerMonth: 4` is sent.
+
+**Status: FIXED** in phase 3 batch 4.
+
+---
+
+## F-022 — The hardware scanner lost the caret after every scan (the closed mobile drawer counted as an open modal)
+
+**Severity:** High (the keyboard-wedge scanner stopped working after the first student, while the UI still showed the scan result)
+
+**Found:** 2026-11-11 while recording the phase 3 batch 4 scanner states.
+
+**Symptom**
+
+On `/scanner`, the **سكانر** tab focused `#scanner-code-input` and the card switched to
+**الماسح جاهز**. The first scan registered correctly, but after the result card appeared the
+caret fell back to `<body>` and the card flipped to **اضغط للتركيز** — the next barcode burst
+went nowhere until the operator clicked the field or the pill by hand. No error was logged; the
+POST and the on-screen log were fine, so the failure was invisible in the API data.
+
+**Root cause**
+
+`QrScannerModal` restores the focus after each submit, but `isAnotherModalOpen()` bailed out as
+soon as *any* element matching `[role="dialog"], [aria-modal="true"], dialog[open]` existed
+outside the scanner overlay. The mobile navigation drawer
+(`#mobile-nav-drawer.app-drawer[role="dialog"]` in `AppSidebar`/`StudentSidebar`) stays mounted
+all the time: it is `inert`, `md:hidden` and parked at `transform: translateX(100%)` when closed,
+but it still matched that query. Every focus restore therefore returned early while the scanner
+dialog was on screen — the drawer was open in name only.
+
+**Fix** — frontend only, no API and no migration:
+
+- Added `isDialogOnScreen()` in `QrScannerModal`: a dialog only blocks the restore when it is
+  actually interactive on screen — no `aria-hidden="true"`, no ancestor (or self) with `inert`,
+  `display` not `none`, `visibility` not `hidden`, and (when the element has a box) a centre point
+  inside the viewport. The closed drawer fails three of those checks.
+- `isAnotherModalOpen()` now ignores every off-screen or inert dialog, so the caret returns to
+  `#scanner-code-input` after each scan while a real modal (unsaved-changes prompt, group editor)
+  still wins over the scanner.
+
+**Regression guard**
+
+`Frontend/CenterManagement/src/components/common/QrScannerModal.scanner.test.jsx` — new test
+«keeps the focus when a hidden drawer sits in the tree»: mounts an `inert` `role="dialog"` drawer
+in `document.body`, opens the scanner tab, blurs the field, waits past the restore delay and
+asserts the field owns the focus again. The suite is 15 tests.
+
+`docs/design/phase3-batch4-verify.mjs` — the scanner page check now asserts
+`document.activeElement` is `scanner-code-input` after a real scan (`activeId`). Before the fix
+all four `scanner-code` runs failed with `scanner focus state is missing`; after it they pass.
+The «الماسح جاهز» pill is driven by a DOM `focus`/`focusout` pair, and headless Chrome suppresses
+those events while the page itself is unfocused (`document.hasFocus() === false`), so that pill
+is asserted only when `document.hasFocus()` is true; the focus assertion itself does not depend
+on it.
+
+**Status: FIXED** in phase 3 batch 4.
+
+---
+
 ## Harness failures during the Stage C dry runs (not product defects)
 
 These stopped recordings before Stage C started. None of them is a product bug, and none of

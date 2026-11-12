@@ -15,7 +15,7 @@ export default function PageHeader({
   className,
 }) {
   return (
-    <div className={cn("flex flex-col gap-3", className)}>
+    <div className={cn("flex min-w-0 flex-col gap-3", className)}>
       {breadcrumbs.length > 0 && (
         <nav
           aria-label="مسار التنقل"
@@ -43,7 +43,7 @@ export default function PageHeader({
         </nav>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <h1 className="page-title break-words font-bold text-text-main">
             {title}
@@ -54,7 +54,7 @@ export default function PageHeader({
         </div>
 
         {actions && (
-          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0">
+          <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto sm:shrink-0">
             {actions}
           </div>
         )}

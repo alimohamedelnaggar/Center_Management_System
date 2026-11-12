@@ -1,5 +1,6 @@
 import { Plus, Building } from "@/components/icons";
 import toast from "react-hot-toast";
+import Card, { CardHeader } from "@/components/ui/Card";
 import { groupsService } from "../../services/groupsService";
 import GroupForm from "./GroupForm";
 
@@ -10,6 +11,7 @@ export default function AddGroupForm({ onSuccess }) {
         Name: data.name,
         MonthlyPrice: data.monthlyPrice,
         PerSessionPrice: data.perSessionPrice,
+        SessionsPerMonth: data.sessionsPerMonth,
         TeacherId: data.teacherId,
         Schedule: data.schedule,
       });
@@ -29,27 +31,24 @@ export default function AddGroupForm({ onSuccess }) {
   };
 
   return (
-    <div className="bg-surface-card border border-surface-border rounded-2xl p-5 md:p-6 shadow-xs max-w-4xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-3 rounded-xl bg-primary-subtle text-primary shrink-0">
-          <Plus className="w-6 h-6" />
-        </div>
-        <div>
-          <h3 className="text-base font-bold text-text-main">
-            إضافة مجموعة جديدة
-          </h3>
-          <p className="text-xs text-text-muted mt-0.5">
-            أنشئ مجموعة دراسية جديدة وحدد جدول الجلسات بسهولة
-          </p>
-        </div>
-      </div>
-
-      <GroupForm
-        onSubmit={handleSubmit}
-        submitLabel="إنشاء المجموعة"
-        SubmitIcon={Building}
+    <Card className="mx-auto max-w-4xl" data-testid="group-add-card">
+      <CardHeader
+        title="إضافة مجموعة جديدة"
+        subtitle="أنشئ مجموعة دراسية جديدة وحدد سعر الشهر وسعر الحصة وجدول المواعيد."
+        action={
+          <span className="flex h-10 w-10 items-center justify-center rounded-control bg-primary-subtle text-primary">
+            <Plus className="h-5 w-5" aria-hidden="true" />
+          </span>
+        }
       />
-    </div>
+
+      <div className="p-4 sm:p-5">
+        <GroupForm
+          onSubmit={handleSubmit}
+          submitLabel="إنشاء المجموعة"
+          SubmitIcon={Building}
+        />
+      </div>
+    </Card>
   );
 }
