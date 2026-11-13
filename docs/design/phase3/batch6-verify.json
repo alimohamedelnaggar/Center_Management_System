@@ -1,0 +1,505 @@
+{
+  "summary": {
+    "generated": "2026-11-13T11:52:40.463Z",
+    "viewports": 6,
+    "pages": [
+      "attempt"
+    ],
+    "runs": 5,
+    "baseRuns": 2,
+    "textZoom": 2,
+    "pageZoom": 1,
+    "failures": [],
+    "byPage": {
+      "attempt": [
+        {
+          "id": "kb-360",
+          "width": 360,
+          "height": 400,
+          "theme": "light",
+          "overflowX": 0,
+          "outside": 0,
+          "small": 0,
+          "primary": 0,
+          "clipped": 0,
+          "covered": 0,
+          "overlap": 0,
+          "contrast": 5.25,
+          "state": "attempt · 1,2,3"
+        },
+        {
+          "id": "kb-390",
+          "width": 390,
+          "height": 400,
+          "theme": "light",
+          "overflowX": 0,
+          "outside": 0,
+          "small": 0,
+          "primary": 0,
+          "clipped": 0,
+          "covered": 0,
+          "overlap": 0,
+          "contrast": 5.25,
+          "state": "attempt · 1,2,3"
+        }
+      ]
+    },
+    "apiCalls": 11,
+    "apiSummary": {
+      "/Api/V1/Authentication/refresh-token": 6,
+      "/Api/V1/StudentPortal/Attempts/attempt-1": 10,
+      "/Api/V1/Profile/GetMyProfile": 10,
+      "/images/questions/q2.png": 6,
+      "/images/questions/q3.png": 6,
+      "/Api/V1/StudentPortal/Attempts/attempt-1/Violation": 2,
+      "/Api/V1/StudentPortal/Attempts/attempt-1/Submit": 2,
+      "/notifications/negotiate": 2,
+      "/Api/V1/StudentPortal/Notifications/Unread-Count": 4,
+      "/Api/V1/StudentPortal/Results": 2,
+      "/Api/V1/StudentPortal/Profile": 2
+    },
+    "console": {
+      "entries": 20,
+      "leaks": 0
+    }
+  },
+  "runs": [
+    {
+      "page": "attempt",
+      "id": "kb-360",
+      "width": 360,
+      "height": 400,
+      "theme": "light",
+      "vw": 360,
+      "vh": 400,
+      "dir": "rtl",
+      "overflowX": 0,
+      "overflowY": 561,
+      "outside": [],
+      "outsideCount": 0,
+      "wide": [],
+      "beyond": [],
+      "chain": [],
+      "docWidths": {
+        "innerWidth": 360,
+        "client": 360,
+        "scroll": 360,
+        "body": 360
+      },
+      "small": [],
+      "smallCount": 0,
+      "primary": [],
+      "primaryCount": 0,
+      "clipped": [],
+      "clippedCount": 0,
+      "covered": [],
+      "coveredCount": 0,
+      "overlaps": [],
+      "overlapCount": 0,
+      "contrastMin": 5.25,
+      "contrastLow": [],
+      "fonts": {
+        "tajawal": true,
+        "manrope": true,
+        "status": "loaded",
+        "body": "Tajawal, Manrope, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif"
+      },
+      "pageHeading": "امتحان العلوم",
+      "badText": [],
+      "ui": {
+        "qr": null,
+        "bulk": null,
+        "wizard": null,
+        "accounts": null,
+        "text": ".exam-lock { user-select: none; -webkit-user-select: none; } .exam-lock textarea, .exam-lock input { user-select: text; -webkit-user-select: text; } @media print { body { display: none !important; } } امتحان العلومأجب عن جميع الأسئلة • الدرجة الكلية 10011:59تس"
+      },
+      "probe": {
+        "text": ".exam-lock { user-select: none; -webkit-user-select: none; } .exam-lock textarea, .exam-lock input { user-select: text; -webkit-user-select: text; } @media print { body { display: none !important; } } امتحان العلومأجب عن جميع الأسئلة • الدرجة الكلية 10011:59تسليملم تُحفظ إجابة بعد1صح وغلطالشمس نجم.2 درجةصحغلط2اختر من متعددما أكبر كوكب في المجموعة الشمسية؟2 درجةعطاردالمشتريزحلالأرض3مقالياكتب تعريفًا موجزًا للطاقة.6 درجةتسليم الامتحان",
+        "heading": "امتحان العلوم",
+        "startRules": 0,
+        "cardsCount": 0,
+        "table": false,
+        "tableRows": 0,
+        "tableHeadings": [],
+        "navText": "",
+        "navOutsideCards": null,
+        "actionLabels": [
+          "العودة لملء الشاشة",
+          "سجل المخالفات (0)"
+        ],
+        "filterLabels": [],
+        "smallButtons": [],
+        "modal": null,
+        "attempt": {
+          "stickyCount": 1,
+          "stickyHeight": 53,
+          "stickyRatio": 13.3,
+          "warningHeight": 0,
+          "viewportHeight": 400,
+          "stickyClass": "sticky top-0 z-40 border-b border-surface-border bg-surface-card shadow-sm",
+          "warningPresent": false,
+          "warningInsideSticky": false,
+          "inlineFullscreen": true,
+          "offlineNote": false,
+          "headerHasTimer": true,
+          "headerHasSubmit": true,
+          "timer": "11:59",
+          "submit": "تسليم",
+          "violationCount": "0",
+          "draftState": "لم تُحفظ إجابة بعد",
+          "questionTypes": [
+            "1",
+            "2",
+            "3"
+          ],
+          "questionTexts": [
+            "1صح وغلطالشمس نجم.2 درجةصحغلط",
+            "2اختر من متعددما أكبر كوكب في المجموعة الشمسية؟2 درجةعطاردالمشتريزحلالأرض",
+            "3مقالياكتب تعريفًا موجزًا للطاقة.6 درجة"
+          ],
+          "images": [
+            "https://center-system.runasp.net/images/questions/q2.png",
+            "https://center-system.runasp.net/images/questions/q3.png"
+          ],
+          "optionCount": 6,
+          "optionMinHeights": [
+            44,
+            44,
+            44,
+            44,
+            44,
+            44
+          ],
+          "hasTextarea": true,
+          "startRules": 0
+        },
+        "log": null,
+        "errors": []
+      }
+    },
+    {
+      "page": "attempt",
+      "id": "kb-390",
+      "width": 390,
+      "height": 400,
+      "theme": "light",
+      "vw": 390,
+      "vh": 400,
+      "dir": "rtl",
+      "overflowX": 0,
+      "overflowY": 538,
+      "outside": [],
+      "outsideCount": 0,
+      "wide": [],
+      "beyond": [],
+      "chain": [],
+      "docWidths": {
+        "innerWidth": 390,
+        "client": 390,
+        "scroll": 390,
+        "body": 390
+      },
+      "small": [],
+      "smallCount": 0,
+      "primary": [],
+      "primaryCount": 0,
+      "clipped": [],
+      "clippedCount": 0,
+      "covered": [],
+      "coveredCount": 0,
+      "overlaps": [],
+      "overlapCount": 0,
+      "contrastMin": 5.25,
+      "contrastLow": [],
+      "fonts": {
+        "tajawal": true,
+        "manrope": true,
+        "status": "loaded",
+        "body": "Tajawal, Manrope, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif"
+      },
+      "pageHeading": "امتحان العلوم",
+      "badText": [],
+      "ui": {
+        "qr": null,
+        "bulk": null,
+        "wizard": null,
+        "accounts": null,
+        "text": ".exam-lock { user-select: none; -webkit-user-select: none; } .exam-lock textarea, .exam-lock input { user-select: text; -webkit-user-select: text; } @media print { body { display: none !important; } } امتحان العلومأجب عن جميع الأسئلة • الدرجة الكلية 10011:59تس"
+      },
+      "probe": {
+        "text": ".exam-lock { user-select: none; -webkit-user-select: none; } .exam-lock textarea, .exam-lock input { user-select: text; -webkit-user-select: text; } @media print { body { display: none !important; } } امتحان العلومأجب عن جميع الأسئلة • الدرجة الكلية 10011:59تسليملم تُحفظ إجابة بعد1صح وغلطالشمس نجم.2 درجةصحغلط2اختر من متعددما أكبر كوكب في المجموعة الشمسية؟2 درجةعطاردالمشتريزحلالأرض3مقالياكتب تعريفًا موجزًا للطاقة.6 درجةتسليم الامتحان",
+        "heading": "امتحان العلوم",
+        "startRules": 0,
+        "cardsCount": 0,
+        "table": false,
+        "tableRows": 0,
+        "tableHeadings": [],
+        "navText": "",
+        "navOutsideCards": null,
+        "actionLabels": [
+          "العودة لملء الشاشة",
+          "سجل المخالفات (0)"
+        ],
+        "filterLabels": [],
+        "smallButtons": [],
+        "modal": null,
+        "attempt": {
+          "stickyCount": 1,
+          "stickyHeight": 53,
+          "stickyRatio": 13.3,
+          "warningHeight": 0,
+          "viewportHeight": 400,
+          "stickyClass": "sticky top-0 z-40 border-b border-surface-border bg-surface-card shadow-sm",
+          "warningPresent": false,
+          "warningInsideSticky": false,
+          "inlineFullscreen": true,
+          "offlineNote": false,
+          "headerHasTimer": true,
+          "headerHasSubmit": true,
+          "timer": "11:59",
+          "submit": "تسليم",
+          "violationCount": "0",
+          "draftState": "لم تُحفظ إجابة بعد",
+          "questionTypes": [
+            "1",
+            "2",
+            "3"
+          ],
+          "questionTexts": [
+            "1صح وغلطالشمس نجم.2 درجةصحغلط",
+            "2اختر من متعددما أكبر كوكب في المجموعة الشمسية؟2 درجةعطاردالمشتريزحلالأرض",
+            "3مقالياكتب تعريفًا موجزًا للطاقة.6 درجة"
+          ],
+          "images": [
+            "https://center-system.runasp.net/images/questions/q2.png",
+            "https://center-system.runasp.net/images/questions/q3.png"
+          ],
+          "optionCount": 6,
+          "optionMinHeights": [
+            44,
+            44,
+            44,
+            44,
+            44,
+            44
+          ],
+          "hasTextarea": true,
+          "startRules": 0
+        },
+        "log": null,
+        "errors": []
+      }
+    }
+  ],
+  "probes": {
+    "attemptHeader": {
+      "kb-360 light": {
+        "viewportHeight": 400,
+        "stickyHeight": 53,
+        "ratio": 13.3,
+        "warningPresent": false,
+        "warningHeight": 0,
+        "inlineFullscreen": true
+      },
+      "kb-390 light": {
+        "viewportHeight": 400,
+        "stickyHeight": 53,
+        "ratio": 13.3,
+        "warningPresent": false,
+        "warningHeight": 0,
+        "inlineFullscreen": true
+      }
+    },
+    "attemptDraft": {
+      "state": "حفظ تلقائي",
+      "hasDraft": true,
+      "trueFalse": "o1",
+      "essay": "إجابة تجريبية"
+    },
+    "attemptOffline": {
+      "state": "غير متصل — حفظ محلي",
+      "draft": true,
+      "note": true,
+      "noteText": "لا يوجد اتصال بالإنترنت. إجاباتك تُحفظ على هذا الجهاز، وتُرسل عند التسليم بعد عودة الاتصال."
+    },
+    "attemptSubmit": {
+      "url": "https://center-system.runasp.net/Api/V1/StudentPortal/Attempts/attempt-1/Submit",
+      "body": [
+        {
+          "questionId": "q1",
+          "selectedOptionId": "o1",
+          "essayAnswer": null
+        },
+        {
+          "questionId": "q2",
+          "selectedOptionId": null,
+          "essayAnswer": null
+        },
+        {
+          "questionId": "q3",
+          "selectedOptionId": null,
+          "essayAnswer": "إجابة تجريبية"
+        }
+      ],
+      "path": "/student/results",
+      "draft": false,
+      "results": true
+    }
+  },
+  "textZoom": [
+    {
+      "page": "attempt",
+      "id": "390",
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "vw": 390,
+      "vh": 844,
+      "dir": "rtl",
+      "overflowX": 0,
+      "overflowY": 1703,
+      "outside": [],
+      "outsideCount": 0,
+      "wide": null,
+      "beyond": [],
+      "chain": [],
+      "docWidths": {
+        "innerWidth": 390,
+        "client": 390,
+        "scroll": 390,
+        "body": 390
+      },
+      "small": [],
+      "smallCount": 0,
+      "primary": [],
+      "primaryCount": 0,
+      "clipped": [],
+      "clippedCount": 0,
+      "covered": [],
+      "coveredCount": 0,
+      "overlaps": [],
+      "overlapCount": 0,
+      "contrastMin": 4.83,
+      "contrastLow": [],
+      "fonts": {
+        "tajawal": true,
+        "manrope": true,
+        "status": "loaded",
+        "body": "Tajawal, Manrope, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif"
+      },
+      "pageHeading": "امتحان العلوم",
+      "badText": [],
+      "ui": {
+        "qr": null,
+        "bulk": null,
+        "wizard": null,
+        "accounts": null,
+        "text": ".exam-lock { user-select: none; -webkit-user-select: none; } .exam-lock textarea, .exam-lock input { user-select: text; -webkit-user-select: text; } @media print { body { display: none !important; } } أنت خارج وضع ملء الشاشة.ملء الشاشةامتحان العلومأجب عن جميع "
+      },
+      "wideInfo": null
+    },
+    {
+      "page": "attempt",
+      "id": "1440",
+      "width": 1440,
+      "height": 900,
+      "theme": "light",
+      "vw": 1440,
+      "vh": 900,
+      "dir": "rtl",
+      "overflowX": 0,
+      "overflowY": 1163,
+      "outside": [],
+      "outsideCount": 0,
+      "wide": null,
+      "beyond": [],
+      "chain": [],
+      "docWidths": {
+        "innerWidth": 1440,
+        "client": 1440,
+        "scroll": 1440,
+        "body": 1440
+      },
+      "small": [],
+      "smallCount": 0,
+      "primary": [],
+      "primaryCount": 0,
+      "clipped": [],
+      "clippedCount": 0,
+      "covered": [],
+      "coveredCount": 0,
+      "overlaps": [],
+      "overlapCount": 0,
+      "contrastMin": 4.83,
+      "contrastLow": [],
+      "fonts": {
+        "tajawal": true,
+        "manrope": true,
+        "status": "loaded",
+        "body": "Tajawal, Manrope, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif"
+      },
+      "pageHeading": "امتحان العلوم",
+      "badText": [],
+      "ui": {
+        "qr": null,
+        "bulk": null,
+        "wizard": null,
+        "accounts": null,
+        "text": ".exam-lock { user-select: none; -webkit-user-select: none; } .exam-lock textarea, .exam-lock input { user-select: text; -webkit-user-select: text; } @media print { body { display: none !important; } } أنت خارج وضع ملء الشاشة.ملء الشاشةامتحان العلومأجب عن جميع "
+      },
+      "wideInfo": null
+    }
+  ],
+  "pageZoom": [
+    {
+      "page": "attempt",
+      "id": "1440",
+      "width": 720,
+      "height": 450,
+      "theme": "light",
+      "vw": 720,
+      "vh": 450,
+      "dir": "rtl",
+      "overflowX": 0,
+      "overflowY": 488,
+      "outside": [],
+      "outsideCount": 0,
+      "wide": [],
+      "beyond": [],
+      "chain": [],
+      "docWidths": {
+        "innerWidth": 720,
+        "client": 720,
+        "scroll": 720,
+        "body": 720
+      },
+      "small": [],
+      "smallCount": 0,
+      "primary": [],
+      "primaryCount": 0,
+      "clipped": [],
+      "clippedCount": 0,
+      "covered": [],
+      "coveredCount": 0,
+      "overlaps": [],
+      "overlapCount": 0,
+      "contrastMin": 5.25,
+      "contrastLow": [],
+      "fonts": {
+        "tajawal": true,
+        "manrope": true,
+        "status": "loaded",
+        "body": "Tajawal, Manrope, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif"
+      },
+      "pageHeading": "امتحان العلوم",
+      "badText": [],
+      "ui": {
+        "qr": null,
+        "bulk": null,
+        "wizard": null,
+        "accounts": null,
+        "text": ".exam-lock { user-select: none; -webkit-user-select: none; } .exam-lock textarea, .exam-lock input { user-select: text; -webkit-user-select: text; } @media print { body { display: none !important; } } امتحان العلومأجب عن جميع الأسئلة • الدرجة الكلية 10011:58تس"
+      }
+    }
+  ]
+}
