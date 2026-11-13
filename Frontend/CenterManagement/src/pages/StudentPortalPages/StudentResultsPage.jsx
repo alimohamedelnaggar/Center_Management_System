@@ -51,7 +51,7 @@ export default function StudentResultsPage() {
   }, []);
 
   return (
-    <div className="p-4 md:p-6 font-sans">
+    <div data-testid="student-results-page" className="p-4 md:p-6 font-sans">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-text-main">نتائجي</h1>
@@ -62,7 +62,7 @@ export default function StudentResultsPage() {
         <button
           type="button"
           onClick={loadResults}
-          className="inline-flex items-center gap-2 rounded-lg border border-surface-border bg-surface-card px-3.5 py-2.5 text-sm font-medium text-text-main transition-colors hover:bg-surface-muted"
+          className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-surface-border bg-surface-card px-3.5 py-2.5 text-sm font-medium text-text-main transition-colors hover:bg-surface-muted"
         >
           <RefreshCw className="h-4 w-4" />
           تحديث
@@ -73,7 +73,7 @@ export default function StudentResultsPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-right">
             <thead>
-              <tr className="border-b border-surface-border bg-surface-muted text-xs font-semibold text-text-muted">
+              <tr className="border-b border-surface-border bg-surface-muted text-sm font-semibold text-text-muted">
                 <th className="w-12 px-4 py-3">#</th>
                 <th className="px-4 py-3">الامتحان</th>
                 <th className="px-4 py-3">الدرجة</th>
@@ -158,7 +158,7 @@ export default function StudentResultsPage() {
                               setPreviewExam(item);
                               setIsPreviewOpen(true);
                             }}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-primary-subtle px-3 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-primary hover:text-text-inverse"
+                            className="inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-primary-subtle px-3 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-primary hover:text-text-inverse"
                           >
                             <Eye className="h-3.5 w-3.5" />
                             مراجعة

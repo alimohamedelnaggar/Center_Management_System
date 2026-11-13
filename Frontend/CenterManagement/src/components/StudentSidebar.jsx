@@ -84,7 +84,7 @@ export default function StudentSidebar({ mobileOpen = false, onMobileClose }) {
   return (
     <>
       <SidebarPanel
-        className="app-sidebar"
+        className="app-sidebar hidden md:flex"
         brand={brand}
         items={items}
         identity={identity}

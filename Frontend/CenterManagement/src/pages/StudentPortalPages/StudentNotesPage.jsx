@@ -58,7 +58,7 @@ export default function StudentNotesPage() {
   };
 
   return (
-    <div className="p-4 md:p-6 font-sans">
+    <div data-testid="student-notes-page" className="p-4 md:p-6 font-sans">
       <div className="mb-5">
         <h1 className="text-xl font-bold text-text-main">المذكرات</h1>
         <p className="mt-0.5 text-sm text-text-muted">
@@ -124,7 +124,8 @@ export default function StudentNotesPage() {
               <button
                 type="button"
                 onClick={() => handleDownload(note)}
-                className="mt-auto inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-3.5 py-2 text-sm font-medium text-white transition hover:opacity-90"
+                aria-label={`تحميل ${note.title}`}
+                className="mt-auto inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-3.5 text-sm font-medium text-primary-contrast transition hover:opacity-90"
               >
                 <Download className="h-4 w-4" />
                 تحميل

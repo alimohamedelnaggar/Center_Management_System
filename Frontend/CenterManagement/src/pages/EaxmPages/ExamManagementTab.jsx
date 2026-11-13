@@ -978,7 +978,7 @@ export default function ExamManagementTab() {
                 setSelectedGroup(e.target.value)
               }
               disabled={loadingGroups}
-              className="bg-transparent text-xs font-bold text-text-main focus:outline-none w-full cursor-pointer disabled:opacity-60"
+              className="min-h-11 bg-transparent text-xs font-bold text-text-main focus:outline-none w-full cursor-pointer disabled:opacity-60"
             >
               <option value="">
                 {loadingGroups
@@ -1009,7 +1009,7 @@ export default function ExamManagementTab() {
                 !selectedGroup ||
                 fetchingStudents
               }
-              className="bg-transparent text-xs font-bold text-text-main focus:outline-none w-full cursor-pointer disabled:opacity-60"
+              className="min-h-11 bg-transparent text-xs font-bold text-text-main focus:outline-none w-full cursor-pointer disabled:opacity-60"
             >
               <option value="">
                 اختر الحصة...
@@ -1040,7 +1040,7 @@ export default function ExamManagementTab() {
                 fetchingStudents ||
                 !selectedSession
               }
-              className="bg-transparent text-xs font-bold text-text-main focus:outline-none w-full cursor-pointer disabled:opacity-60"
+              className="min-h-11 bg-transparent text-xs font-bold text-text-main focus:outline-none w-full cursor-pointer disabled:opacity-60"
             >
               <option value="">
                 اختر الامتحان...
@@ -1069,7 +1069,7 @@ export default function ExamManagementTab() {
                     setShowDeleteModal(true)
                   }
                   disabled={loading}
-                  className="group inline-flex items-center gap-2 rounded-xl border border-status-danger/30 bg-status-danger-bg px-4 py-2.5 text-xs font-bold text-status-danger transition-all duration-200 hover:border-status-danger hover:bg-status-danger hover:text-white active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 w-full"
+                  className="group min-h-11 inline-flex items-center gap-2 rounded-xl border border-status-danger/30 bg-status-danger-bg px-4 py-2.5 text-xs font-bold text-status-danger transition-all duration-200 hover:border-status-danger hover:bg-status-danger hover:text-text-inverse active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 w-full"
                 >
                   <Trash2 className="h-4 w-4" />
                   <span>حذف الامتحان</span>
@@ -1121,7 +1121,7 @@ export default function ExamManagementTab() {
                         e.target.value,
                       )
                     }
-                    className="mt-3 w-full p-2 border border-surface-border rounded-lg bg-surface-muted focus:outline-none focus:border-primary text-center font-bold text-xs text-text-main transition-colors"
+                    className="mt-3 min-h-11 w-full p-2 border border-surface-border rounded-lg bg-surface-muted focus:outline-none focus:border-primary text-center font-bold text-xs text-text-main transition-colors"
                   />
                 </div>
               ),
@@ -1154,7 +1154,7 @@ export default function ExamManagementTab() {
                       e.target.value,
                     )
                   }
-                  className="w-full pr-10 pl-4 py-2 rounded-xl border border-surface-border bg-surface-card text-xs text-text-main focus:outline-none focus:border-primary transition-colors"
+                  className="min-h-11 w-full pr-10 pl-4 py-2 rounded-xl border border-surface-border bg-surface-card text-xs text-text-main focus:outline-none focus:border-primary transition-colors"
                 />
               </div>
 
@@ -1253,7 +1253,7 @@ export default function ExamManagementTab() {
                                     ? "تم فتح واتساب مع ولي الأمر — اضغط للإلغاء"
                                     : "تسجيل أن واتساب فُتح مع ولي الأمر"
                                 }
-                                className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold border transition-all duration-200 active:scale-95 ${
+                                className={`min-h-11 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold border transition-all duration-200 active:scale-95 ${
                                   student.isParentContacted
                                     ? "bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
                                     : "bg-red-50 border-red-200 text-red-600 hover:bg-red-100"
@@ -1293,7 +1293,7 @@ export default function ExamManagementTab() {
                                       ? "فتح واتساب لإرسال النتيجة (يسجّل فتح واتساب)"
                                       : "لا يوجد رقم ولي أمر صحيح"
                                   }
-                                  className={`inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold border transition-all duration-200 ${
+                                  className={`min-h-11 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-bold border transition-all duration-200 ${
                                     hasParentPhone
                                       ? "bg-green-50 border-green-200 text-green-700 hover:bg-green-100 active:scale-95 cursor-pointer"
                                       : "bg-slate-50 border-slate-200 text-slate-300 cursor-not-allowed"
@@ -1398,7 +1398,7 @@ export default function ExamManagementTab() {
                                               .value,
                                           )
                                         }
-                                        className={`w-16 sm:w-16 p-1.5 rounded-lg text-center font-bold outline-none text-xs transition-colors ${
+                                        className={`min-h-11 w-16 sm:w-16 p-1.5 rounded-lg text-center font-bold outline-none text-xs transition-colors ${
                                           isAbsent
                                             ? "border border-orange-200 bg-orange-100 text-orange-600 cursor-not-allowed"
                                             : "border border-surface-border bg-surface-card text-text-main focus:border-primary focus:ring-1 focus:ring-primary/20"
@@ -1425,7 +1425,7 @@ export default function ExamManagementTab() {
                     loading ||
                     students.length === 0
                   }
-                  className="w-full sm:w-auto px-6 py-3 sm:py-2.5 bg-primary hover:bg-primary-hover text-text-inverse rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="min-h-11 w-full sm:w-auto px-6 py-3 sm:py-2.5 bg-primary hover:bg-primary-hover text-text-inverse rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <RefreshCw className="w-4 h-4 animate-spin" />

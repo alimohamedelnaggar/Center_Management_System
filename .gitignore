@@ -44,6 +44,10 @@ Thumbs.db
 docs/design/shots/
 docs/design/fonts/
 
+# Raw audit output: the JSON is generated on every harness run (and is hundreds
+# of KB per batch). Only the human-readable .md report is committed.
+docs/design/**/*-verify.json
+
 # Visual Studio files
 *.suo
 *.user

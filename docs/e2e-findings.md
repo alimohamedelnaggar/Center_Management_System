@@ -1029,6 +1029,9 @@ observed. The failing frame is a connection open/return inside the SQLite provid
   decide whether the mitigation belongs in the test harness or the provider configuration.
 - `Pooling=False` in `BuildOptions` would be a **test-only** diagnostic. Production runs SQL Server,
   so this entry has no expected product-availability impact.
+- **Backlog (future):** add a CI job that starts SQL Server in Docker (service container), runs the
+  receipt-counter concurrency test against it, and keeps the SQLite run as the fast local default.
+  This closes the current gap where the design branch only exercises the SQLite provider.
 
 ---
 
@@ -1189,6 +1192,168 @@ is asserted only when `document.hasFocus()` is true; the focus assertion itself 
 on it.
 
 **Status: FIXED** in phase 3 batch 4.
+
+---
+
+## F-023 — The e-exam warning and the timer/submit header were two separate sticky bars
+
+**Severity:** High (the timer and the submit button could scroll under the fullscreen warning during an attempt)
+
+**Found:** 2026-11-12 while recording the phase 3 batch 6 attempt states.
+
+**Symptom**
+
+On `/student/attempt/:attemptId` the fullscreen warning strip and the exam header were both
+`sticky top-0`. Because the warning rendered *above* the header, the header's sticky offset
+started below the warning height; when the student scrolled, the header slid up and the warning
+covered the top of it. On a short phone viewport the covered part included the remaining-time
+badge and, in the worst case, the submit button — exactly the controls the screen must keep
+visible at all times.
+
+**Root cause**
+
+Two independent `sticky top-0` siblings inside the same scroll container. Each one stuck to the
+same offset, so their occupied rectangles stacked and overlapped once scrolling began.
+
+**Fix** — frontend only, no API and no grading/violation change:
+
+- Wrapped the fullscreen warning and `<header data-testid="exam-header">` in a single
+  `sticky top-0 z-40` container. The warning is an ordinary row inside that container, so the
+  timer, violation counter and submit button are always below it and never covered.
+- The scroll container keeps one sticky box, matching the intent of the original design.
+
+**Regression guard**
+
+`Frontend/CenterManagement/src/pages/studentExamAttempt.batch6.test.jsx` — the test asserts that
+`exam-header` and `exam-fullscreen-warning` share exactly one `.sticky.top-0` ancestor. The
+batch-6 harness also screenshots the attempt screen at 390/1440 in both themes and fails any
+overlap or covered control (`docs/design/phase3-batch6-verify.mjs`).
+
+**Status: FIXED** in phase 3 batch 6.
+
+---
+
+## F-024 — The student desktop sidebar stayed visible on phones and squeezed the page at 200% text
+
+**Severity:** High (horizontal page scroll and truncated content on the student mobile pages once the user raised the text size)
+
+**Found:** 2026-11-12 by the batch 6 200% text-zoom audit.
+
+**Symptom**
+
+At 390px with the browser text size at 200%, `/student/results` reported 206px of horizontal
+page scroll: the page content was squeezed into a 53px-wide `.app-main` next to a 337px sidebar.
+The exam cards carried their own min-content width as well, so `/student/exams` still scrolled
+150px sideways even after the rail was hidden. At the default 100% text size the same rail was
+narrow enough (icon-only) to hide the bug visually, so the earlier 100% screenshots had looked
+fine.
+
+**Root cause**
+
+`SidebarPanel` renders `<aside className={cn("flex h-full flex-col", className)}>`. The `flex`
+utility sets `display: flex`, while the screen rule that should hide the rail on phones
+(`.app-sidebar { display: none }`) lives in `@layer components`. Tailwind's utilities layer wins
+over components, so `display: none` never applied. `AppSidebar` had already compensated with
+`hidden md:flex`; `StudentSidebar` had only `app-sidebar`, so its desktop rail rendered at all
+widths. The rail's rem-based content grew with the 200% root font and squeezed the main column.
+Independently, the student exam card grid had no explicit single column and the exam title /
+status row could not shrink, so the card's min-content width exceeded the narrow viewport.
+
+**Fix** — frontend only:
+
+- `StudentSidebar` now passes `className="app-sidebar hidden md:flex"`, matching `AppSidebar`.
+  The mobile drawer (`.app-drawer`) is unchanged.
+- The student exam list uses `grid-cols-1`, `min-w-0` on the cards and
+  `[overflow-wrap:anywhere]` on the date row so long values wrap instead of widening the page.
+
+**Regression guard**
+
+The batch-6 harness audits every student page at 390px with `fontSize = 200%` and fails on any
+horizontal page scroll or element outside the viewport. Before the fixes `/student/results`
+failed with 206px and `/student/exams` with 150px; after them both pass at 0px. The full
+6-viewport × 2-theme run also checks the default text size.
+
+**Status: FIXED** in phase 3 batch 6.
+
+---
+
+## F-025 — Batch-6 table headers inherited 12px text
+
+**Severity:** Medium (primary text below the 14px accessibility floor in the results and exam-results tables)
+
+**Found:** 2026-11-12 by the batch 6 base audit at 390px.
+
+**Symptom**
+
+The student results table and the exam-results dialog rendered their `<th>` cells at 12px: the
+`text-xs` sat on the `<tr>`/`<thead>` and was inherited by the header cells. The batch-6 audit
+flagged 7 header nodes on `/student/results` and 5 inside the exam-results dialog. The other
+batch-6 tables hid their desktop view on phones, so the same inherited size only mattered at
+`md` and above.
+
+**Root cause**
+
+The header row/thead used `text-xs` for compactness, and the `<th>` cells had no size of their
+own. `th` text is primary content, so the 14px floor applies.
+
+**Fix** — frontend only:
+
+- The header row/thead in `StudentResultsPage`, `ExamsPage`, `QuestionBankPage`,
+  `StudyNotesPage` and `QuestionExamResultsModal` now uses `text-sm` (14px). Cell markup and
+  data are unchanged.
+
+**Regression guard**
+
+The batch-6 harness counts visible primary text nodes under 14px on every page and dialog at all
+six viewports; the run fails if any remain.
+
+**Status: FIXED** in phase 3 batch 6.
+
+---
+
+## F-026 — New primary/danger buttons hard-coded white text and failed AA contrast in dark mode
+
+**Severity:** Medium (four buttons fell below the 4.5:1 floor for normal text in the dark theme)
+
+**Found:** 2026-11-13 by the full batch 6 matrix (6 viewports × 2 themes).
+
+**Symptom**
+
+Every dark-theme run of four batch-6 states failed the contrast audit:
+
+| State | Control | Measured |
+|---|---|---|
+| `/notes` | **إضافة مذكرة** (14px bold) | 3.39:1 |
+| `/student/notes` | **تحميل** on both cards (14px medium) | 2.72:1 |
+| note dialog | **حفظ وإرسال** (12px bold) | 3.39:1 |
+| delete confirm | **حذف** (14px bold) | 2.16:1 |
+
+Light-theme runs were fine, so the earlier 390px light pass never saw it. The full run reported
+24 failures — the same four controls repeated for each viewport.
+
+**Root cause**
+
+The buttons hard-coded `text-white`. In dark mode `--color-primary-val` is `#8b93ff` and
+`--color-status-danger` is `#ff8fa3`, both light tints that need dark text. The design system
+already exposes the correct semantic tokens: `text-primary-contrast` (white in light, `#0b102a`
+in dark) and `text-text-inverse` (white in light, `#080b18` in dark). White text on the light
+tints is what failed.
+
+**Fix** — frontend only, colours only, no text or behaviour change:
+
+- `StudentNotesPage` download, `StudyNotesPage` add, `StudyNoteModal` submit and selected type,
+  and `ConfirmModal` confirm now use `text-primary-contrast` / `text-text-inverse`.
+- The same hard-coded pattern was corrected in `QuestionModal` (delete-image button and selected
+  correct answer), the attempt violation-counter hover, and the legacy exam-management delete
+  hover, so the hover states do not reintroduce white-on-light-tint.
+
+**Regression guard**
+
+The batch-6 harness computes WCAG contrast from computed styles for every visible text node on
+every page and dialog, and fails below 4.5:1 (3:1 for large text). After the fix the full
+6-viewport × 2-theme run is clean.
+
+**Status: FIXED** in phase 3 batch 6.
 
 ---
 

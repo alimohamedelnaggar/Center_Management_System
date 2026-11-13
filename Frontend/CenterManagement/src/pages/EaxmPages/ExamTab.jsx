@@ -352,7 +352,7 @@ export default function ExamTab() {
               value={selectedGroup}
               onChange={(e) => handleGroupChange(e.target.value)}
               disabled={loadingGroups}
-              className="bg-transparent text-xs font-bold text-text-main focus:outline-none w-full cursor-pointer disabled:opacity-60"
+              className="min-h-11 bg-transparent text-xs font-bold text-text-main focus:outline-none w-full cursor-pointer disabled:opacity-60"
             >
               <option value="">
                 {loadingGroups ? "جاري تحميل المجموعات..." : "اختر المجموعة..."}
@@ -370,7 +370,7 @@ export default function ExamTab() {
               value={selectedSession}
               onChange={(e) => setSelectedSession(e.target.value)}
               disabled={!selectedGroup || fetchingStudents}
-              className="bg-transparent text-xs font-bold text-text-main focus:outline-none w-full cursor-pointer disabled:opacity-60"
+              className="min-h-11 bg-transparent text-xs font-bold text-text-main focus:outline-none w-full cursor-pointer disabled:opacity-60"
             >
               <option value="">اختر الحصة...</option>
               {sessions.map((s) => (
@@ -386,14 +386,14 @@ export default function ExamTab() {
             placeholder="اسم الامتحان / العنوان"
             value={examName}
             onChange={(e) => setExamName(e.target.value)}
-            className="bg-surface-muted px-3 py-2.5 rounded-xl border border-surface-border text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-colors"
+            className="min-h-11 bg-surface-muted px-3 py-2.5 rounded-xl border border-surface-border text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-colors"
           />
 
           <input
             type="date"
             value={examDate}
             onChange={(e) => setExamDate(e.target.value)}
-            className="bg-surface-muted px-3 py-2.5 rounded-xl border border-surface-border text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-colors"
+            className="min-h-11 bg-surface-muted px-3 py-2.5 rounded-xl border border-surface-border text-xs font-bold text-text-main focus:outline-none focus:border-primary transition-colors"
           />
         </div>
 
@@ -432,7 +432,7 @@ export default function ExamTab() {
                     onChange={(e) =>
                       handleTotalMarkChange(type, e.target.value)
                     }
-                    className="mt-3 w-full p-2 border border-surface-border rounded-lg bg-surface-muted focus:outline-none focus:border-primary text-center font-bold text-xs text-text-main transition-colors"
+                    className="mt-3 min-h-11 w-full p-2 border border-surface-border rounded-lg bg-surface-muted focus:outline-none focus:border-primary text-center font-bold text-xs text-text-main transition-colors"
                   />
                 )}
               </div>
@@ -452,7 +452,7 @@ export default function ExamTab() {
                 placeholder="ابحث باسم الطالب أو الهاتف..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pr-10 pl-4 py-2 rounded-xl border border-surface-border bg-surface-card text-xs text-text-main focus:outline-none focus:border-primary transition-colors"
+                className="min-h-11 w-full pr-10 pl-4 py-2 rounded-xl border border-surface-border bg-surface-card text-xs text-text-main focus:outline-none focus:border-primary transition-colors"
               />
             </div>
 
@@ -521,7 +521,7 @@ export default function ExamTab() {
                                   e.target.value,
                                 )
                               }
-                              className="w-16 sm:w-16 p-1.5 border border-surface-border rounded-lg text-center bg-surface-card font-bold outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-xs text-text-main transition-colors"
+                              className="min-h-11 w-16 sm:w-16 p-1.5 border border-surface-border rounded-lg text-center bg-surface-card font-bold outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 text-xs text-text-main transition-colors"
                             />
                           </div>
                         ))}
@@ -536,7 +536,7 @@ export default function ExamTab() {
               <button
                 onClick={handleSubmit}
                 disabled={loading || students.length === 0}
-                className="w-full sm:w-auto px-6 py-3 sm:py-2.5 bg-primary hover:bg-primary-hover text-text-inverse rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="min-h-11 w-full sm:w-auto px-6 py-3 sm:py-2.5 bg-primary hover:bg-primary-hover text-text-inverse rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <RefreshCw className="w-4 h-4 animate-spin" />

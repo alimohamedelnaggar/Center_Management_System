@@ -98,7 +98,7 @@ export default function StudentExamsPage() {
   };
 
   return (
-    <div className="p-4 md:p-6 font-sans">
+    <div data-testid="student-exams-page" className="p-4 md:p-6 font-sans">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-text-main">امتحاناتي</h1>
@@ -109,7 +109,7 @@ export default function StudentExamsPage() {
         <button
           type="button"
           onClick={loadExams}
-          className="inline-flex items-center gap-2 rounded-lg border border-surface-border bg-surface-card px-3.5 py-2.5 text-sm font-medium text-text-main transition hover:bg-surface-muted"
+          className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-surface-border bg-surface-card px-3.5 text-sm font-medium text-text-main transition hover:bg-surface-muted"
         >
           <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
           تحديث
@@ -131,7 +131,7 @@ export default function StudentExamsPage() {
       )}
 
       {!loading && exams.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {exams.map((exam) => {
             const meta = statusMeta[exam.status] ?? statusMeta.upcoming;
             const canStart = exam.status === "available";
@@ -140,7 +140,7 @@ export default function StudentExamsPage() {
             return (
               <div
                 key={exam.examId}
-                className="flex flex-col rounded-xl border border-surface-border bg-surface-card p-5 shadow-sm transition hover:shadow-md"
+                className="flex min-w-0 flex-col rounded-xl border border-surface-border bg-surface-card p-5 shadow-sm transition hover:shadow-md"
               >
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -163,15 +163,17 @@ export default function StudentExamsPage() {
 
                 <div className="mb-4 space-y-2 text-sm text-text-muted">
                   <div className="flex items-center gap-2">
-                    <CalendarClock className="h-4 w-4" />
-                    <span>{formatDateTime(exam.examDate)}</span>
+                    <CalendarClock className="h-4 w-4 shrink-0" />
+                    <span className="min-w-0 [overflow-wrap:anywhere]">
+                      {formatDateTime(exam.examDate)}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4" />
+                    <Clock className="h-4 w-4 shrink-0" />
                     <span>المدة {exam.durationMinutes} دقيقة</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <FileQuestion className="h-4 w-4" />
+                    <FileQuestion className="h-4 w-4 shrink-0" />
                     <span>
                       {exam.questionsCount} سؤال • الدرجة {exam.totalMarks}
                     </span>
@@ -195,7 +197,7 @@ export default function StudentExamsPage() {
                       type="button"
                       onClick={() => handleAction(exam)}
                       disabled={startingId === exam.examId}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-bold text-text-inverse transition hover:bg-primary-hover disabled:opacity-70"
+                      className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-text-inverse transition hover:bg-primary-hover disabled:opacity-70"
                     >
                       {startingId === exam.examId ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -224,7 +226,7 @@ export default function StudentExamsPage() {
                     <button
                       type="button"
                       onClick={() => navigate("/student/results")}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-surface-border bg-surface-card px-4 py-2.5 text-sm font-medium text-text-main transition hover:bg-surface-muted"
+                      className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-surface-border bg-surface-card px-4 text-sm font-medium text-text-main transition hover:bg-surface-muted"
                     >
                       <ClipboardList className="h-4 w-4" />
                       عرض النتائج

@@ -197,16 +197,17 @@ export default function QuestionExamModal({
   };
 
   const inputClass =
-    "w-full rounded-lg border border-surface-border bg-surface-card px-3 py-2.5 text-sm text-text-main placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle";
+    "w-full rounded-lg border border-surface-border bg-surface-card px-3 min-h-11 py-2.5 text-sm text-text-main placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle";
 
   return (
     <div
+      data-testid="exam-form-modal"
       dir="rtl"
       className="fixed inset-0 z-50 flex items-center justify-center bg-text-main/40 px-4 font-sans"
       onClick={saving ? null : onClose}
     >
       <div
-        className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-surface-card shadow-xl"
+        className="flex max-h-[calc(100dvh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-surface-card shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-surface-border px-5 py-4">
@@ -217,7 +218,7 @@ export default function QuestionExamModal({
             type="button"
             onClick={onClose}
             aria-label="إغلاق"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
           >
             <X className="h-4 w-4" />
           </button>
@@ -227,7 +228,7 @@ export default function QuestionExamModal({
           {/* Shuffle (electronic only) */}
           {mode === MODE.ELECTRONIC && (
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-surface-border bg-surface-card px-3 py-2.5">
+              <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-surface-border bg-surface-card px-3 min-h-11 py-2.5">
                 <input
                   type="checkbox"
                   checked={shuffleQuestions}
@@ -238,7 +239,7 @@ export default function QuestionExamModal({
                   خلط ترتيب الأسئلة لكل طالب
                 </span>
               </label>
-              <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-surface-border bg-surface-card px-3 py-2.5">
+              <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-surface-border bg-surface-card px-3 min-h-11 py-2.5">
                 <input
                   type="checkbox"
                   checked={shuffleOptions}
@@ -313,7 +314,7 @@ export default function QuestionExamModal({
               <button
                 type="button"
                 onClick={() => setMode(MODE.PAPER)}
-                className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
+                className={`rounded-lg border px-3 min-h-11 py-2.5 text-sm font-medium transition-colors ${
                   mode === MODE.PAPER
                     ? "border-primary bg-primary-subtle text-primary"
                     : "border-surface-border bg-surface-card text-text-muted hover:bg-surface-muted"
@@ -324,7 +325,7 @@ export default function QuestionExamModal({
               <button
                 type="button"
                 onClick={() => setMode(MODE.ELECTRONIC)}
-                className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
+                className={`rounded-lg border px-3 min-h-11 py-2.5 text-sm font-medium transition-colors ${
                   mode === MODE.ELECTRONIC
                     ? "border-primary bg-primary-subtle text-primary"
                     : "border-surface-border bg-surface-card text-text-muted hover:bg-surface-muted"
@@ -382,7 +383,7 @@ export default function QuestionExamModal({
           </div>
 
           {mode === MODE.ELECTRONIC && endPreview && (
-            <p className="rounded-lg border border-surface-border bg-surface-muted px-3 py-2.5 text-sm text-text-muted">
+            <p className="rounded-lg border border-surface-border bg-surface-muted px-3 min-h-11 py-2.5 text-sm text-text-muted">
               يبدأ الامتحان في{" "}
               <span className="font-semibold text-text-main">
                 {buildStartDate(examDate, examTime).toLocaleString("ar-EG", {
@@ -408,7 +409,7 @@ export default function QuestionExamModal({
                 <button
                   type="button"
                   onClick={() => setShowPicker(true)}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover"
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 min-h-11 py-2 text-xs font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover"
                 >
                   <Plus className="h-4 w-4" />
                   إضافة أسئلة
@@ -432,7 +433,7 @@ export default function QuestionExamModal({
                   key={q.id}
                   className="flex items-center gap-3 rounded-lg border border-surface-border bg-surface-card p-3"
                 >
-                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary-subtle text-xs font-bold text-primary">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-subtle text-xs font-bold text-primary">
                     {index + 1}
                   </span>
                   <div className="flex-1 min-w-0">
@@ -453,7 +454,7 @@ export default function QuestionExamModal({
                       type="button"
                       onClick={() => moveQuestion(index, -1)}
                       disabled={index === 0}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted disabled:opacity-40"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted disabled:opacity-40"
                       title="لأعلى"
                     >
                       <ArrowUp className="h-4 w-4" />
@@ -462,7 +463,7 @@ export default function QuestionExamModal({
                       type="button"
                       onClick={() => moveQuestion(index, 1)}
                       disabled={index === questions.length - 1}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted disabled:opacity-40"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted disabled:opacity-40"
                       title="لأسفل"
                     >
                       <ArrowDown className="h-4 w-4" />
@@ -471,7 +472,7 @@ export default function QuestionExamModal({
                       type="button"
                       onClick={() => removeQuestion(q.id)}
                       aria-label="حذف"
-                      className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-status-danger-bg text-status-danger transition-colors hover:bg-status-danger hover:text-text-inverse"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-status-danger-bg text-status-danger transition-colors hover:bg-status-danger hover:text-text-inverse"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -486,7 +487,7 @@ export default function QuestionExamModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-surface-border bg-surface-card px-4 py-2.5 text-sm font-medium text-text-main transition-colors hover:bg-surface-muted"
+            className="rounded-lg border border-surface-border bg-surface-card px-4 min-h-11 py-2.5 text-sm font-medium text-text-main transition-colors hover:bg-surface-muted"
           >
             إلغاء
           </button>
@@ -494,7 +495,7 @@ export default function QuestionExamModal({
             type="button"
             onClick={handleSubmit}
             disabled={saving || loading}
-            className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover disabled:opacity-60"
+            className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 min-h-11 py-2.5 text-sm font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover disabled:opacity-60"
           >
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}
             {exam ? "حفظ التعديلات" : "إنشاء الامتحان"}

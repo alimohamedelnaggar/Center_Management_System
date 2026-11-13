@@ -159,8 +159,42 @@ export default function StudyNotesPage() {
     if (url) window.open(url, "_blank", "noopener");
   };
 
+  const renderNoteActions = (note, { compact = false } = {}) => {
+    const buttonClass = compact
+      ? "inline-flex h-11 w-11 items-center justify-center rounded-lg transition"
+      : "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-medium transition";
+
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => handleDownload(note)}
+          aria-label={`تحميل ${note.title}`}
+          title="تحميل"
+          className={`${buttonClass} text-primary hover:bg-primary-subtle`}
+        >
+          <Download className="h-4 w-4" />
+          {!compact && <span>تحميل</span>}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedNote(note);
+            setIsDeleteOpen(true);
+          }}
+          aria-label={`حذف ${note.title}`}
+          title="حذف"
+          className={`${buttonClass} text-status-danger hover:bg-status-danger-bg`}
+        >
+          <Trash2 className="h-4 w-4" />
+          {!compact && <span>حذف</span>}
+        </button>
+      </div>
+    );
+  };
+
   return (
-    <div className="p-4 md:p-6">
+    <div data-testid="study-notes-page" className="p-4 md:p-6">
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-text-main">المذكرات</h1>
@@ -171,7 +205,7 @@ export default function StudyNotesPage() {
         <button
           type="button"
           onClick={() => setShowModal(true)}
-          className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:opacity-90"
+          className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-contrast shadow-sm transition hover:opacity-90"
         >
           <Plus className="h-4 w-4" />
           إضافة مذكرة
@@ -186,13 +220,15 @@ export default function StudyNotesPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="ابحث بعنوان المذكرة..."
-            className="w-full rounded-xl border border-surface-border bg-surface-card py-2.5 pr-10 pl-3.5 text-sm text-text-main outline-none focus:border-primary"
+            aria-label="بحث بعنوان المذكرة"
+            className="min-h-11 w-full rounded-xl border border-surface-border bg-surface-card py-2.5 pr-10 pl-3.5 text-sm text-text-main outline-none focus:border-primary"
           />
         </div>
         <select
           value={groupId}
           onChange={(e) => setGroupId(e.target.value)}
-          className="rounded-xl border border-surface-border bg-surface-card px-3.5 py-2.5 text-sm text-text-main outline-none focus:border-primary"
+          aria-label="المجموعة"
+          className="min-h-11 rounded-xl border border-surface-border bg-surface-card px-3.5 py-2.5 text-sm text-text-main outline-none focus:border-primary"
         >
           <option value="">كل المجموعات</option>
           {groups.map((group) => (
@@ -203,107 +239,160 @@ export default function StudyNotesPage() {
         </select>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-surface-border bg-surface-card shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-right text-sm">
-            <thead className="bg-surface-muted text-xs text-text-muted">
-              <tr>
-                <th className="px-4 py-3 font-bold">العنوان</th>
-                <th className="px-4 py-3 font-bold">المجموعات</th>
-                <th className="px-4 py-3 font-bold">الملف</th>
-                <th className="px-4 py-3 font-bold">التاريخ</th>
-                <th className="px-4 py-3 font-bold">إجراءات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading && (
-                <tr>
-                  <td colSpan={5} className="py-16 text-center">
-                    <span className="inline-flex items-center gap-2 text-sm text-text-muted">
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      جاري التحميل...
+      <div className="space-y-3">
+        <ul data-testid="study-notes-cards" className="space-y-3 md:hidden">
+          {loading && (
+            <li className="rounded-card border border-surface-border bg-surface-card p-8 text-center">
+              <span className="inline-flex items-center gap-2 text-sm text-text-muted">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                جاري التحميل...
+              </span>
+            </li>
+          )}
+
+          {!loading && notes.length === 0 && (
+            <li className="flex flex-col items-center gap-3 rounded-card border border-surface-border bg-surface-card p-8 text-center">
+              <NotebookText className="h-10 w-10 text-text-muted" />
+              <p className="text-sm text-text-muted">لا توجد مذكرات بعد.</p>
+            </li>
+          )}
+
+          {!loading &&
+            notes.map((note) => (
+              <li
+                key={note.id}
+                className="rounded-card border border-surface-border bg-surface-card p-4 shadow-soft"
+              >
+                <div className="flex items-start gap-2">
+                  <FileText className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                  <div className="min-w-0">
+                    <p className="break-words font-bold text-text-main">
+                      {note.title}
+                    </p>
+                    {note.description && (
+                      <p className="mt-0.5 break-words text-sm text-text-muted">
+                        {note.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  {(note.groupNames ?? []).map((name) => (
+                    <span
+                      key={name}
+                      className="rounded-full bg-primary-subtle px-2.5 py-1 text-xs font-medium text-primary"
+                    >
+                      {name}
                     </span>
-                  </td>
-                </tr>
-              )}
+                  ))}
+                  {(note.groupNames ?? []).length === 0 && (
+                    <span className="text-sm text-text-muted">كل المجموعات</span>
+                  )}
+                </div>
 
-              {!loading && notes.length === 0 && (
+                <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <dt className="text-text-muted">حجم الملف</dt>
+                    <dd className="num text-text-main">
+                      {formatSize(note.fileSize)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-text-muted">التاريخ</dt>
+                    <dd className="num text-text-main">
+                      {formatDate(note.createdAt)}
+                    </dd>
+                  </div>
+                </dl>
+
+                <div className="mt-3">{renderNoteActions(note)}</div>
+              </li>
+            ))}
+        </ul>
+
+        <div className="hidden overflow-hidden rounded-xl border border-surface-border bg-surface-card shadow-sm md:block">
+          <div className="overflow-x-auto">
+            <table className="w-full text-right text-sm">
+              <thead className="bg-surface-muted text-sm text-text-muted">
                 <tr>
-                  <td colSpan={5} className="py-16 text-center">
-                    <div className="flex flex-col items-center gap-3">
-                      <NotebookText className="h-10 w-10 text-text-muted" />
-                      <p className="text-sm text-text-muted">
-                        لا توجد مذكرات بعد.
-                      </p>
-                    </div>
-                  </td>
+                  <th className="px-4 py-3 font-bold">العنوان</th>
+                  <th className="px-4 py-3 font-bold">المجموعات</th>
+                  <th className="px-4 py-3 font-bold">الملف</th>
+                  <th className="px-4 py-3 font-bold">التاريخ</th>
+                  <th className="px-4 py-3 font-bold">إجراءات</th>
                 </tr>
-              )}
-
-              {!loading &&
-                notes.map((note) => (
-                  <tr
-                    key={note.id}
-                    className="border-t border-surface-border transition hover:bg-surface-muted"
-                  >
-                    <td className="px-4 py-3">
-                      <p className="font-semibold text-text-main">
-                        {note.title}
-                      </p>
-                      {note.description && (
-                        <p className="mt-0.5 line-clamp-1 text-xs text-text-muted">
-                          {note.description}
-                        </p>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-1">
-                        {(note.groupNames ?? []).map((name) => (
-                          <span
-                            key={name}
-                            className="rounded-full bg-primary-subtle px-2 py-0.5 text-[11px] font-medium text-primary"
-                          >
-                            {name}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex items-center gap-1.5 text-xs text-text-muted">
-                        <FileText className="h-4 w-4 text-primary" />
-                        {formatSize(note.fileSize)}
+              </thead>
+              <tbody>
+                {loading && (
+                  <tr>
+                    <td colSpan={5} className="py-16 text-center">
+                      <span className="inline-flex items-center gap-2 text-sm text-text-muted">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        جاري التحميل...
                       </span>
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-xs text-text-muted">
-                      {formatDate(note.createdAt)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handleDownload(note)}
-                          title="تحميل"
-                          className="rounded-lg p-2 text-primary transition hover:bg-primary-subtle"
-                        >
-                          <Download className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedNote(note);
-                            setIsDeleteOpen(true);
-                          }}
-                          title="حذف"
-                          className="rounded-lg p-2 text-status-danger transition hover:bg-status-danger-bg"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                  </tr>
+                )}
+
+                {!loading && notes.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="py-16 text-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <NotebookText className="h-10 w-10 text-text-muted" />
+                        <p className="text-sm text-text-muted">
+                          لا توجد مذكرات بعد.
+                        </p>
                       </div>
                     </td>
                   </tr>
-                ))}
-            </tbody>
-          </table>
+                )}
+
+                {!loading &&
+                  notes.map((note) => (
+                    <tr
+                      key={note.id}
+                      className="border-t border-surface-border transition hover:bg-surface-muted"
+                    >
+                      <td className="px-4 py-3">
+                        <p className="font-semibold text-text-main">
+                          {note.title}
+                        </p>
+                        {note.description && (
+                          <p className="mt-0.5 line-clamp-1 text-xs text-text-muted">
+                            {note.description}
+                          </p>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-1">
+                          {(note.groupNames ?? []).map((name) => (
+                            <span
+                              key={name}
+                              className="rounded-full bg-primary-subtle px-2 py-0.5 text-[11px] font-medium text-primary"
+                            >
+                              {name}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-center gap-1.5 text-xs text-text-muted">
+                          <FileText className="h-4 w-4 text-primary" />
+                          {formatSize(note.fileSize)}
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-xs text-text-muted">
+                        {formatDate(note.createdAt)}
+                      </td>
+                      <td className="px-4 py-3">
+                        {renderNoteActions(note, { compact: true })}
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {!loading && notes.length > 0 && (
