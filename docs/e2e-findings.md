@@ -687,7 +687,12 @@ enough to need horizontal scrolling.
 The payments summary (`إجمالي المدفوع`, `المتبقي`, `عدد الدفعات`) is correct and is what the caption
 talks about. The table header is not claimed. The defect is recorded here and left untouched.
 
-**Status: OPEN — logged, not fixed.**
+**Fix (phase 3 batch 8)** — the duplicated receiver column is gone, so the table is seven columns
+(`التاريخ`, `المجموعة`, `الشهر`, `المبلغ`, `المدفوع`, `المتبقي`, `الحالة`) and every value now sits
+under its own heading. The phone card layout shows the same three money figures per payment. The
+`colSpan` mismatch disappeared with the table: the empty state is rendered outside the table.
+
+**Status: FIXED** in phase 3 batch 8.
 
 ---
 
@@ -1474,6 +1479,111 @@ and the full batch-7 matrix (232 runs) is clean.
 zoom) and fails on any horizontal overflow.
 
 **Status: FIXED** in phase 3 batch 7.
+
+---
+
+## F-031 — Two portal controls were smaller than a 44px touch target
+
+**Severity:** Low (touch accessibility; nothing blocked)
+
+**Found:** 2026-11-13 while preparing the batch-8 audit for the student portal.
+
+**Root cause**
+
+- `NotificationBell` (both portals) was a `40×40` button (`h-10 w-10`).
+- The two «عرض الكل» links in the student dashboard were inline text links with no
+  vertical padding, so their hit box was ~20px tall.
+
+**Fix** — layout only: the bell is `h-11 w-11` with `rounded-control`, and both section
+links are `inline-flex min-h-11 items-center px-1`. The audit measures 44×44 for both.
+
+**Status: FIXED** in phase 3 batch 8.
+
+---
+
+## F-032 — Portal sections pushed the page sideways at 390px and at 200% text
+
+**Severity:** Medium (horizontal page scroll; the mobile-first portal is meant to be read on a phone)
+
+**Found:** 2026-11-13 by the batch-8 harness on `student-dashboard 390 light` (65px) and the
+same page at 200% text (517px).
+
+**Root cause**
+
+`PortalSection` was a grid item with the default `min-width: auto`. Its rows use `truncate`
+and the performance chart draws wide labels, so the section's min-content width was larger
+than the 358px phone column. The implicit `auto` grid track grew to that min-content width
+and the whole document inherited the overflow.
+
+**Fix** — one class: `min-w-0` on the `PortalSection` root, so a grid/flex parent can shrink
+the track. The same states now report 0px overflow; the fix covers every portal page because
+they all share the component.
+
+**Regression guard:** the batch-8 harness audits every page at 360/390/768/1280/1920 plus
+landscape, and repeats the matrix at 200% text and 200% page zoom.
+
+**Status: FIXED** in phase 3 batch 8.
+
+---
+
+## F-033 — The parent bottom nav lost its current item on a child page
+
+**Severity:** Low (orientation only; no navigation was broken)
+
+**Found:** 2026-11-13 by the batch-8 harness on `parent-child 390 light` — zero items carried
+`aria-current="page"`.
+
+**Root cause**
+
+The nav marks an item current when the pathname equals its path or starts with `path/`.
+`/parent/children/101` matches neither `/parent/dashboard` nor `/parent/notifications`, even
+though child details belong to the «أبنائي» tab.
+
+**Fix** — `MobileBottomNav` now accepts an optional `match` list of path prefixes per item, and
+the parent «أبنائي» item lists `/parent/dashboard` and `/parent/children`. Exactly one item is
+current on every parent screen, including when arriving from an absence notification.
+
+**Status: FIXED** in phase 3 batch 8.
+
+---
+
+## F-034 — The parent logout control was 42px wide on phones
+
+**Severity:** Low (touch accessibility)
+
+**Found:** 2026-11-13 by the batch-8 shell audit (`parent-child 390 light`), 42×44.
+
+**Root cause**
+
+Below `sm` the button hides its label but keeps `px-3`, so the width was the icon (16px) plus
+24px of padding, not the required 44px.
+
+**Fix** — the control is `h-11 w-11 justify-center p-0` below `sm` and returns to
+`sm:w-auto sm:px-3` with the visible label above it. Measured 44×44 on the phone and the same
+appearance as before on desktop.
+
+**Status: FIXED** in phase 3 batch 8.
+
+---
+
+## F-035 — Two portal table header rows inherited 12px text
+
+**Severity:** Low (readability; the values were correct)
+
+**Found:** 2026-11-13 by the batch-8 desktop audit on `student-attendance 1280 light`
+(6 cells) and `student-payments 1280 light` (7 cells).
+
+**Root cause**
+
+Both tables put `text-xs` on the header `<tr>`, so every `<th>` inherited 12px. The audit
+only exempts an element that carries `text-xs` itself, not one that inherits it, which is
+why the batch-6 fix (F-025) already moved the size onto the cells. These two tables were
+rebuilt in batch 8 and reintroduced the pattern.
+
+**Fix** — the header row is `text-sm` in both tables; the headers are 14px at every desktop
+width and the measured cell text stays 14px.
+
+**Status: FIXED** in phase 3 batch 8.
 
 ---
 

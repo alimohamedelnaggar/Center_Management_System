@@ -11,28 +11,35 @@ import {
   RefreshCw,
 } from "@/components/icons";
 import toast from "react-hot-toast";
+import Button from "../../components/ui/Button";
+import PageHeader from "../../components/ui/PageHeader";
+import {
+  PortalEmpty,
+  PortalLoading,
+  PortalStatus,
+} from "../../components/portal/PortalUI";
 import { studentPortalService } from "../../services/studentPortalService";
 
 const statusMeta = {
   upcoming: {
     label: "لم يبدأ بعد",
-    className: "bg-surface-muted text-text-muted",
+    tone: "neutral",
   },
   available: {
     label: "متاح الآن",
-    className: "bg-status-success-bg text-status-success",
+    tone: "success",
   },
   inprogress: {
     label: "قيد الحل",
-    className: "bg-status-warning-bg text-status-warning",
+    tone: "warning",
   },
   finished: {
     label: "تم التسليم",
-    className: "bg-status-info-bg text-status-info",
+    tone: "info",
   },
   expired: {
     label: "انتهى",
-    className: "bg-status-danger-bg text-status-danger",
+    tone: "danger",
   },
 };
 
@@ -98,67 +105,49 @@ export default function StudentExamsPage() {
   };
 
   return (
-    <div data-testid="student-exams-page" className="p-4 md:p-6 font-sans">
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-text-main">امتحاناتي</h1>
-          <p className="mt-0.5 text-sm text-text-muted">
-            الامتحانات الإلكترونية المتاحة لمجموعاتك
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={loadExams}
-          className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-surface-border bg-surface-card px-3.5 text-sm font-medium text-text-main transition hover:bg-surface-muted"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          تحديث
-        </button>
-      </div>
+    <div data-testid="student-exams-page" className="p-4 font-sans md:p-6">
+      <PageHeader
+        className="mb-5"
+        title="امتحاناتي"
+        subtitle="الامتحانات الإلكترونية المتاحة لمجموعاتك"
+        actions={
+          <Button variant="secondary" onClick={loadExams} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            تحديث
+          </Button>
+        }
+      />
 
-      {loading && (
-        <div className="flex items-center justify-center gap-2 rounded-xl border border-surface-border bg-surface-card py-16 text-sm text-text-muted">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          جاري التحميل...
-        </div>
-      )}
+      {loading && <PortalLoading icon={Loader2} />}
 
       {!loading && exams.length === 0 && (
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-surface-border bg-surface-card py-16 text-center">
-          <ClipboardList className="h-10 w-10 text-text-muted" />
-          <p className="text-sm text-text-muted">لا توجد امتحانات متاحة حالياً</p>
-        </div>
+        <PortalEmpty icon={ClipboardList} title="لا توجد امتحانات متاحة حالياً" />
       )}
 
       {!loading && exams.length > 0 && (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {exams.map((exam) => {
-            const meta = statusMeta[exam.status] ?? statusMeta.upcoming;
-            const canStart = exam.status === "available";
-            const canResume = exam.status === "inprogress";
+            const meta = statusMeta[exam.status] ?? {
+              label: "غير محدد",
+              tone: "neutral",
+            };
 
             return (
-              <div
+              <article
                 key={exam.examId}
-                className="flex min-w-0 flex-col rounded-xl border border-surface-border bg-surface-card p-5 shadow-sm transition hover:shadow-md"
+                data-testid="student-exam-card"
+                className="flex min-w-0 flex-col rounded-card border border-surface-border bg-surface-card p-5 shadow-soft transition hover:border-primary/60 hover:shadow-md"
               >
                 <div className="mb-3 flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                      <h3 className="truncate text-base font-bold text-text-main">
-                        {exam.name}
-                      </h3>
-                    <p className="mt-0.5 text-xs text-text-muted">
+                    <h2 className="break-words text-lg font-extrabold leading-7 text-text-main">
+                      {exam.name}
+                    </h2>
+                    <p className="mt-0.5 break-words text-sm text-text-muted">
                       {exam.groupName}
                     </p>
                   </div>
-                  <span
-                    className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${
-                      statusMeta[exam.status]?.className ??
-                      statusMeta.upcoming.className
-                    }`}
-                  >
-                    {statusMeta[exam.status]?.label ?? "غير محدد"}
-                  </span>
+                  <PortalStatus tone={meta.tone}>{meta.label}</PortalStatus>
                 </div>
 
                 <div className="mb-4 space-y-2 text-sm text-text-muted">
@@ -181,9 +170,9 @@ export default function StudentExamsPage() {
                 </div>
 
                 {exam.status === "finished" && (
-                  <div className="mb-3 flex items-center gap-2 rounded-lg bg-status-info-bg px-3 py-2 text-sm font-medium text-status-info">
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span>
+                  <div className="mb-3 flex items-center gap-2 rounded-control bg-status-info-bg px-3 py-2 text-sm font-bold text-status-info">
+                    <CheckCircle2 className="h-4 w-4 shrink-0" />
+                    <span className="tabular-nums">
                       الدرجة: {exam.score ?? 0} / {exam.scoredTotalMark ?? exam.totalMarks}
                       {exam.hasPendingManualGrading ? " (بانتظار تصحيح المقالي)" : ""}
                     </span>
@@ -193,47 +182,45 @@ export default function StudentExamsPage() {
                 <div className="mt-auto">
                   {(exam.status === "available" ||
                     exam.status === "inprogress") && (
-                    <button
-                      type="button"
+                    <Button
+                      block
                       onClick={() => handleAction(exam)}
+                      loading={startingId === exam.examId}
                       disabled={startingId === exam.examId}
-                      className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-bold text-text-inverse transition hover:bg-primary-hover disabled:opacity-70"
                     >
-                      {startingId === exam.examId ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
+                      {startingId !== exam.examId && (
                         <PlayCircle className="h-4 w-4" />
                       )}
                       {exam.status === "inprogress"
                         ? "استكمال الامتحان"
                         : "ابدأ الامتحان"}
-                    </button>
+                    </Button>
                   )}
 
                   {exam.status === "upcoming" && (
-                    <p className="rounded-lg bg-surface-muted px-3 py-2 text-center text-xs font-medium text-text-muted">
+                    <p className="rounded-control bg-surface-muted px-3 py-2.5 text-center text-sm font-medium text-text-muted">
                       يفتح الامتحان في الموعد المحدد
                     </p>
                   )}
 
                   {exam.status === "expired" && (
-                    <p className="rounded-lg bg-surface-muted px-3 py-2 text-center text-xs font-medium text-text-muted">
+                    <p className="rounded-control bg-surface-muted px-3 py-2.5 text-center text-sm font-medium text-text-muted">
                       انتهى وقت هذا الامتحان
                     </p>
                   )}
 
                   {exam.status === "finished" && (
-                    <button
-                      type="button"
+                    <Button
+                      variant="secondary"
+                      block
                       onClick={() => navigate("/student/results")}
-                      className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-surface-border bg-surface-card px-4 text-sm font-medium text-text-main transition hover:bg-surface-muted"
                     >
                       <ClipboardList className="h-4 w-4" />
                       عرض النتائج
-                    </button>
+                    </Button>
                   )}
                 </div>
-              </div>
+              </article>
             );
           })}
         </div>

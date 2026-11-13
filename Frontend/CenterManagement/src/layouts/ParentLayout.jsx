@@ -1,9 +1,21 @@
 import { Outlet, useNavigate } from "react-router-dom";
-import { LogOut, Moon, Sun, UserRound } from "@/components/icons";
+import { Bell, LogOut, Moon, Sun, Users } from "@/components/icons";
+import MobileBottomNav from "../components/layout/MobileBottomNav";
 import NotificationBell from "../components/Student/NotificationBell";
 import { useAuth } from "../context/useAuth";
 import { useTheme } from "../context/useTheme";
 import { parentPortalService } from "../services/parentPortalService";
+
+const PARENT_NAV_ITEMS = [
+  {
+    title: "أبنائي",
+    path: "/parent/dashboard",
+    icon: Users,
+    // A child detail page belongs to the "my children" tab.
+    match: ["/parent/dashboard", "/parent/children"],
+  },
+  { title: "الإشعارات", path: "/parent/notifications", icon: Bell },
+].map((item) => ({ ...item, label: item.title }));
 
 export default function ParentLayout() {
   const { logout } = useAuth();
@@ -22,7 +34,7 @@ export default function ParentLayout() {
   };
 
   return (
-    <div dir="rtl" className="app-shell flex-col">
+    <div data-testid="parent-shell" dir="rtl" className="app-shell flex-col">
       <header
         className="sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-surface-border bg-surface-card px-4 py-3 md:px-6"
         style={{ paddingTop: "calc(0.75rem + env(safe-area-inset-top, 0px))" }}
@@ -32,7 +44,7 @@ export default function ParentLayout() {
             Edu
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-bold text-text-main">
+            <p className="truncate text-base font-extrabold text-text-main">
               بوابة ولي الأمر
             </p>
             <p className="truncate text-xs text-text-muted">متابعة أبنائك</p>
@@ -63,7 +75,7 @@ export default function ParentLayout() {
           <button
             type="button"
             onClick={handleLogout}
-            className="inline-flex min-h-11 items-center gap-2 rounded-action border border-surface-border bg-surface-card px-3 py-2 text-sm font-medium text-status-danger transition-colors duration-150 hover:bg-status-danger-bg"
+            className="inline-flex h-11 w-11 items-center justify-center gap-2 rounded-action border border-surface-border bg-surface-card p-0 text-sm font-medium text-status-danger transition-colors duration-150 hover:bg-status-danger-bg sm:w-auto sm:px-3"
           >
             <LogOut className="h-4 w-4" />
             <span className="hidden sm:inline">تسجيل خروج</span>
@@ -71,9 +83,11 @@ export default function ParentLayout() {
         </div>
       </header>
 
-      <main className="min-w-0 flex-1 pb-[env(safe-area-inset-bottom,0px)]">
+      <main className="app-main min-w-0 flex-1">
         <Outlet />
       </main>
+
+      <MobileBottomNav items={PARENT_NAV_ITEMS} />
     </div>
   );
 }

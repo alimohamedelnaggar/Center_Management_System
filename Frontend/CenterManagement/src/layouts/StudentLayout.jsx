@@ -36,7 +36,7 @@ export default function StudentLayout() {
     : "مرحباً بك في بوابة الطالب";
 
   return (
-    <div className="app-shell">
+    <div data-testid="student-shell" className="app-shell">
       <StudentSidebar mobileOpen={navOpen} onMobileClose={closeNav} />
 
       <div className="app-main">

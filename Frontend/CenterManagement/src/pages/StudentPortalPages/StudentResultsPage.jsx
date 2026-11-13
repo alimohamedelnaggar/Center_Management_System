@@ -8,6 +8,13 @@ import {
   Star,
 } from "@/components/icons";
 import toast from "react-hot-toast";
+import Button from "../../components/ui/Button";
+import PageHeader from "../../components/ui/PageHeader";
+import {
+  PortalEmpty,
+  PortalLoading,
+  PortalStatus,
+} from "../../components/portal/PortalUI";
 import { studentPortalService } from "../../services/studentPortalService";
 import StudentExamPreviewModal from "./StudentExamPreviewModal";
 
@@ -21,6 +28,18 @@ function formatDateTime(value) {
   } catch {
     return "-";
   }
+}
+
+function statusTone(item) {
+  if (!item.isPublished) return "warning";
+  if (item.hasPendingManualGrading) return "warning";
+  return "success";
+}
+
+function statusLabel(item) {
+  if (!item.isPublished) return "بانتظار النشر";
+  if (item.hasPendingManualGrading) return "بانتظار تصحيح المقالي";
+  return "مكتمل";
 }
 
 export default function StudentResultsPage() {
@@ -50,152 +69,186 @@ export default function StudentResultsPage() {
     loadResults();
   }, []);
 
+  const openPreview = (item) => {
+    setPreviewExam(item);
+    setIsPreviewOpen(true);
+  };
+
   return (
-    <div data-testid="student-results-page" className="p-4 md:p-6 font-sans">
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-text-main">نتائجي</h1>
-          <p className="mt-0.5 text-sm text-text-muted">
-            درجاتك في الامتحانات الإلكترونية
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={loadResults}
-          className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-surface-border bg-surface-card px-3.5 py-2.5 text-sm font-medium text-text-main transition-colors hover:bg-surface-muted"
-        >
-          <RefreshCw className="h-4 w-4" />
-          تحديث
-        </button>
-      </div>
+    <div data-testid="student-results-page" className="p-4 font-sans md:p-6">
+      <PageHeader
+        className="mb-5"
+        title="نتائجي"
+        subtitle="درجاتك في الامتحانات الإلكترونية"
+        actions={
+          <Button variant="secondary" onClick={loadResults} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            تحديث
+          </Button>
+        }
+      />
 
-      <div className="overflow-hidden rounded-xl border border-surface-border bg-surface-card shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-right">
-            <thead>
-              <tr className="border-b border-surface-border bg-surface-muted text-sm font-semibold text-text-muted">
-                <th className="w-12 px-4 py-3">#</th>
-                <th className="px-4 py-3">الامتحان</th>
-                <th className="px-4 py-3">الدرجة</th>
-                <th className="px-4 py-3">النسبة</th>
-                <th className="px-4 py-3">التاريخ</th>
-                <th className="px-4 py-3">الحالة</th>
-                <th className="px-4 py-3">الإجراءات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {!loading &&
-                results.map((item, idx) => {
-                  const published = Boolean(item.isPublished);
-                  const percentage =
-                    published && item.totalMark > 0
-                      ? Math.round((item.score / item.totalMark) * 100)
-                      : 0;
+      {loading && <PortalLoading icon={Loader2} />}
 
-                  return (
-                    <tr
-                      key={`${item.examId}-${idx}`}
-                      className="border-b border-surface-border last:border-0 hover:bg-surface-muted/60"
-                    >
-                      <td className="px-4 py-3 text-sm text-text-muted">
-                        {idx + 1}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="inline-flex items-center gap-1.5 text-sm font-medium text-text-main">
-                          <ClipboardList className="h-4 w-4 text-text-muted" />
-                          {item.examName}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-text-main">
-                        {published ? (
-                          <>
-                            {item.score} / {item.totalMark}
-                          </>
-                        ) : (
-                          <span className="text-text-muted">—</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        {published ? (
-                          <span
-                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
-                              percentage >= 50
-                                ? "bg-status-success-bg text-status-success"
-                                : "bg-status-danger-bg text-status-danger"
-                            }`}
-                          >
-                            <Star className="h-3.5 w-3.5" />
-                            {percentage}%
-                          </span>
-                        ) : (
-                          <span className="text-sm text-text-muted">—</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-text-main">
+      {!loading && results.length === 0 && (
+        <PortalEmpty icon={ClipboardList} title="لا توجد نتائج بعد" />
+      )}
+
+      {!loading && results.length > 0 && (
+        <>
+          {/* Phone: one card per result, readable at arm's length. */}
+          <div className="grid gap-3 lg:hidden">
+            {results.map((item, idx) => {
+              const published = Boolean(item.isPublished);
+              const percentage =
+                published && item.totalMark > 0
+                  ? Math.round((item.score / item.totalMark) * 100)
+                  : 0;
+
+              return (
+                <article
+                  key={`${item.examId}-${idx}`}
+                  data-testid="student-result-card"
+                  className="rounded-card border border-surface-border bg-surface-card p-4 shadow-soft"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h2 className="break-words text-base font-bold text-text-main">
+                        {item.examName}
+                      </h2>
+                      <p className="mt-1 text-xs text-text-muted">
                         {formatDateTime(item.submittedAt)}
-                      </td>
-                      <td className="px-4 py-3">
-                        {!published ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-status-warning-bg px-2.5 py-1 text-xs font-medium text-status-warning">
-                            <Clock3 className="h-3.5 w-3.5" />
-                            بانتظار النشر
-                          </span>
-                        ) : item.hasPendingManualGrading ? (
-                          <span className="inline-flex rounded-full bg-status-warning-bg px-2.5 py-1 text-xs font-medium text-status-warning">
-                            بانتظار تصحيح المقالي
-                          </span>
-                        ) : (
-                          <span className="inline-flex rounded-full bg-status-success-bg px-2.5 py-1 text-xs font-medium text-status-success">
-                            مكتمل
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        {published && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setPreviewExam(item);
-                              setIsPreviewOpen(true);
-                            }}
-                            className="inline-flex min-h-11 items-center gap-1.5 rounded-lg bg-primary-subtle px-3 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-primary hover:text-text-inverse"
-                          >
-                            <Eye className="h-3.5 w-3.5" />
-                            مراجعة
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-
-              {!loading && results.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center">
-                    <div className="flex flex-col items-center justify-center gap-3">
-                      <ClipboardList className="h-10 w-10 text-text-muted" />
-                      <p className="text-sm text-text-muted">
-                        لا توجد نتائج بعد
                       </p>
                     </div>
-                  </td>
-                </tr>
-              )}
+                    <PortalStatus tone={statusTone(item)}>
+                      {statusLabel(item)}
+                    </PortalStatus>
+                  </div>
 
-              {loading && (
-                <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center">
-                    <div className="flex items-center justify-center gap-2 text-sm text-text-muted">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      جارٍ التحميل...
+                  <div className="mt-4 flex items-end justify-between gap-3">
+                    <div>
+                      <p className="text-xs text-text-muted">الدرجة</p>
+                      <p className="mt-0.5 text-3xl font-extrabold leading-none tabular-nums text-text-main">
+                        {published ? item.score : "—"}
+                        {published && (
+                          <span className="text-base font-bold text-text-muted">
+                            {" / "}
+                            {item.totalMark}
+                          </span>
+                        )}
+                      </p>
                     </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                    {published && (
+                      <PortalStatus tone={percentage >= 50 ? "success" : "danger"}>
+                        <Star className="h-3.5 w-3.5" />
+                        {percentage}%
+                      </PortalStatus>
+                    )}
+                  </div>
+
+                  {published && (
+                    <Button
+                      variant="soft"
+                      size="sm"
+                      block
+                      className="mt-4"
+                      onClick={() => openPreview(item)}
+                    >
+                      <Eye className="h-4 w-4" />
+                      مراجعة
+                    </Button>
+                  )}
+                </article>
+              );
+            })}
+          </div>
+
+          {/* Tablet and desktop: the same rows in a table. */}
+          <div className="hidden overflow-hidden rounded-card border border-surface-border bg-surface-card shadow-soft lg:block">
+            <div className="overflow-x-auto">
+              <table className="w-full text-right">
+                <thead>
+                  <tr className="border-b border-surface-border bg-surface-muted text-sm font-semibold text-text-muted">
+                    <th className="w-12 px-4 py-3">#</th>
+                    <th className="px-4 py-3">الامتحان</th>
+                    <th className="px-4 py-3">الدرجة</th>
+                    <th className="px-4 py-3">النسبة</th>
+                    <th className="px-4 py-3">التاريخ</th>
+                    <th className="px-4 py-3">الحالة</th>
+                    <th className="px-4 py-3">الإجراءات</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {results.map((item, idx) => {
+                    const published = Boolean(item.isPublished);
+                    const percentage =
+                      published && item.totalMark > 0
+                        ? Math.round((item.score / item.totalMark) * 100)
+                        : 0;
+
+                    return (
+                      <tr
+                        key={`${item.examId}-${idx}`}
+                        className="border-b border-surface-border last:border-0 hover:bg-surface-muted/60"
+                      >
+                        <td className="px-4 py-3 text-sm text-text-muted">
+                          {idx + 1}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-text-main">
+                            <ClipboardList className="h-4 w-4 text-text-muted" />
+                            {item.examName}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-sm font-semibold tabular-nums text-text-main">
+                          {published ? (
+                            <>
+                              {item.score} / {item.totalMark}
+                            </>
+                          ) : (
+                            <span className="text-text-muted">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          {published ? (
+                            <PortalStatus tone={percentage >= 50 ? "success" : "danger"}>
+                              <Star className="h-3.5 w-3.5" />
+                              {percentage}%
+                            </PortalStatus>
+                          ) : (
+                            <span className="text-sm text-text-muted">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-text-main">
+                          {formatDateTime(item.submittedAt)}
+                        </td>
+                        <td className="px-4 py-3">
+                          <PortalStatus tone={statusTone(item)}>
+                            {!item.isPublished && <Clock3 className="h-3.5 w-3.5" />}
+                            {statusLabel(item)}
+                          </PortalStatus>
+                        </td>
+                        <td className="px-4 py-3">
+                          {published && (
+                            <Button
+                              variant="soft"
+                              size="sm"
+                              onClick={() => openPreview(item)}
+                            >
+                              <Eye className="h-3.5 w-3.5" />
+                              مراجعة
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
 
       <StudentExamPreviewModal
         open={isPreviewOpen}

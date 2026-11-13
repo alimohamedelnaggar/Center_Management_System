@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import { BadgeDollarSign, Loader2, RefreshCw, Wallet } from "@/components/icons";
 import toast from "react-hot-toast";
+import Button from "../../components/ui/Button";
+import PageHeader from "../../components/ui/PageHeader";
+import {
+  PortalEmpty,
+  PortalLoading,
+  PortalStat,
+  PortalStatus,
+} from "../../components/portal/PortalUI";
 import { studentPortalService } from "../../services/studentPortalService";
 
 function formatMoney(value) {
@@ -33,12 +41,12 @@ function formatPeriod(value) {
   }
 }
 
-const STATUS_STYLES = {
-  0: "bg-status-danger-bg text-status-danger",
-  1: "bg-status-warning-bg text-status-warning",
-  2: "bg-status-success-bg text-status-success",
-  3: "bg-status-danger-bg text-status-danger",
-  4: "bg-surface-muted text-text-muted",
+const STATUS_TONES = {
+  0: "danger",
+  1: "warning",
+  2: "success",
+  3: "danger",
+  4: "neutral",
 };
 
 export default function StudentPaymentsPage() {
@@ -68,147 +76,152 @@ export default function StudentPaymentsPage() {
   const payments = data?.payments ?? [];
 
   return (
-    <div className="p-4 md:p-6 font-sans">
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-text-main">المدفوعات</h1>
-          <p className="mt-0.5 text-sm text-text-muted">
-            سجل مدفوعاتك والمبالغ المستحقة
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={loadPayments}
-          className="inline-flex items-center gap-2 rounded-lg border border-surface-border bg-surface-card px-4 py-2 text-sm font-medium text-text-main transition hover:bg-surface-muted"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          تحديث
-        </button>
-      </div>
+    <div data-testid="student-payments-page" className="p-4 font-sans md:p-6">
+      <PageHeader
+        className="mb-5"
+        title="المدفوعات"
+        subtitle="سجل مدفوعاتك والمبالغ المستحقة"
+        actions={
+          <Button variant="secondary" onClick={loadPayments} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            تحديث
+          </Button>
+        }
+      />
 
       <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border border-surface-border bg-surface-card p-4 shadow-sm">
-          <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-status-success-bg text-status-success">
-            <Wallet className="h-4 w-4" />
-          </div>
-          <p className="text-lg font-bold text-text-main">
-            {formatMoney(data?.totalPaid)}
-          </p>
-          <p className="mt-0.5 text-xs text-text-muted">إجمالي المدفوع</p>
-        </div>
-
-        <div className="rounded-xl border border-surface-border bg-surface-card p-4 shadow-sm">
-          <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-status-danger-bg text-status-danger">
-            <BadgeDollarSign className="h-4 w-4" />
-          </div>
-          <p className="text-2xl font-bold text-text-main">
-            {formatMoney(data?.totalDue)}
-          </p>
-          <p className="mt-0.5 text-xs text-text-muted">المتبقي</p>
-        </div>
-
-        <div className="rounded-xl border border-surface-border bg-surface-card p-4 shadow-sm">
-          <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-primary-subtle text-primary">
-            <Wallet className="h-4 w-4" />
-          </div>
-          <p className="text-2xl font-bold text-text-main">
-            {data?.paymentsCount ?? 0}
-          </p>
-          <p className="mt-0.5 text-xs text-text-muted">عدد الدفعات</p>
-        </div>
+        <PortalStat
+          icon={Wallet}
+          label="إجمالي المدفوع"
+          value={formatMoney(data?.totalPaid)}
+          tone="success"
+          testId="student-payments-paid"
+        />
+        <PortalStat
+          icon={BadgeDollarSign}
+          label="المتبقي"
+          value={formatMoney(data?.totalDue)}
+          tone="danger"
+          testId="student-payments-due"
+        />
+        <PortalStat
+          icon={Wallet}
+          label="عدد الدفعات"
+          value={data?.paymentsCount ?? 0}
+          tone="primary"
+          testId="student-payments-count"
+        />
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-surface-border bg-surface-card shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-surface-border bg-surface-muted text-xs text-text-muted">
-                <th className="px-4 py-3 text-right font-medium">التاريخ</th>
-                <th className="px-4 py-3 text-right font-medium">المجموعة</th>
-                <th className="px-4 py-3 text-right font-medium">المجموع المستلم</th>
-                <th className="px-4 py-3 text-right font-medium">الشهر</th>
-                <th className="px-4 py-3 text-right font-medium">المبلغ</th>
-                <th className="px-4 py-3 text-right font-medium">المدفوع</th>
-                <th className="px-4 py-3 text-right font-medium">المتبقي</th>
-                <th className="px-4 py-3 text-right font-medium">الحالة</th>
-              </tr>
-            </thead>
-            <tbody>
-              {!loading &&
-                payments.map((item, idx) => (
-                  <tr
-                    key={`${item.paymentId}-${idx}`}
-                    className="border-b border-surface-border last:border-0 hover:bg-surface-muted/60"
-                  >
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-text-main">
+      {loading && <PortalLoading icon={Loader2} />}
+
+      {!loading && payments.length === 0 && (
+        <PortalEmpty icon={Wallet} title="لا توجد مدفوعات مسجلة بعد." />
+      )}
+
+      {!loading && payments.length > 0 && (
+        <>
+          <div className="grid gap-3 lg:hidden">
+            {payments.map((item, idx) => (
+              <article
+                key={`${item.paymentId}-${idx}`}
+                data-testid="student-payment-card"
+                className="rounded-card border border-surface-border bg-surface-card p-4 shadow-soft"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-base font-bold text-text-main">
                       {formatDate(item.paymentDate)}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-text-main">
+                    </p>
+                    <p className="mt-1 break-words text-sm text-text-muted">
                       {item.groupName}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-text-main">
-                      {item.receivedByName || "-"}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-text-main">
-                      {item.receivedByName || "-"}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-text-muted">
+                    </p>
+                    <p className="mt-0.5 text-xs text-text-muted">
                       {formatPeriod(item.billingPeriod)}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm font-semibold text-text-main">
+                    </p>
+                  </div>
+                  <PortalStatus tone={STATUS_TONES[item.status] ?? "neutral"}>
+                    <BadgeDollarSign className="h-3.5 w-3.5" />
+                    {item.statusName}
+                  </PortalStatus>
+                </div>
+
+                <dl className="mt-3 grid grid-cols-3 gap-2 border-t border-surface-border pt-3 text-sm">
+                  <div>
+                    <dt className="text-xs text-text-muted">المبلغ</dt>
+                    <dd className="mt-0.5 font-bold tabular-nums text-text-main">
                       {formatMoney(item.totalAmount)}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-status-success">
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-text-muted">المدفوع</dt>
+                    <dd className="mt-0.5 font-bold tabular-nums text-status-success">
                       {formatMoney(item.paidAmount)}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-status-danger">
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-text-muted">المتبقي</dt>
+                    <dd className="mt-0.5 font-bold tabular-nums text-status-danger">
                       {formatMoney(item.remainingAmount)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${
-                          STATUS_STYLES[item.status] ??
-                          "bg-surface-muted text-text-muted"
-                        }`}
-                      >
-                        <BadgeDollarSign className="h-3.5 w-3.5" />
-                        {item.statusName}
-                      </span>
-                    </td>
+                    </dd>
+                  </div>
+                </dl>
+              </article>
+            ))}
+          </div>
+
+          <div className="hidden overflow-hidden rounded-card border border-surface-border bg-surface-card shadow-soft lg:block">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-surface-border bg-surface-muted text-sm text-text-muted">
+                    <th className="px-4 py-3 text-right font-medium">التاريخ</th>
+                    <th className="px-4 py-3 text-right font-medium">المجموعة</th>
+                    <th className="px-4 py-3 text-right font-medium">الشهر</th>
+                    <th className="px-4 py-3 text-right font-medium">المبلغ</th>
+                    <th className="px-4 py-3 text-right font-medium">المدفوع</th>
+                    <th className="px-4 py-3 text-right font-medium">المتبقي</th>
+                    <th className="px-4 py-3 text-right font-medium">الحالة</th>
                   </tr>
-                ))}
-
-              {!loading && !payments.length && (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-4 py-12 text-center text-sm text-text-muted"
-                  >
-                    <span className="inline-flex flex-col items-center gap-2">
-                      <Wallet className="h-6 w-6" />
-                      لا توجد مدفوعات مسجلة بعد.
-                    </span>
-                  </td>
-                </tr>
-              )}
-
-              {loading && (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-4 py-12 text-center text-sm text-text-muted"
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      جاري التحميل...
-                    </span>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                </thead>
+                <tbody>
+                  {payments.map((item, idx) => (
+                    <tr
+                      key={`${item.paymentId}-${idx}`}
+                      className="border-b border-surface-border last:border-0 hover:bg-surface-muted/60"
+                    >
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-text-main">
+                        {formatDate(item.paymentDate)}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-text-main">
+                        {item.groupName}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-text-muted">
+                        {formatPeriod(item.billingPeriod)}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm font-semibold tabular-nums text-text-main">
+                        {formatMoney(item.totalAmount)}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm tabular-nums text-status-success">
+                        {formatMoney(item.paidAmount)}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm tabular-nums text-status-danger">
+                        {formatMoney(item.remainingAmount)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <PortalStatus tone={STATUS_TONES[item.status] ?? "neutral"}>
+                          <BadgeDollarSign className="h-3.5 w-3.5" />
+                          {item.statusName}
+                        </PortalStatus>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

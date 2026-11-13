@@ -8,6 +8,14 @@ import {
   ShieldCheck,
 } from "@/components/icons";
 import toast from "react-hot-toast";
+import Button from "../../components/ui/Button";
+import PageHeader from "../../components/ui/PageHeader";
+import {
+  PortalEmpty,
+  PortalLoading,
+  PortalStat,
+  PortalStatus,
+} from "../../components/portal/PortalUI";
 import { studentPortalService } from "../../services/studentPortalService";
 import { formatAttendanceRate } from "../../utils/attendance";
 
@@ -24,11 +32,11 @@ function formatDate(value) {
   }
 }
 
-const STATUS_STYLES = {
-  1: "bg-status-success-bg text-status-success",
-  2: "bg-status-danger-bg text-status-danger",
-  3: "bg-status-warning-bg text-status-warning",
-  4: "bg-primary-subtle text-primary",
+const STATUS_TONES = {
+  1: "success",
+  2: "danger",
+  3: "warning",
+  4: "info",
 };
 
 export default function StudentAttendancePage() {
@@ -61,35 +69,35 @@ export default function StudentAttendancePage() {
       label: "إجمالي الحصص",
       value: summary?.totalSessions ?? 0,
       icon: CalendarCheck,
-      tone: "bg-primary-subtle text-primary",
+      tone: "primary",
     },
     {
       key: "present",
       label: "حاضر",
       value: summary?.presentCount ?? 0,
       icon: CalendarCheck,
-      tone: "bg-status-success-bg text-status-success",
+      tone: "success",
     },
     {
       key: "absent",
       label: "غائب",
       value: summary?.absentCount ?? 0,
       icon: CalendarX,
-      tone: "bg-status-danger-bg text-status-danger",
+      tone: "danger",
     },
     {
       key: "late",
       label: "متأخر",
       value: summary?.lateCount ?? 0,
       icon: Clock,
-      tone: "bg-status-warning-bg text-status-warning",
+      tone: "warning",
     },
     {
       key: "excused",
       label: "بعذر",
       value: summary?.excusedCount ?? 0,
       icon: ShieldCheck,
-      tone: "bg-status-info-bg text-status-info",
+      tone: "info",
     },
   ];
 
@@ -99,54 +107,43 @@ export default function StudentAttendancePage() {
   const attendanceRateValue = hasAttendanceRate
     ? Math.min(Math.max(Number(summary.attendancePercentage) || 0, 0), 100)
     : 0;
+  const records = summary?.records ?? [];
 
   return (
-    <div className="p-4 md:p-6 font-sans">
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-text-main">الحضور والغياب</h1>
-          <p className="mt-0.5 text-sm text-text-muted">
-            سجل حضورك في حصص المجموعات
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={loadAttendance}
-          className="inline-flex items-center gap-2 rounded-lg border border-surface-border bg-surface-card px-4 py-2 text-sm font-medium text-text-main transition hover:bg-surface-muted"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          تحديث
-        </button>
+    <div data-testid="student-attendance-page" className="p-4 font-sans md:p-6">
+      <PageHeader
+        className="mb-5"
+        title="الحضور والغياب"
+        subtitle="سجل حضورك في حصص المجموعات"
+        actions={
+          <Button variant="secondary" onClick={loadAttendance} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            تحديث
+          </Button>
+        }
+      />
+
+      <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        {cards.map((card) => (
+          <PortalStat
+            key={card.key}
+            label={card.label}
+            value={card.value}
+            icon={card.icon}
+            tone={card.tone}
+            testId={`student-attendance-${card.key}`}
+          />
+        ))}
       </div>
 
-      <div className="mb-5 grid grid-cols-2 gap-3 md:grid-cols-5">
-        {cards.map((card) => {
-          const Icon = card.icon;
-          return (
-            <div
-              key={card.key}
-              className="rounded-xl border border-surface-border bg-surface-card p-4 shadow-sm"
-            >
-              <div
-                className={`mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg ${card.tone}`}
-              >
-                <Icon className="h-4 w-4" />
-              </div>
-              <p className="text-2xl font-bold text-text-main">{card.value}</p>
-              <p className="mt-0.5 text-xs text-text-muted">{card.label}</p>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="mb-5 rounded-xl border border-surface-border bg-surface-card p-4 shadow-sm">
-        <div className="mb-2 flex items-center justify-between text-sm">
-          <span className="font-medium text-text-main">نسبة الحضور</span>
-          <span className="font-bold text-primary">
+      <div className="mb-5 rounded-card border border-surface-border bg-surface-card p-4 shadow-soft sm:p-5">
+        <div className="mb-2 flex items-center justify-between gap-3 text-sm">
+          <span className="font-bold text-text-main">نسبة الحضور</span>
+          <span className="text-base font-extrabold tabular-nums text-primary">
             {formatAttendanceRate(summary?.attendancePercentage)}
           </span>
         </div>
-        <div className="h-2 w-full overflow-hidden rounded-full bg-surface-muted">
+        <div className="h-2.5 w-full overflow-hidden rounded-full bg-surface-muted">
           <div
             className="h-full rounded-full bg-status-success transition-all"
             style={{ width: `${attendanceRateValue}%` }}
@@ -154,84 +151,110 @@ export default function StudentAttendancePage() {
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-surface-border bg-surface-card shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-surface-border bg-surface-muted text-xs text-text-muted">
-                <th className="px-4 py-3 text-right font-medium">التاريخ</th>
-                <th className="px-4 py-3 text-right font-medium">المجموعة</th>
-                <th className="px-4 py-3 text-right font-medium">اليوم</th>
-                <th className="px-4 py-3 text-right font-medium">الوقت</th>
-                <th className="px-4 py-3 text-right font-medium">الحالة</th>
-                <th className="px-4 py-3 text-right font-medium">ملاحظات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {!loading &&
-                summary?.records?.map((record, idx) => (
-                  <tr
-                    key={`${record.attendanceDate}-${idx}`}
-                    className="border-b border-surface-border last:border-0 hover:bg-surface-muted/60"
-                  >
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-text-main">
+      {loading && <PortalLoading icon={Loader2} />}
+
+      {!loading && records.length === 0 && (
+        <PortalEmpty icon={CalendarX} title="لا توجد سجلات حضور بعد." />
+      )}
+
+      {!loading && records.length > 0 && (
+        <>
+          <div className="grid gap-3 lg:hidden">
+            {records.map((record, idx) => (
+              <article
+                key={`${record.attendanceDate}-${idx}`}
+                data-testid="student-attendance-card"
+                className="rounded-card border border-surface-border bg-surface-card p-4 shadow-soft"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-base font-bold text-text-main">
                       {formatDate(record.attendanceDate)}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-text-main">
+                    </p>
+                    <p className="mt-1 break-words text-sm text-text-muted">
                       {record.groupName}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-text-muted">
+                    </p>
+                  </div>
+                  <PortalStatus tone={STATUS_TONES[record.status] ?? "neutral"}>
+                    {record.statusName}
+                  </PortalStatus>
+                </div>
+
+                <dl className="mt-3 grid grid-cols-2 gap-2 border-t border-surface-border pt-3 text-sm">
+                  <div>
+                    <dt className="text-xs text-text-muted">اليوم</dt>
+                    <dd className="mt-0.5 font-medium text-text-main">
                       {record.dayOfWeek || "-"}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-3 text-sm text-text-muted">
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-text-muted">الوقت</dt>
+                    <dd className="mt-0.5 font-medium tabular-nums text-text-main">
                       {record.startTime && record.endTime
                         ? `${record.startTime} - ${record.endTime}`
                         : "-"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-                          STATUS_STYLES[record.status] ??
-                          "bg-surface-muted text-text-muted"
-                        }`}
-                      >
-                        {record.statusName}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-text-muted">
-                      {record.notes || "-"}
-                    </td>
+                    </dd>
+                  </div>
+                </dl>
+
+                {record.notes && (
+                  <p className="mt-3 rounded-control bg-surface-muted px-3 py-2 text-sm leading-6 text-text-muted">
+                    {record.notes}
+                  </p>
+                )}
+              </article>
+            ))}
+          </div>
+
+          <div className="hidden overflow-hidden rounded-card border border-surface-border bg-surface-card shadow-soft lg:block">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-surface-border bg-surface-muted text-sm text-text-muted">
+                    <th className="px-4 py-3 text-right font-medium">التاريخ</th>
+                    <th className="px-4 py-3 text-right font-medium">المجموعة</th>
+                    <th className="px-4 py-3 text-right font-medium">اليوم</th>
+                    <th className="px-4 py-3 text-right font-medium">الوقت</th>
+                    <th className="px-4 py-3 text-right font-medium">الحالة</th>
+                    <th className="px-4 py-3 text-right font-medium">ملاحظات</th>
                   </tr>
-                ))}
-
-              {!loading && !summary?.records?.length && (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="px-4 py-12 text-center text-sm text-text-muted"
-                  >
-                    لا توجد سجلات حضور بعد.
-                  </td>
-                </tr>
-              )}
-
-              {loading && (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="px-4 py-12 text-center text-sm text-text-muted"
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      جاري التحميل...
-                    </span>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                </thead>
+                <tbody>
+                  {records.map((record, idx) => (
+                    <tr
+                      key={`${record.attendanceDate}-${idx}`}
+                      className="border-b border-surface-border last:border-0 hover:bg-surface-muted/60"
+                    >
+                      <td className="whitespace-nowrap px-4 py-3 text-sm text-text-main">
+                        {formatDate(record.attendanceDate)}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-text-main">
+                        {record.groupName}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-text-muted">
+                        {record.dayOfWeek || "-"}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-sm tabular-nums text-text-muted">
+                        {record.startTime && record.endTime
+                          ? `${record.startTime} - ${record.endTime}`
+                          : "-"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <PortalStatus tone={STATUS_TONES[record.status] ?? "neutral"}>
+                          {record.statusName}
+                        </PortalStatus>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-text-muted">
+                        {record.notes || "-"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

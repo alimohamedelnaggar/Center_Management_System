@@ -122,7 +122,7 @@ export default function NotificationBell({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-surface-border bg-surface-card text-text-muted transition hover:bg-surface-muted hover:text-text-main"
+        className="relative flex h-11 w-11 items-center justify-center rounded-control border border-surface-border bg-surface-card text-text-muted transition hover:bg-surface-muted hover:text-text-main"
         title="الإشعارات"
         aria-label="الإشعارات"
       >

@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { Bell, CheckCheck, Loader2 } from "@/components/icons";
 import toast from "react-hot-toast";
+import Button from "../../components/ui/Button";
+import PageHeader from "../../components/ui/PageHeader";
 import Pagination from "../../components/common/Pagination";
+import {
+  PortalEmpty,
+  PortalLoading,
+  PortalStatus,
+} from "../../components/portal/PortalUI";
 import { studentPortalService } from "../../services/studentPortalService";
 
 const PAGE_SIZE = 10;
@@ -76,74 +83,70 @@ export default function StudentNotificationsPage() {
   };
 
   return (
-    <div className="p-4 md:p-6 font-sans">
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-text-main">الإشعارات</h1>
-          <p className="mt-0.5 text-sm text-text-muted">
-            كل التنبيهات الخاصة بك
-          </p>
+    <div
+      data-testid="student-notifications-page"
+      className="p-4 font-sans md:p-6"
+    >
+      <PageHeader
+        className="mb-5"
+        title="الإشعارات"
+        subtitle="كل التنبيهات الخاصة بك"
+        actions={
+          <Button variant="secondary" onClick={handleMarkAll}>
+            <CheckCheck className="h-4 w-4" />
+            تعليم الكل كمقروء
+          </Button>
+        }
+      />
+
+      {loading && <PortalLoading icon={Loader2} />}
+
+      {!loading && notifications.length === 0 && (
+        <PortalEmpty icon={Bell} title="لا توجد إشعارات." />
+      )}
+
+      {!loading && notifications.length > 0 && (
+        <div className="overflow-hidden rounded-card border border-surface-border bg-surface-card shadow-soft">
+          <ul className="divide-y divide-surface-border">
+            {notifications.map((item) => (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  onClick={() => handleMarkRead(item)}
+                  className={`flex w-full items-start gap-3 px-4 py-4 text-right transition hover:bg-surface-muted sm:px-5 ${
+                    item.isRead ? "opacity-80" : ""
+                  }`}
+                >
+                  <span className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-subtle text-primary">
+                    <Bell className="h-5 w-5" aria-hidden="true" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-center gap-2">
+                      <span className="break-words text-base font-bold leading-6 text-text-main">
+                        {item.title}
+                      </span>
+                      {!item.isRead && (
+                        <PortalStatus tone="info">جديد</PortalStatus>
+                      )}
+                    </span>
+                    {item.body && (
+                      <span className="mt-1 block break-words text-sm leading-6 text-text-muted">
+                        {item.body}
+                      </span>
+                    )}
+                    <span className="mt-1.5 block text-xs text-text-muted">
+                      {formatDateTime(item.createdAt)}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
-        <button
-          type="button"
-          onClick={handleMarkAll}
-          className="inline-flex items-center gap-2 rounded-lg border border-surface-border bg-surface-card px-3.5 py-2.5 text-sm font-medium text-text-main transition hover:bg-surface-muted"
-        >
-          <CheckCheck className="h-4 w-4" />
-          تعليم الكل كمقروء
-        </button>
-      </div>
+      )}
 
-      <div className="overflow-hidden rounded-xl border border-surface-border bg-surface-card shadow-sm">
-        {loading && (
-          <div className="flex items-center justify-center gap-2 py-16 text-sm text-text-muted">
-            <Loader2 className="h-5 w-5 animate-spin" />
-            جاري التحميل...
-          </div>
-        )}
-
-        {!loading && notifications.length === 0 && (
-          <div className="flex flex-col items-center gap-3 py-16 text-center">
-            <Bell className="h-10 w-10 text-text-muted" />
-            <p className="text-sm text-text-muted">لا توجد إشعارات.</p>
-          </div>
-        )}
-
-        {!loading &&
-          notifications.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              onClick={() => handleMarkRead(item)}
-              className={`flex w-full items-start gap-3 border-b border-surface-border px-4 py-4 text-right transition last:border-0 hover:bg-surface-muted ${
-                item.isRead ? "opacity-70" : ""
-              }`}
-            >
-              <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary-subtle text-primary">
-                <Bell className="h-4 w-4" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="flex items-center gap-2">
-                  <span className="truncate text-sm font-semibold text-text-main">
-                    {item.title}
-                  </span>
-                  {!item.isRead && (
-                    <span className="h-2 w-2 shrink-0 rounded-full bg-status-info" />
-                  )}
-                </span>
-                {item.body && (
-                  <span className="mt-1 block text-sm text-text-muted">
-                    {item.body}
-                  </span>
-                )}
-                <span className="mt-1 block text-[11px] text-text-muted">
-                  {formatDateTime(item.createdAt)}
-                </span>
-              </span>
-            </button>
-          ))}
-
-        {!loading && notifications.length > 0 && (
+      {!loading && notifications.length > 0 && (
+        <div className="mt-4">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -152,8 +155,8 @@ export default function StudentNotificationsPage() {
             name="إشعار"
             onPageChange={loadNotifications}
           />
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

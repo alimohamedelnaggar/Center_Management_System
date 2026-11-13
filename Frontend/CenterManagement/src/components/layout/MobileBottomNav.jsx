@@ -26,9 +26,12 @@ export default function MobileBottomNav({ items = [], onMore, staticPreview = fa
     >
       {primary.map((item) => {
         const Icon = item.icon;
-        const isActive =
-          location.pathname === item.path ||
-          location.pathname.startsWith(`${item.path}/`);
+        const prefixes = item.match ?? [item.path];
+        const isActive = prefixes.some(
+          (prefix) =>
+            location.pathname === prefix ||
+            location.pathname.startsWith(`${prefix}/`),
+        );
         return (
           <Link
             key={item.path}
@@ -47,6 +50,7 @@ export default function MobileBottomNav({ items = [], onMore, staticPreview = fa
           type="button"
           onClick={onMore}
           aria-label="المزيد من الصفحات"
+          data-active={moreActive ? "true" : "false"}
           className={cn(moreActive && "text-primary")}
           title="المزيد"
         >
