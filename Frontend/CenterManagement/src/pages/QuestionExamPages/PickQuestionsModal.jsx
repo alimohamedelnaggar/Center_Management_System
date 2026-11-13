@@ -106,7 +106,7 @@ export default function PickQuestionsModal({
       onClick={onClose}
     >
       <div
-        className="flex max-h-[92vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-surface-card shadow-xl"
+        className="flex max-h-[calc(100dvh-2rem)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl bg-surface-card shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-surface-border px-5 py-4">
@@ -120,7 +120,7 @@ export default function PickQuestionsModal({
             type="button"
             onClick={onClose}
             aria-label="إغلاق"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
           >
             <X className="h-4 w-4" />
           </button>
@@ -240,14 +240,14 @@ export default function PickQuestionsModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-surface-border bg-surface-card px-4 py-2.5 text-sm font-medium text-text-main transition-colors hover:bg-surface-muted"
+              className="rounded-lg border border-surface-border bg-surface-card px-4 min-h-11 py-2.5 text-sm font-medium text-text-main transition-colors hover:bg-surface-muted"
             >
               إلغاء
             </button>
             <button
               type="button"
               onClick={handleConfirm}
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover"
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 min-h-11 py-2.5 text-sm font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover"
             >
               <Plus className="h-4 w-4" />
               إضافة المحدد

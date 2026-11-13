@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import {
   Copy,
-  Loader2,
   Mail,
   Printer,
   QrCode,
@@ -12,11 +11,19 @@ import {
   Share2,
   TriangleAlert,
   Wand2,
-  X,
 } from "@/components/icons";
 import Pagination from "../../components/common/Pagination";
 import StudentCard from "../../components/common/StudentCard";
 import ModuleOnly from "../../components/common/ModuleOnly";
+import Button from "../../components/ui/Button";
+import Card, { CardBody } from "../../components/ui/Card";
+import EmptyState from "../../components/ui/EmptyState";
+import FormField from "../../components/ui/FormField";
+import Input from "../../components/ui/Input";
+import PageHeader from "../../components/ui/PageHeader";
+import Select from "../../components/ui/Select";
+import Skeleton from "../../components/ui/Skeleton";
+import AppModal from "../../components/ui/AppModal";
 import { emailService } from "../../services/emailService";
 import { groupsService } from "../../services/groupsService";
 import { studentsService } from "../../services/studentService";
@@ -100,9 +107,10 @@ export default function StudentQrCardsPage() {
     [students],
   );
 
+  const filtersActive = Boolean(debouncedSearch || selectedGroupId);
+
   const cardUrlFor = useCallback(
-    (student) =>
-      student.qrCode ? buildStudentCardUrl(student.qrCode) : "",
+    (student) => (student.qrCode ? buildStudentCardUrl(student.qrCode) : ""),
     [],
   );
 
@@ -185,6 +193,9 @@ export default function StudentQrCardsPage() {
     return `<div dir="rtl" style="font-family:Arial,sans-serif;">${cards.join("")}</div>`;
   };
 
+  const closeEmailModal = () =>
+    setEmailModal({ isOpen: false, email: "", sending: false });
+
   const handleSendEmail = async (event) => {
     event.preventDefault();
 
@@ -207,7 +218,7 @@ export default function StudentQrCardsPage() {
 
       if (result?.succeeded) {
         toast.success("تم إرسال الكروت بالإيميل");
-        setEmailModal({ isOpen: false, email: "", sending: false });
+        closeEmailModal();
       } else {
         toast.error(result?.message || "فشل في إرسال الإيميل");
       }
@@ -218,8 +229,14 @@ export default function StudentQrCardsPage() {
     }
   };
 
+  const resetFilters = () => {
+    setSearch("");
+    setSelectedGroupId("");
+  };
+
   return (
     <div
+      data-testid="qr-page"
       className={`qr-print-root dir-rtl mx-auto max-w-7xl space-y-5 p-4 md:p-6 ${
         printingId ? "qr-print-single" : ""
       }`}
@@ -238,103 +255,159 @@ export default function StudentQrCardsPage() {
         }
       `}</style>
 
-      <div className="qr-no-print flex flex-col gap-4 rounded-2xl border border-surface-border bg-surface-card p-5 shadow-sm lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-primary-subtle p-3 text-primary">
-            <QrCode className="h-6 w-6" />
-          </div>
-          <div>
-            <h2 className="text-base font-bold text-text-main">
-              كروت حضور الطلاب
-            </h2>
-            <p className="mt-0.5 text-xs text-text-muted">
-              الكارت فيه QR لولي الأمر و باركود للحضور والغياب. اطبع أو ابعته.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            onClick={handleGenerateCodes}
-            disabled={generating}
-            className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-surface-muted px-3.5 py-2.5 text-xs font-bold text-text-main transition-colors hover:bg-surface-border disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {generating ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Wand2 className="h-4 w-4 text-primary" />
-            )}
-            توليد أكواد ناقصة
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handlePrint("")}
-            className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-surface-muted px-3.5 py-2.5 text-xs font-bold text-text-main transition-colors hover:bg-surface-border"
-          >
-            <Printer className="h-4 w-4" />
-            طباعة الكل
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setEmailModal((prev) => ({ ...prev, isOpen: true }))}
-            className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-text-inverse transition-colors hover:bg-primary-hover"
-          >
-            <Mail className="h-4 w-4" />
-            إرسال بالإيميل
-          </button>
-        </div>
-      </div>
+      <PageHeader
+        className="qr-no-print"
+        title="كروت حضور الطلاب"
+        subtitle="كل كارت يحمل QR لولي الأمر وباركود للحضور والغياب. اطبع الكروت أو أرسلها."
+        actions={
+          <>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={handleGenerateCodes}
+              loading={generating}
+              data-testid="qr-generate"
+            >
+              <Wand2 className="h-4 w-4" aria-hidden="true" />
+              توليد أكواد ناقصة
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => handlePrint("")}
+              data-testid="qr-print-all"
+            >
+              <Printer className="h-4 w-4" aria-hidden="true" />
+              طباعة الكل
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => setEmailModal((prev) => ({ ...prev, isOpen: true }))}
+              data-testid="qr-email-open"
+            >
+              <Mail className="h-4 w-4" aria-hidden="true" />
+              إرسال بالإيميل
+            </Button>
+          </>
+        }
+      />
 
       {missingCodesCount > 0 && (
-        <div className="qr-no-print flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-semibold text-amber-700">
-          <TriangleAlert className="h-4 w-4 shrink-0" />
-          فيه {missingCodesCount} طالب بدون كود. اضغط "توليد أكواد ناقصة" عشان
-          يتولد لهم كود.
+        <div
+          data-testid="qr-missing-codes"
+          className="qr-no-print flex items-start gap-2 rounded-card border border-status-warning/30 bg-status-warning-bg px-4 py-3 text-sm font-semibold text-status-warning"
+        >
+          <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <p>
+            {missingCodesCount} طالب بدون كود. اضغط «توليد أكواد ناقصة» لتوليد كود
+            لكل طالب.
+          </p>
         </div>
       )}
 
-      <div className="qr-no-print flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:w-72">
-          <Search className="absolute right-3.5 top-3 h-4 w-4 text-text-muted" />
-          <input
-            type="text"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="ابحث باسم الطالب أو الكود..."
-            className="w-full rounded-xl border border-surface-border bg-surface-card py-2 pl-4 pr-10 text-xs text-text-main outline-none transition-colors focus:border-primary"
-          />
-        </div>
+      <Card className="qr-no-print">
+        <CardBody>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+            <FormField label="بحث" htmlFor="qr-search" className="flex-1">
+              <div className="relative">
+                <Search
+                  className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted"
+                  aria-hidden="true"
+                />
+                <Input
+                  id="qr-search"
+                  data-testid="qr-search"
+                  type="search"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="ابحث باسم الطالب أو الكود..."
+                  aria-label="بحث باسم الطالب أو الكود"
+                  className="ps-9"
+                />
+              </div>
+            </FormField>
 
-        <select
-          value={selectedGroupId}
-          onChange={(event) => setSelectedGroupId(event.target.value)}
-          className="w-full rounded-xl border border-surface-border bg-surface-card px-3 py-2.5 text-xs text-text-main outline-none focus:border-primary sm:w-56"
-        >
-          <option value="">كل المجموعات</option>
-          {groups.map((group) => (
-            <option key={group.id} value={group.id}>
-              {group.name || group.Name}
-            </option>
-          ))}
-        </select>
-      </div>
+            <FormField
+              label="المجموعة"
+              htmlFor="qr-group"
+              className="sm:w-64"
+            >
+              <Select
+                id="qr-group"
+                data-testid="qr-group"
+                value={selectedGroupId}
+                onChange={(event) => setSelectedGroupId(event.target.value)}
+                aria-label="تصفية حسب المجموعة"
+              >
+                <option value="">كل المجموعات</option>
+                {groups.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name || group.Name}
+                  </option>
+                ))}
+              </Select>
+            </FormField>
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={resetFilters}
+              disabled={!filtersActive}
+              data-testid="qr-reset"
+            >
+              <RefreshCw className="h-4 w-4" aria-hidden="true" />
+              إعادة تعيين
+            </Button>
+          </div>
+        </CardBody>
+      </Card>
 
       {loading ? (
-        <div className="flex justify-center py-16">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div
+          data-testid="qr-loading"
+          className="qr-no-print grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        >
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div
+              key={index}
+              className="rounded-card border border-surface-border bg-surface-card p-4 shadow-soft"
+            >
+              <Skeleton className="mb-3 h-5 w-2/3" />
+              <Skeleton className="mb-2 h-4 w-1/2" />
+              <Skeleton className="h-40 w-full" />
+            </div>
+          ))}
         </div>
       ) : students.length === 0 ? (
-        <div className="rounded-2xl border border-surface-border bg-surface-card py-12 text-center text-xs text-text-muted">
-          مفيش طلاب لعرضهم.
+        <div data-testid="qr-empty" className="qr-no-print">
+          <Card>
+            <EmptyState
+              icon={QrCode}
+              title={filtersActive ? "لا توجد نتائج مطابقة" : "لا يوجد طلاب"}
+              description={
+                filtersActive
+                  ? "امسح البحث أو الفلتر لعرض كل الطلاب."
+                  : "أضف طلابًا من صفحة الطلاب ثم ارجع لتوليد الكروت."
+              }
+              action={
+                filtersActive ? (
+                  <Button variant="secondary" size="sm" onClick={resetFilters}>
+                    مسح الفلاتر
+                  </Button>
+                ) : null
+              }
+            />
+          </Card>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div
+          data-testid="qr-grid"
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        >
           {students.map((student) => (
             <div
               key={student.id}
+              data-testid={`qr-card-${student.id}`}
               className={`qr-card flex h-full flex-col ${
                 printingId === student.id ? "qr-card-target" : ""
               }`}
@@ -345,35 +418,43 @@ export default function StudentQrCardsPage() {
                 className="flex-1"
               />
 
-              <div className="qr-no-print mt-2 flex items-center justify-center gap-1.5">
-                <button
-                  type="button"
+              <div className="qr-no-print mt-2 grid grid-cols-3 gap-1.5">
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={() => handlePrint(student.id)}
                   title="طباعة الكارت"
-                  className="flex cursor-pointer items-center gap-1 rounded-lg bg-surface-card px-2.5 py-1.5 text-[10px] font-bold text-text-muted shadow-sm transition-colors hover:text-primary"
+                  aria-label={`طباعة كارت ${student.fullName}`}
+                  className="px-2 text-[11px]"
+                  data-testid={`qr-print-one-${student.id}`}
                 >
-                  <Printer className="h-3.5 w-3.5" />
+                  <Printer className="h-4 w-4" aria-hidden="true" />
                   طباعة
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
                   onClick={() => handleCopy(student)}
                   title="نسخ الكود"
-                  className="flex cursor-pointer items-center gap-1 rounded-lg bg-surface-card px-2.5 py-1.5 text-[10px] font-bold text-text-muted shadow-sm transition-colors hover:text-primary"
+                  aria-label={`نسخ كود ${student.fullName}`}
+                  className="px-2 text-[11px]"
+                  data-testid={`qr-copy-${student.id}`}
                 >
-                  <Copy className="h-3.5 w-3.5" />
+                  <Copy className="h-4 w-4" aria-hidden="true" />
                   نسخ
-                </button>
+                </Button>
                 <ModuleOnly moduleKey="whatsapp">
-                <button
-                  type="button"
-                  onClick={() => handleShareWhatsApp(student)}
-                  title="مشاركة واتساب"
-                  className="flex cursor-pointer items-center gap-1 rounded-lg bg-surface-card px-2.5 py-1.5 text-[10px] font-bold text-text-muted shadow-sm transition-colors hover:text-primary"
-                >
-                  <Share2 className="h-3.5 w-3.5" />
-                  واتساب
-                </button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => handleShareWhatsApp(student)}
+                    title="مشاركة واتساب"
+                    aria-label={`مشاركة كارت ${student.fullName} على واتساب`}
+                    className="w-full px-2 text-[11px]"
+                  >
+                    <Share2 className="h-4 w-4" aria-hidden="true" />
+                    واتساب
+                  </Button>
                 </ModuleOnly>
               </div>
             </div>
@@ -388,83 +469,70 @@ export default function StudentQrCardsPage() {
           totalItems={totalCount}
           pageSize={PAGE_SIZE}
           name="الطلاب"
+          testId="qr-pagination"
           onPageChange={setPageNumber}
         />
       </div>
 
-      {emailModal.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs">
-          <form
-            onSubmit={handleSendEmail}
-            className="w-full max-w-md space-y-4 rounded-2xl border border-surface-border bg-surface-card p-6 shadow-xl"
+      <AppModal
+        open={emailModal.isOpen}
+        onClose={closeEmailModal}
+        title="إرسال كروت الحضور"
+        icon={Send}
+        testId="qr-email-modal"
+        busy={emailModal.sending}
+        footer={
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button
+              variant="secondary"
+              onClick={closeEmailModal}
+              disabled={emailModal.sending}
+              data-testid="qr-email-cancel"
+            >
+              إلغاء
+            </Button>
+            <Button
+              type="submit"
+              form="qr-email-form"
+              loading={emailModal.sending}
+              data-testid="qr-email-send"
+            >
+              <Send className="h-4 w-4" aria-hidden="true" />
+              إرسال
+            </Button>
+          </div>
+        }
+      >
+        <form
+          id="qr-email-form"
+          onSubmit={handleSendEmail}
+          className="space-y-3"
+        >
+          <FormField
+            label="البريد الإلكتروني للطالب أو ولي الأمر"
+            htmlFor="qr-email"
           >
-            <div className="flex items-center justify-between border-b border-surface-border pb-3">
-              <div className="flex items-center gap-2">
-                <Send className="h-4 w-4 text-primary" />
-                <h3 className="text-sm font-bold text-text-main">
-                  إرسال كروت الحضور
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() =>
-                  setEmailModal({ isOpen: false, email: "", sending: false })
-                }
-                className="cursor-pointer rounded-lg p-1 text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
+            <Input
+              id="qr-email"
+              type="email"
+              value={emailModal.email}
+              onChange={(event) =>
+                setEmailModal((prev) => ({
+                  ...prev,
+                  email: event.target.value,
+                }))
+              }
+              dir="ltr"
+              placeholder="parent@example.com"
+              data-testid="qr-email-input"
+            />
+          </FormField>
 
-            <div>
-              <label className="mb-1.5 block text-xs font-semibold text-text-muted">
-                البريد الإلكتروني للطالب أو ولي الأمر
-              </label>
-              <input
-                type="email"
-                value={emailModal.email}
-                onChange={(event) =>
-                  setEmailModal((prev) => ({
-                    ...prev,
-                    email: event.target.value,
-                  }))
-                }
-                dir="ltr"
-                placeholder="parent@example.com"
-                className="w-full rounded-xl border border-surface-border bg-surface-card px-3 py-2.5 text-xs text-text-main outline-none focus:border-primary"
-              />
-            </div>
-
-            <p className="text-[11px] leading-relaxed text-text-muted">
-              هيتبعت كروت الطلاب الظاهرين في الصفحة الحالية كصور مدمجة.
-            </p>
-
-            <div className="flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() =>
-                  setEmailModal({ isOpen: false, email: "", sending: false })
-                }
-                className="cursor-pointer rounded-xl bg-surface-muted px-4 py-2 text-xs font-bold text-text-main transition-colors hover:bg-surface-border"
-              >
-                إلغاء
-              </button>
-              <button
-                type="submit"
-                disabled={emailModal.sending}
-                className="flex cursor-pointer items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-text-inverse transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {emailModal.sending ? (
-                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Send className="h-3.5 w-3.5" />
-                )}
-                إرسال
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+          <p className="text-sm leading-relaxed text-text-muted">
+            سيتم إرسال كروت الطلاب الظاهرين في الصفحة الحالية كصور مدمجة.
+          </p>
+        </form>
+      </AppModal>
     </div>
   );
 }

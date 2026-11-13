@@ -8,7 +8,6 @@ import StudentTable from "./StudentTable";
 
 import ConfirmModal from "../../components/common/ConfirmModal";
 import Pagination from "../../components/common/Pagination";
-import Spinner from "../../components/common/Spinner";
 import { useStudentActions } from "../../hooks/students/useStudentActions";
 import { useStudentForm } from "../../hooks/students/useStudentForm";
 import { useStudentsList } from "../../hooks/students/useStudentsList";
@@ -101,6 +100,10 @@ export default function StudentManagement() {
   } = useStudentActions({ page, loadStudents });
 
   const hasStudents = students?.items && students.items.length > 0;
+  const hasActiveFilters =
+    Boolean(search) ||
+    Boolean(group) ||
+    (status !== null && status !== undefined);
 
   const centerName = branding?.center?.name || "";
 
@@ -241,10 +244,10 @@ export default function StudentManagement() {
   };
 
   return (
-    <div dir="rtl" lang="ar" className="w-full">
+    <div dir="rtl" lang="ar" className="w-full" data-testid="students-page">
       <div className="min-h-screen bg-surface-bg px-4 py-6 transition-colors duration-200 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl space-y-6">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-text-main">
                 الطلاب
@@ -253,36 +256,41 @@ export default function StudentManagement() {
                 إدارة الطلاب والمجموعات والحضور وبيانات التواصل.
               </p>
             </div>
-            <div className="flex items-center gap-2">
-                            {canImportStudents && (
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+              {canImportStudents && (
                 <button
+                  type="button"
                   onClick={() => setImportOpen(true)}
-                  className="focus-ring inline-flex items-center gap-2 rounded-lg border border-surface-border bg-surface-card px-4 py-2.5 text-sm font-medium text-text-main shadow-sm transition-colors hover:bg-surface-muted"
+                  className="focus-ring inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-action border border-surface-border bg-surface-card px-4 text-sm font-bold text-text-main shadow-sm transition-colors hover:bg-surface-muted sm:w-auto"
                 >
-                  <FileUp className="h-4 w-4" />
+                  <FileUp className="h-4 w-4" aria-hidden="true" />
                   استيراد من Excel
                 </button>
               )}
-{isCenterAdmin && (
+              {isCenterAdmin && (
                 <button
+                  type="button"
                   onClick={handleGenerate}
                   disabled={generating}
-                  className="focus-ring inline-flex items-center gap-2 rounded-lg border border-surface-border bg-surface-card px-4 py-2.5 text-sm font-medium text-text-main shadow-sm transition-colors hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50"
+                  className="focus-ring inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-action border border-surface-border bg-surface-card px-4 text-sm font-bold text-text-main shadow-sm transition-colors hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                 >
                   <ClipboardList
                     className={`h-4 w-4 ${generating ? "animate-pulse" : ""}`}
+                    aria-hidden="true"
                   />
                   {generating ? "جاري الإنشاء..." : "إنشاء حسابات الطلاب"}
                 </button>
               )}
               {showParentAccount && (
                 <button
+                  type="button"
                   onClick={handleGenerateParentAccounts}
                   disabled={generatingParents}
-                  className="focus-ring inline-flex items-center gap-2 rounded-lg border border-surface-border bg-surface-card px-4 py-2.5 text-sm font-medium text-text-main shadow-sm transition-colors hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50"
+                  className="focus-ring inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-action border border-surface-border bg-surface-card px-4 text-sm font-bold text-text-main shadow-sm transition-colors hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                 >
                   <UserPlus
                     className={`h-4 w-4 ${generatingParents ? "animate-pulse" : ""}`}
+                    aria-hidden="true"
                   />
                   {generatingParents
                     ? "جاري الإنشاء..."
@@ -290,16 +298,17 @@ export default function StudentManagement() {
                 </button>
               )}
               <button
+                type="button"
                 onClick={openAddModal}
-                className="focus-ring inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover"
+                data-testid="students-add"
+                className="focus-ring inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-action bg-primary px-5 text-sm font-bold text-text-inverse shadow-sm transition-colors hover:bg-primary-hover sm:w-auto"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-4 w-4" aria-hidden="true" />
                 إضافة طالب
               </button>
             </div>
           </div>
 
-          {/* Student Filters */}
           <StudentFilters
             search={search}
             onSearchChange={setSearch}
@@ -310,13 +319,40 @@ export default function StudentManagement() {
             groups={groups}
             onReset={resetFilters}
           />
-          <div className="rounded-xl border border-surface-border bg-surface-card shadow-sm min-h-[300px] flex flex-col justify-center">
+
+          <div className="flex min-h-[300px] flex-col rounded-card border border-surface-border bg-surface-card shadow-sm">
             {loading ? (
-              <div className="py-12">
-                <Spinner msg="جاري تحميل الطلاب..." />
+              <div
+                data-testid="students-loading"
+                role="status"
+                aria-live="polite"
+                className="flex-1 p-4 sm:p-5"
+              >
+                <p className="mb-4 text-center text-sm text-text-muted">
+                  جاري تحميل الطلاب...
+                </p>
+                <div className="space-y-3" aria-hidden="true">
+                  {[0, 1, 2, 3].map((row) => (
+                    <div
+                      key={row}
+                      className="flex items-center gap-3 rounded-control border border-surface-border p-3"
+                    >
+                      <div className="h-10 w-10 shrink-0 animate-pulse rounded-full bg-surface-muted" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-3.5 w-2/5 animate-pulse rounded-full bg-surface-muted" />
+                        <div className="h-3 w-3/5 animate-pulse rounded-full bg-surface-muted" />
+                      </div>
+                      <div className="hidden h-8 w-20 animate-pulse rounded-full bg-surface-muted sm:block" />
+                    </div>
+                  ))}
+                </div>
               </div>
             ) : !hasStudents ? (
-              <EmptyState onAdd={openAddModal} />
+              <EmptyState
+                onAdd={openAddModal}
+                filtered={hasActiveFilters}
+                onReset={resetFilters}
+              />
             ) : (
               <>
                 <StudentTable
@@ -354,6 +390,7 @@ export default function StudentManagement() {
               totalItems={students.totalCount}
               pageSize={students.pageSize}
               name="طالب"
+              testId="students-pagination"
               onPageChange={handlePageChange}
             />
           )}

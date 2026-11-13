@@ -129,7 +129,7 @@ export default function BulkParentAccountsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="bulk-parents-page">
       <PageHeader
         title="حسابات أولياء الأمور"
         subtitle="إنشاء حسابات دخول لأولياء أمور الطلاب دفعة واحدة، ثم تصدير النتيجة Excel و PDF."
@@ -140,6 +140,7 @@ export default function BulkParentAccountsPage() {
               size="sm"
               onClick={handleExportExcel}
               disabled={!hasResult}
+              data-testid="bulk-parents-export-excel"
             >
               <Download className="h-4 w-4" aria-hidden="true" />
               تصدير Excel
@@ -149,6 +150,7 @@ export default function BulkParentAccountsPage() {
               size="sm"
               onClick={handlePrint}
               disabled={!hasResult}
+              data-testid="bulk-parents-export-pdf"
             >
               <Printer className="h-4 w-4" aria-hidden="true" />
               تصدير PDF
@@ -228,7 +230,7 @@ export default function BulkParentAccountsPage() {
               onChange={(e) => setSkipAlreadyLinked(e.target.checked)}
               className="h-4 w-4 rounded border-surface-border text-primary focus:ring-primary"
             />
-            تخطي الطلاب الذين跟他们 ولي أمر مرتبط بالفعل
+            تخطي الطلاب المرتبطين بالفعل بحساب ولي أمر
           </label>
 
           <div className="flex flex-wrap items-center justify-end gap-2">
@@ -259,7 +261,10 @@ export default function BulkParentAccountsPage() {
       {/* ================= Result ================= */}
       {result && (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div
+            className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
+            data-testid="bulk-parents-stats"
+          >
             <StatCard
               label="حسابات جديدة"
               value={created.length}
@@ -303,62 +308,144 @@ export default function BulkParentAccountsPage() {
               className="px-3"
             />
 
-            <Table>
-              <TableHead>
-                <tr>
-                  <TableHeaderCell className="w-12">م</TableHeaderCell>
-                  <TableHeaderCell>اسم الطالب</TableHeaderCell>
-                  <TableHeaderCell>المجموعة</TableHeaderCell>
-                  <TableHeaderCell>هاتف ولي الأمر</TableHeaderCell>
-                  <TableHeaderCell>رقم الدخول</TableHeaderCell>
-                  {activeTab === "created" && (
-                    <TableHeaderCell>كلمة المرور المؤقتة</TableHeaderCell>
-                  )}
-                  {activeTab === "skipped" && (
-                    <TableHeaderCell>سبب التخطي</TableHeaderCell>
-                  )}
-                </tr>
-              </TableHead>
-              <TableBody>
-                {rows.length === 0 ? (
-                  <TableEmpty colSpan={activeTab === "created" ? 6 : 5}>
-                    لا توجد نتائج في هذا القسم
-                  </TableEmpty>
-                ) : (
-                  rows.map((item, index) => (
-                    <TableRow key={item.studentId ?? index}>
-                      <TableCell className="text-text-muted tabular-nums">
-                        {index + 1}
-                      </TableCell>
-                      <TableCell className="font-semibold">
-                        {item.studentName}
-                      </TableCell>
-                      <TableCell className="text-text-muted">
-                        {item.groupName || "-"}
-                      </TableCell>
-                      <TableCell dir="ltr" className="text-right font-mono">
-                        {item.parentPhone || "-"}
-                      </TableCell>
-                      <TableCell dir="ltr" className="text-right font-mono">
-                        {item.username || "-"}
-                      </TableCell>
-                      {activeTab === "created" && (
-                        <TableCell dir="ltr" className="text-right font-mono font-bold">
-                          {item.temporaryPassword || "-"}
+            <div className="hidden md:block">
+              <Table>
+                <TableHead>
+                  <tr>
+                    <TableHeaderCell className="w-12">م</TableHeaderCell>
+                    <TableHeaderCell>اسم الطالب</TableHeaderCell>
+                    <TableHeaderCell>المجموعة</TableHeaderCell>
+                    <TableHeaderCell>هاتف ولي الأمر</TableHeaderCell>
+                    <TableHeaderCell>رقم الدخول</TableHeaderCell>
+                    {activeTab === "created" && (
+                      <TableHeaderCell>كلمة المرور المؤقتة</TableHeaderCell>
+                    )}
+                    {activeTab === "skipped" && (
+                      <TableHeaderCell>سبب التخطي</TableHeaderCell>
+                    )}
+                  </tr>
+                </TableHead>
+                <TableBody>
+                  {rows.length === 0 ? (
+                    <TableEmpty colSpan={activeTab === "created" ? 6 : 5}>
+                      لا توجد نتائج في هذا القسم
+                    </TableEmpty>
+                  ) : (
+                    rows.map((item, index) => (
+                      <TableRow key={item.studentId ?? index}>
+                        <TableCell className="text-text-muted tabular-nums">
+                          {index + 1}
                         </TableCell>
+                        <TableCell className="font-semibold">
+                          {item.studentName}
+                        </TableCell>
+                        <TableCell className="text-text-muted">
+                          {item.groupName || "-"}
+                        </TableCell>
+                        <TableCell dir="ltr" className="text-right font-mono">
+                          {item.parentPhone || "-"}
+                        </TableCell>
+                        <TableCell dir="ltr" className="text-right font-mono">
+                          {item.username || "-"}
+                        </TableCell>
+                        {activeTab === "created" && (
+                          <TableCell
+                            dir="ltr"
+                            className="text-right font-mono font-bold"
+                          >
+                            {item.temporaryPassword || "-"}
+                          </TableCell>
+                        )}
+                        {activeTab === "skipped" && (
+                          <TableCell className="text-text-muted">
+                            <StatusPill tone="warning">
+                              {item.reason || "سبب غير معروف"}
+                            </StatusPill>
+                          </TableCell>
+                        )}
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+
+            {/* Phones stack the same rows as cards so no column is clipped. */}
+            <div
+              className="space-y-3 p-3 md:hidden"
+              data-testid="bulk-parents-cards"
+            >
+              {rows.length === 0 ? (
+                <p className="rounded-card border border-surface-border bg-surface-card px-4 py-10 text-center text-sm text-text-muted">
+                  لا توجد نتائج في هذا القسم
+                </p>
+              ) : (
+                rows.map((item, index) => (
+                  <div
+                    key={item.studentId ?? index}
+                    data-testid="bulk-parent-card"
+                    className="rounded-card border border-surface-border bg-surface-card p-4 shadow-soft"
+                  >
+                    <div className="mb-3 flex items-start justify-between gap-2 border-b border-surface-border pb-2">
+                      <p className="min-w-0 break-words text-sm font-bold text-text-main">
+                        {item.studentName}
+                      </p>
+                      <span className="shrink-0 text-xs tabular-nums text-text-muted">
+                        {index + 1}
+                      </span>
+                    </div>
+
+                    <dl className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <dt className="text-xs text-text-muted">المجموعة</dt>
+                        <dd className="break-words text-text-main">
+                          {item.groupName || "-"}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs text-text-muted">
+                          هاتف ولي الأمر
+                        </dt>
+                        <dd dir="ltr" className="break-all text-right font-mono">
+                          {item.parentPhone || "-"}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs text-text-muted">رقم الدخول</dt>
+                        <dd dir="ltr" className="break-all text-right font-mono">
+                          {item.username || "-"}
+                        </dd>
+                      </div>
+                      {activeTab === "created" && (
+                        <div>
+                          <dt className="text-xs text-text-muted">
+                            كلمة المرور المؤقتة
+                          </dt>
+                          <dd
+                            dir="ltr"
+                            className="break-all text-right font-mono font-bold"
+                          >
+                            {item.temporaryPassword || "-"}
+                          </dd>
+                        </div>
                       )}
                       {activeTab === "skipped" && (
-                        <TableCell className="text-text-muted">
-                          <StatusPill tone="warning">
-                            {item.reason || "سبب غير معروف"}
-                          </StatusPill>
-                        </TableCell>
+                        <div className="col-span-2">
+                          <dt className="mb-1 text-xs text-text-muted">
+                            سبب التخطي
+                          </dt>
+                          <dd>
+                            <StatusPill tone="warning">
+                              {item.reason || "سبب غير معروف"}
+                            </StatusPill>
+                          </dd>
+                        </div>
                       )}
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                    </dl>
+                  </div>
+                ))
+              )}
+            </div>
           </Card>
         </>
       )}

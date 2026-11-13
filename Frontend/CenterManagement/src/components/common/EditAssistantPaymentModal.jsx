@@ -84,7 +84,7 @@ export default function EditAssistantPaymentModal({
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="text-text-muted hover:text-text-main p-1 rounded-lg transition-colors"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
           >
             <X className="w-5 h-5" />
           </button>
@@ -98,7 +98,7 @@ export default function EditAssistantPaymentModal({
                 المساعد
               </label>
 
-              <p className="w-full p-2.5 rounded-xl border border-surface-border bg-surface-muted text-text-main truncate">
+              <p className="w-full min-h-11 p-2.5 rounded-xl border border-surface-border bg-surface-muted text-text-main truncate">
                 {assistantName || "-"}
               </p>
             </div>
@@ -108,7 +108,7 @@ export default function EditAssistantPaymentModal({
                 الشهر
               </label>
 
-              <p className="w-full p-2.5 rounded-xl border border-surface-border bg-surface-muted text-text-main">
+              <p className="w-full min-h-11 p-2.5 rounded-xl border border-surface-border bg-surface-muted text-text-main">
                 {formatMonthYear(payment.month, payment.year)}
               </p>
             </div>
@@ -150,7 +150,7 @@ export default function EditAssistantPaymentModal({
               onChange={(e) =>
                 setFormData({ ...formData, amount: e.target.value })
               }
-              className="w-full p-2.5 rounded-xl border border-surface-border bg-surface-muted text-text-main focus:outline-none focus:border-primary"
+              className="w-full min-h-11 p-2.5 rounded-xl border border-surface-border bg-surface-muted text-text-main focus:outline-none focus:border-primary"
             />
           </div>
 
@@ -165,7 +165,7 @@ export default function EditAssistantPaymentModal({
               onChange={(e) =>
                 setFormData({ ...formData, paidAt: e.target.value })
               }
-              className="w-full p-2.5 rounded-xl border border-surface-border bg-surface-muted text-text-main focus:outline-none focus:border-primary"
+              className="w-full min-h-11 p-2.5 rounded-xl border border-surface-border bg-surface-muted text-text-main focus:outline-none focus:border-primary"
             />
           </div>
 
@@ -180,7 +180,7 @@ export default function EditAssistantPaymentModal({
                 setFormData({ ...formData, notes: e.target.value })
               }
               placeholder="أي ملاحظات إضافية..."
-              className="w-full p-2.5 rounded-xl border border-surface-border bg-surface-muted text-text-main focus:outline-none focus:border-primary h-20 resize-none"
+              className="w-full min-h-11 p-2.5 rounded-xl border border-surface-border bg-surface-muted text-text-main focus:outline-none focus:border-primary h-20 resize-none"
             />
           </div>
 
@@ -189,14 +189,14 @@ export default function EditAssistantPaymentModal({
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="w-1/2 py-2.5 rounded-xl border border-surface-border font-bold text-text-muted hover:bg-surface-muted transition-colors"
+              className="w-1/2 min-h-11 py-2.5 rounded-xl border border-surface-border font-bold text-text-muted hover:bg-surface-muted transition-colors"
             >
               إلغاء
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="w-1/2 py-2.5 rounded-xl bg-primary text-white font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-1/2 min-h-11 py-2.5 rounded-xl bg-primary text-white font-bold hover:opacity-90 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
             >
               {loading && <Loader2 className="w-4 h-4 animate-spin" />}
               <span>حفظ التعديل</span>

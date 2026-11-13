@@ -6,6 +6,7 @@ import { canUseModule, canUseCenterModule, normaliseModules } from "../constants
 import {
   decodeToken,
   getRole,
+  getUserId,
   isCenterAdmin,
   isImpersonating,
   getImpersonatedBy,
@@ -87,6 +88,11 @@ export function AuthProvider({ children }) {
     if (!accessToken) return null;
     return getRole(accessToken);
   }, [accessToken]);
+
+  // The caller's own id, used by browser-persisted UI state (e.g. the owner
+  // email reminder) so one user's choice never leaks into another account on
+  // the same browser.
+  const userId = useMemo(() => getUserId(accessToken), [accessToken]);
 
   const centerAdmin = useMemo(() => isCenterAdmin(accessToken), [accessToken]);
   const impersonating = useMemo(() => isImpersonating(accessToken), [accessToken]);
@@ -342,6 +348,7 @@ export function AuthProvider({ children }) {
       value={{
         accessToken,
         user,
+        userId,
         loading,
         login,
         logout,

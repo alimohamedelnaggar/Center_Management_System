@@ -1,6 +1,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "react-hot-toast";
-import { Calendar, Clock, Plus, Trash2, X, Loader2, Edit2 } from "@/components/icons";
+import { Calendar, Clock, Plus, Trash2, Edit2 } from "@/components/icons";
+import AppModal from "@/components/ui/AppModal";
+import Button from "@/components/ui/Button";
+import EmptyState from "@/components/ui/EmptyState";
+import FormField from "@/components/ui/FormField";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import Skeleton from "@/components/ui/Skeleton";
+import StatusPill from "@/components/ui/StatusPill";
 import { sessionsService } from "../../services/sessionsService";
 import { sessionConnection, startSessionConnection } from "../../services/signalr/sessionHub";
 import ConfirmModal from "./ConfirmModal";
@@ -32,11 +40,14 @@ export default function GroupSessionsModal({
   const [selectedSessionId, setSelectedSessionId] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  const groupSessionPrice = () =>
+    group?.perSessionPrice ?? group?.PerSessionPrice ?? 0;
+
   const [formData, setFormData] = useState({
     dayOfWeek: 0,
     startTime: "14:00",
     endTime: "16:00",
-    sessionPrice: group?.monthlyPrice || 0,
+    sessionPrice: groupSessionPrice(),
   });
 
   const groupId = group?.id;
@@ -48,7 +59,7 @@ export default function GroupSessionsModal({
       const res = await sessionsService.getByGroup(groupId);
       setSessions(res.data || res || []);
     } catch (err) {
-      toast.error("تعذر جلب مواعيد الحصص",err);
+      toast.error("تعذر جلب مواعيد الحصص", err);
     } finally {
       setLoading(false);
     }
@@ -60,7 +71,7 @@ export default function GroupSessionsModal({
       dayOfWeek: 0,
       startTime: "14:00",
       endTime: "16:00",
-      sessionPrice: group?.monthlyPrice || 0,
+      sessionPrice: groupSessionPrice(),
     });
     setEditingSessionId(null);
     setShowForm(false);
@@ -175,207 +186,212 @@ export default function GroupSessionsModal({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-surface-card rounded-2xl p-5 border border-surface-border w-full max-w-md shadow-lg relative max-h-[90vh] overflow-y-auto">
-        <button
-          onClick={onClose}
-          className="absolute left-4 top-4 text-text-muted hover:text-text-main"
-        >
-          <X className="w-5 h-5" />
-        </button>
+    <>
+      <AppModal
+        open={isOpen}
+        onClose={onClose}
+        title={`مواعيد حصص: ${group?.name ?? ""}`}
+        icon={Calendar}
+        testId="group-sessions-modal"
+        size="max-w-lg"
+        footer={
+          <Button variant="secondary" block onClick={onClose}>
+            إغلاق
+          </Button>
+        }
+      >
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <StatusPill tone="neutral" dot={false}>
+              الحصص المسجلة: {sessions.length}
+            </StatusPill>
 
-        <h3 className="text-base font-bold text-primary mb-4 flex items-center gap-2">
-          <Calendar className="w-5 h-5" />
-          مواعيد حصص: {group?.name}
-        </h3>
-
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-xs font-bold text-text-muted">
-            الحصص المسجلة ({sessions.length})
-          </span>
-          {!readOnly && !showForm && (
-            <button
-              onClick={() => {
-                resetForm();
-                setShowForm(true);
-              }}
-              className="text-xs bg-primary hover:bg-primary-hover text-text-inverse px-3 py-1.5 rounded-xl font-bold flex items-center gap-1 transition"
-            >
-              <Plus className="w-3.5 h-3.5" /> إضافة موعد
-            </button>
-          )}
-        </div>
-
-        {showForm && (
-          <form
-            onSubmit={handleSubmitSession}
-            className="bg-surface-muted/50 border border-surface-border p-3.5 rounded-xl mb-4 space-y-3"
-          >
-            <div className="flex items-center justify-between border-b border-surface-border pb-2 mb-1">
-              <span className="text-xs font-bold text-primary">
-                {editingSessionId ? "تعديل الموعد" : "إضافة موعد جديد"}
-              </span>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-text-muted mb-1">
-                اليوم
-              </label>
-              <select
-                value={formData.dayOfWeek}
-                onChange={(e) =>
-                  setFormData({ ...formData, dayOfWeek: e.target.value })
-                }
-                className="w-full px-3 py-2 rounded-xl border border-surface-border bg-surface-card text-text-main text-xs focus:outline-none focus:border-primary"
+            {!readOnly && !showForm && (
+              <Button
+                size="sm"
+                onClick={() => {
+                  resetForm();
+                  setShowForm(true);
+                }}
+                data-testid="group-session-add"
               >
-                {DAYS_OF_WEEK.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+                <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                إضافة موعد
+              </Button>
+            )}
+          </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="block text-xs font-bold text-text-muted mb-1">
-                  من (البدء)
-                </label>
-                <input
-                  type="time"
-                  required
-                  value={formData.startTime}
-                  onChange={(e) =>
-                    setFormData({ ...formData, startTime: e.target.value })
-                  }
-                  className="w-full px-3 py-2 rounded-xl border border-surface-border bg-surface-card text-text-main text-xs focus:outline-none focus:border-primary"
-                />
+          {showForm && (
+            <form
+              onSubmit={handleSubmitSession}
+              data-testid="group-session-form"
+              className="space-y-3 rounded-card border border-surface-border bg-surface-muted/50 p-4"
+            >
+              <div className="flex items-center justify-between border-b border-surface-border pb-2">
+                <span className="text-sm font-bold text-primary">
+                  {editingSessionId ? "تعديل الموعد" : "إضافة موعد جديد"}
+                </span>
               </div>
-              <div>
-                <label className="block text-xs font-bold text-text-muted mb-1">
-                  إلى (الانتهاء)
-                </label>
-                <input
-                  type="time"
-                  required
-                  value={formData.endTime}
-                  onChange={(e) =>
-                    setFormData({ ...formData, endTime: e.target.value })
-                  }
-                  className="w-full px-3 py-2 rounded-xl border border-surface-border bg-surface-card text-text-main text-xs focus:outline-none focus:border-primary"
-                />
-              </div>
-            </div>
 
-            <div>
-              <label className="block text-xs font-bold text-text-muted mb-1">
-                سعر الحصة (ج.م)
-              </label>
-              <input
-                type="number"
-                required
-                value={formData.sessionPrice}
-                onChange={(e) =>
-                  setFormData({ ...formData, sessionPrice: e.target.value })
-                }
-                className="w-full px-3 py-2 rounded-xl border border-surface-border bg-surface-card text-text-main text-xs focus:outline-none focus:border-primary"
+              <FormField label="اليوم" htmlFor="group-session-day">
+                <Select
+                  id="group-session-day"
+                  value={formData.dayOfWeek}
+                  onChange={(e) =>
+                    setFormData({ ...formData, dayOfWeek: e.target.value })
+                  }
+                >
+                  {DAYS_OF_WEEK.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name}
+                    </option>
+                  ))}
+                </Select>
+              </FormField>
+
+              <div className="grid grid-cols-2 gap-2">
+                <FormField label="من (البدء)" htmlFor="group-session-start">
+                  <Input
+                    id="group-session-start"
+                    type="time"
+                    required
+                    value={formData.startTime}
+                    onChange={(e) =>
+                      setFormData({ ...formData, startTime: e.target.value })
+                    }
+                  />
+                </FormField>
+                <FormField label="إلى (الانتهاء)" htmlFor="group-session-end">
+                  <Input
+                    id="group-session-end"
+                    type="time"
+                    required
+                    value={formData.endTime}
+                    onChange={(e) =>
+                      setFormData({ ...formData, endTime: e.target.value })
+                    }
+                  />
+                </FormField>
+              </div>
+
+              <FormField
+                label="سعر الحصة (ج.م)"
+                htmlFor="group-session-price"
+                helper="يُستخدم لحساب مستحقات الحصص."
+              >
+                <Input
+                  id="group-session-price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  required
+                  value={formData.sessionPrice}
+                  onChange={(e) =>
+                    setFormData({ ...formData, sessionPrice: e.target.value })
+                  }
+                />
+              </FormField>
+
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <Button
+                  type="submit"
+                  loading={isSubmitting}
+                  className="flex-1"
+                  data-testid="group-session-save"
+                >
+                  {editingSessionId ? "تعديل الموعد" : "حفظ الموعد"}
+                </Button>
+                <Button type="button" variant="secondary" onClick={resetForm}>
+                  إلغاء
+                </Button>
+              </div>
+            </form>
+          )}
+
+          {loading ? (
+            <div data-testid="group-sessions-loading" className="space-y-2">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="rounded-control border border-surface-border bg-surface-muted px-3 py-3"
+                >
+                  <Skeleton className="mb-2 h-4 w-1/2" />
+                  <Skeleton className="h-3 w-1/3" />
+                </div>
+              ))}
+            </div>
+          ) : sessions.length === 0 ? (
+            <div
+              data-testid="group-sessions-empty"
+              className="rounded-control border border-dashed border-surface-border"
+            >
+              <EmptyState
+                icon={Calendar}
+                title="لا توجد مواعيد مسجلة"
+                description="أضف موعدًا أسبوعيًا واحدًا على الأقل لهذه المجموعة."
               />
             </div>
+          ) : (
+            <ul className="max-h-72 space-y-2 overflow-y-auto pe-1">
+              {sessions.map((s) => {
+                const dayName = DAYS_OF_WEEK.find(
+                  (d) => d.id === s.dayOfWeek,
+                )?.name;
 
-            <div className="flex items-center gap-2 pt-1">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex-1 bg-primary hover:bg-primary-hover text-text-inverse py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1 disabled:opacity-70"
-              >
-                {isSubmitting && (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                )}
-                {editingSessionId ? "تعديل الموعد" : "حفظ الموعد"}
-              </button>
-              <button
-                type="button"
-                onClick={resetForm}
-                className="px-3 py-2 border border-surface-border rounded-xl text-xs font-semibold text-text-muted hover:bg-surface-card"
-              >
-                إلغاء
-              </button>
-            </div>
-          </form>
-        )}
+                return (
+                  <li
+                    key={s.id}
+                    data-testid={`group-session-${s.id}`}
+                    className="flex items-center justify-between gap-2 rounded-control border border-surface-border bg-surface-muted px-3 py-2.5"
+                  >
+                    <div className="min-w-0 space-y-1">
+                      <p className="flex flex-wrap items-center gap-1.5 text-sm font-bold text-text-main">
+                        <span>{dayName}</span>
+                        <span className="text-xs font-normal text-text-muted">
+                          • {s.sessionPrice} ج.م
+                        </span>
+                      </p>
+                      <p className="flex items-center gap-1 text-xs text-text-muted">
+                        <Clock className="h-3 w-3" aria-hidden="true" />
+                        <span>
+                          {s.startTime?.substring(0, 5)} -{" "}
+                          {s.endTime?.substring(0, 5)}
+                        </span>
+                      </p>
+                    </div>
 
-        {loading ? (
-          <div className="text-center py-6 text-text-muted text-xs flex items-center justify-center gap-2">
-            <Loader2 className="w-4 h-4 animate-spin text-primary" /> جاري التحميل...
-          </div>
-        ) : sessions.length === 0 ? (
-          <div className="text-center py-6 bg-surface-muted rounded-xl border border-surface-border text-text-muted text-xs">
-            لا توجد مواعيد حصص مسجلة لهذه المجموعة.
-          </div>
-        ) : (
-          <div className="space-y-2 max-h-52 overflow-y-auto pr-0.5">
-            {sessions.map((s) => (
-              <div
-                key={s.id}
-                className="flex items-center justify-between p-3 bg-surface-muted rounded-xl border border-surface-border text-xs"
-              >
-                <div className="space-y-1">
-                  <div className="font-bold text-primary flex items-center gap-1.5">
-                    <span>
-                      {DAYS_OF_WEEK.find((d) => d.id === s.dayOfWeek)?.name}
-                    </span>
-                    <span className="text-text-muted font-normal">
-                      • {s.sessionPrice} ج.م
-                    </span>
-                  </div>
-                  <div className="text-text-muted flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    <span>
-                      {s.startTime?.substring(0, 5)} -{" "}
-                      {s.endTime?.substring(0, 5)}
-                    </span>
-                  </div>
-                </div>
+                    {!readOnly && (
+                      <div className="flex shrink-0 items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditClick(s)}
+                          aria-label={`تعديل موعد ${dayName}`}
+                          title="تعديل"
+                        >
+                          <Edit2 className="h-4 w-4" aria-hidden="true" />
+                        </Button>
 
-                <div className="flex items-center gap-1">
-                  {!readOnly && (
-                    <>
-                      <button
-                        onClick={() => handleEditClick(s)}
-                        className="p-1.5 text-text-muted hover:text-primary hover:bg-surface-card rounded-lg transition"
-                        title="تعديل"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-
-                      <button
-                        onClick={() => handleDeleteClick(s.id)}
-                        className="p-1.5 text-status-danger hover:bg-status-danger-bg rounded-lg transition"
-                        title="حذف"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="mt-4 pt-3 border-t border-surface-border flex justify-end">
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-full px-4 py-2 border border-surface-border rounded-xl text-xs font-semibold text-text-muted hover:bg-surface-muted"
-          >
-            إغلاق
-          </button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeleteClick(s.id)}
+                          aria-label={`حذف موعد ${dayName}`}
+                          title="حذف"
+                          className="text-status-danger hover:bg-status-danger-bg"
+                        >
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
-      </div>
+      </AppModal>
 
       <ConfirmModal
         isOpen={deleteModalOpen}
@@ -387,6 +403,6 @@ export default function GroupSessionsModal({
         cancelText="إلغاء"
         loading={isDeleting}
       />
-    </div>
+    </>
   );
 }

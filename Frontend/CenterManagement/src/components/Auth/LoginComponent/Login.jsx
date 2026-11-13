@@ -38,6 +38,9 @@ const ALERT_STYLES = {
   },
 };
 
+const FIELD_BASE =
+  "min-h-12 w-full rounded-control border bg-surface-card py-3 text-base text-text-main outline-none transition-colors placeholder:text-text-muted/70 sm:text-sm";
+
 export default function CenterLoginPage() {
   const { isDark, toggle } = useTheme();
 
@@ -127,200 +130,234 @@ export default function CenterLoginPage() {
   const AlertIcon = alert?.icon;
 
   return (
-    <div dir="rtl" className="min-h-screen w-full bg-surface-bg font-sans">
+    <div
+      dir="rtl"
+      className="relative min-h-dvh w-full overflow-x-hidden bg-surface-bg font-sans text-text-main"
+    >
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-24 top-16 h-72 w-72 rounded-full bg-primary/10 blur-2xl"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-24 bottom-10 h-80 w-80 rounded-full bg-secondary/10 blur-2xl"
+      />
+
       <button
         type="button"
         onClick={toggle}
+        data-testid="login-theme-toggle"
         aria-label={isDark ? "التبديل إلى الوضع النهاري" : "التبديل إلى الوضع الليلي"}
-        className="fixed left-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-pill border border-surface-border bg-surface-card text-text-muted shadow-soft transition-colors hover:text-primary"
+        className="fixed left-4 top-4 z-30 flex h-11 w-11 items-center justify-center rounded-pill border border-surface-border bg-surface-card text-text-muted shadow-soft transition-colors hover:text-primary"
       >
-        {isDark ? <Sun size={18} /> : <Moon size={18} />}
+        {isDark ? <Sun size={20} /> : <Moon size={20} />}
       </button>
 
-      <div className="flex min-h-screen w-full flex-col md:flex-row">
+      <div className="relative z-10 flex min-h-dvh w-full flex-col md:flex-row">
         <BrandHeader />
 
-        <div className="flex w-full items-center justify-center px-5 py-10 sm:px-8 md:w-1/2 md:py-0">
-          <div
-            className={`w-full max-w-md rounded-card border border-surface-border bg-surface-card p-6 shadow-elevated sm:p-8 ${
-              mounted ? "fade-up" : "opacity-0"
-            }`}
-          >
-            <div className="mb-7 flex items-center gap-3">
-              <img src="/logo.png" alt="" width="40" height="40" />
-              <div>
-                <p className="text-sm font-bold text-text-main">
-                  نظام إدارة السنتر
-                </p>
-                <p className="text-xs text-text-muted">
-                  Center Management System
+        <main className="login-form-side flex w-full flex-1 items-center justify-center px-4 py-4 sm:px-8 sm:py-8 md:w-1/2 md:px-10 md:py-12">
+          <div className="w-full max-w-[27rem]">
+            <div
+              data-testid="login-card"
+              className={`rounded-card border border-surface-border bg-surface-card p-4 shadow-card sm:p-8 ${
+                mounted ? "fade-up" : "opacity-0"
+              }`}
+            >
+              <div className="mb-4 sm:mb-6">
+                <span className="login-eyebrow inline-flex items-center gap-1.5 rounded-pill bg-primary-subtle px-3 py-1 text-sm font-bold text-primary">
+                  <Lock className="h-4 w-4" aria-hidden="true" />
+                  تسجيل الدخول
+                </span>
+
+                <h1 className="mt-2 break-words text-xl font-extrabold text-text-main sm:mt-3 sm:text-[28px]">
+                  مرحباً بعودتك
+                </h1>
+                <p className="mt-1 break-words text-sm text-text-muted sm:mt-1.5">
+                  سجل الدخول لإدارة السنتر
                 </p>
               </div>
-            </div>
 
-            <h1 className="text-2xl font-extrabold text-text-main sm:text-[26px]">
-              مرحباً بعودتك
-            </h1>
-            <p className="mb-6 mt-1.5 text-sm text-text-muted">
-              سجل الدخول لإدارة السنتر
-            </p>
+              <div aria-live="polite" className="mb-4 empty:hidden">
+                {error && (
+                  <div
+                    role="alert"
+                    className={`flex items-start gap-3 rounded-control border px-4 py-3 text-sm ${alert.box}`}
+                  >
+                    <AlertIcon size={18} className="mt-0.5 shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="break-words font-bold">{error.title}</p>
+                      <p className="mt-0.5 break-words opacity-90">
+                        {error.message}
+                      </p>
+                      {error.retry && (
+                        <button
+                          type="button"
+                          onClick={doLogin}
+                          disabled={loading}
+                          className="mt-1 inline-flex min-h-11 items-center font-bold underline underline-offset-2 transition-opacity hover:opacity-70 disabled:opacity-50"
+                        >
+                          إعادة المحاولة
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
 
-            <div aria-live="polite" className="mb-4">
-              {error && (
-                <div
-                  role="alert"
-                  className={`flex items-start gap-3 rounded-control border px-4 py-3 text-sm ${alert.box}`}
-                >
-                  <AlertIcon size={18} className="mt-0.5 shrink-0" />
-                  <div className="flex-1">
-                    <p className="font-bold">{error.title}</p>
-                    <p className="mt-0.5 opacity-90">{error.message}</p>
-                    {error.retry && (
-                      <button
-                        type="button"
-                        onClick={doLogin}
-                        disabled={loading}
-                        className="mt-2 font-bold underline underline-offset-2 transition-opacity hover:opacity-70 disabled:opacity-50"
-                      >
-                        إعادة المحاولة
-                      </button>
+              <form
+                onSubmit={handleSubmit}
+                noValidate
+                className={shake ? "shake-anim" : ""}
+              >
+                <div className="mb-4">
+                  <label
+                    htmlFor="login-phone"
+                    className="mb-1.5 block text-sm font-semibold text-text-main"
+                  >
+                    رقم الهاتف
+                  </label>
+                  <div className="relative">
+                    <Phone
+                      size={18}
+                      aria-hidden="true"
+                      className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted"
+                    />
+                    <input
+                      id="login-phone"
+                      name="phone"
+                      type="tel"
+                      inputMode="numeric"
+                      autoComplete="tel"
+                      dir="ltr"
+                      value={phone}
+                      onChange={(e) =>
+                        setPhone(
+                          e.target.value.replace(/[^0-9]/g, "").slice(0, 11),
+                        )
+                      }
+                      onBlur={() =>
+                        setTouched((s) => ({ ...s, phone: true }))
+                      }
+                      placeholder="01xxxxxxxxx"
+                      aria-invalid={!!phoneError}
+                      aria-describedby={phoneError ? "login-phone-error" : undefined}
+                      className={`${FIELD_BASE} pl-11 pr-11 text-right ${
+                        phoneError
+                          ? "border-status-danger focus:border-status-danger focus:ring-2 focus:ring-status-danger/20"
+                          : "border-surface-border focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      }`}
+                    />
+                    {touched.phone && phoneValid && (
+                      <CheckCircle2
+                        size={18}
+                        aria-hidden="true"
+                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-status-success"
+                      />
                     )}
                   </div>
-                </div>
-              )}
-            </div>
-
-            <form
-              onSubmit={handleSubmit}
-              noValidate
-              className={shake ? "shake-anim" : ""}
-            >
-              <div className="mb-4">
-                <label
-                  htmlFor="login-phone"
-                  className="mb-1.5 block text-sm font-semibold text-text-main"
-                >
-                  رقم الهاتف
-                </label>
-                <div className="relative">
-                  <Phone
-                    size={18}
-                    className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted"
-                  />
-                  <input
-                    id="login-phone"
-                    name="phone"
-                    type="tel"
-                    inputMode="numeric"
-                    autoComplete="tel"
-                    dir="ltr"
-                    value={phone}
-                    onChange={(e) =>
-                      setPhone(
-                        e.target.value.replace(/[^0-9]/g, "").slice(0, 11),
-                      )
-                    }
-                    onBlur={() => setTouched((s) => ({ ...s, phone: true }))}
-                    placeholder="01xxxxxxxxx"
-                    aria-invalid={!!phoneError}
-                    className={`w-full rounded-control border bg-surface-card py-3 pl-10 pr-11 text-right text-sm text-text-main outline-none transition-colors ${
-                      phoneError
-                        ? "border-status-danger focus:border-status-danger focus:ring-2 focus:ring-status-danger/20"
-                        : "border-surface-border focus:border-primary focus:ring-2 focus:ring-primary/20"
-                    }`}
-                  />
-                  {touched.phone && phoneValid && (
-                    <CheckCircle2
-                      size={18}
-                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-status-success"
-                    />
+                  {phoneError && (
+                    <p
+                      id="login-phone-error"
+                      className="mt-1.5 flex items-center gap-1 text-sm text-status-danger"
+                    >
+                      <AlertCircle size={14} aria-hidden="true" /> {phoneError}
+                    </p>
                   )}
                 </div>
-                {phoneError && (
-                  <p className="mt-1.5 flex items-center gap-1 text-xs text-status-danger">
-                    <AlertCircle size={13} /> {phoneError}
-                  </p>
-                )}
-              </div>
 
-              <div className="mb-2">
-                <div className="mb-1.5 flex items-center justify-between">
-                  <label
-                    htmlFor="login-password"
-                    className="block text-sm font-semibold text-text-main"
-                  >
-                    كلمة المرور
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => navigate("/forgot-password")}
-                    className="text-xs font-semibold text-primary transition-opacity hover:opacity-70"
-                  >
-                    نسيت كلمة المرور؟
-                  </button>
+                <div className="mb-2">
+                  <div className="mb-1.5 flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                    <label
+                      htmlFor="login-password"
+                      className="block text-sm font-semibold text-text-main"
+                    >
+                      كلمة المرور
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => navigate("/forgot-password")}
+                      className="inline-flex min-h-11 items-center rounded-control px-1 text-sm font-semibold text-primary transition-opacity hover:opacity-70"
+                    >
+                      نسيت كلمة المرور؟
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <Lock
+                      size={18}
+                      aria-hidden="true"
+                      className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted"
+                    />
+                    <input
+                      id="login-password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      onBlur={() =>
+                        setTouched((s) => ({ ...s, password: true }))
+                      }
+                      placeholder="••••••••"
+                      aria-invalid={!!passwordError}
+                      aria-describedby={
+                        passwordError ? "login-password-error" : undefined
+                      }
+                      className={`${FIELD_BASE} pl-14 pr-11 ${
+                        passwordError
+                          ? "border-status-danger focus:border-status-danger focus:ring-2 focus:ring-status-danger/20"
+                          : "border-surface-border focus:border-primary focus:ring-2 focus:ring-primary/20"
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((s) => !s)}
+                      data-testid="login-password-toggle"
+                      className="absolute left-1 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-control text-text-muted transition-colors hover:text-text-main"
+                      aria-label={
+                        showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"
+                      }
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {passwordError && (
+                    <p
+                      id="login-password-error"
+                      className="mt-1.5 flex items-center gap-1 text-sm text-status-danger"
+                    >
+                      <AlertCircle size={14} aria-hidden="true" /> {passwordError}
+                    </p>
+                  )}
                 </div>
-                <div className="relative">
-                  <Lock
-                    size={18}
-                    className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-text-muted"
-                  />
-                  <input
-                    id="login-password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    autoComplete="current-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onBlur={() =>
-                      setTouched((s) => ({ ...s, password: true }))
-                    }
-                    placeholder="••••••••"
-                    aria-invalid={!!passwordError}
-                    className={`w-full rounded-control border bg-surface-card py-3 pl-11 pr-11 text-sm text-text-main outline-none transition-colors ${
-                      passwordError
-                        ? "border-status-danger focus:border-status-danger focus:ring-2 focus:ring-status-danger/20"
-                        : "border-surface-border focus:border-primary focus:ring-2 focus:ring-primary/20"
-                    }`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((s) => !s)}
-                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted transition-colors hover:text-text-main"
-                    aria-label={
-                      showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"
-                    }
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-                {passwordError && (
-                  <p className="mt-1.5 flex items-center gap-1 text-xs text-status-danger">
-                    <AlertCircle size={13} /> {passwordError}
-                  </p>
-                )}
-              </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="mt-6 flex w-full items-center justify-center gap-2 rounded-control bg-primary py-3.5 text-sm font-bold text-primary-contrast shadow-md transition-colors hover:bg-primary-hover disabled:opacity-80"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" /> جاري تسجيل
-                    الدخول...
-                  </>
-                ) : (
-                  "تسجيل الدخول"
-                )}
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  data-testid="login-submit"
+                  disabled={loading}
+                  className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-action bg-primary px-5 text-base font-bold text-primary-contrast shadow-md transition-colors hover:bg-primary-hover disabled:opacity-80 sm:mt-6"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2
+                        size={18}
+                        aria-hidden="true"
+                        className="animate-spin"
+                      />{" "}
+                      جاري تسجيل الدخول...
+                    </>
+                  ) : (
+                    "تسجيل الدخول"
+                  )}
+                </button>
+              </form>
+            </div>
 
-            <p className="mt-6 text-center text-xs text-text-muted">
+            <p className="login-footer mt-3 break-words text-center text-sm text-text-muted sm:mt-5">
               © 2026 نظام إدارة السنتر · جميع الحقوق محفوظة
             </p>
           </div>
-        </div>
+        </main>
 
         <BrandPanel />
       </div>

@@ -687,7 +687,12 @@ enough to need horizontal scrolling.
 The payments summary (`إجمالي المدفوع`, `المتبقي`, `عدد الدفعات`) is correct and is what the caption
 talks about. The table header is not claimed. The defect is recorded here and left untouched.
 
-**Status: OPEN — logged, not fixed.**
+**Fix (phase 3 batch 8)** — the duplicated receiver column is gone, so the table is seven columns
+(`التاريخ`, `المجموعة`, `الشهر`, `المبلغ`, `المدفوع`, `المتبقي`, `الحالة`) and every value now sits
+under its own heading. The phone card layout shows the same three money figures per payment. The
+`colSpan` mismatch disappeared with the table: the empty state is rendered outside the table.
+
+**Status: FIXED** in phase 3 batch 8.
 
 ---
 
@@ -767,6 +772,818 @@ handler. The link was built (and discarded) during render, so no popup ever open
 - `src/pages/messageTemplates.integration.test.jsx` now saves a custom template in the editor and
   asserts the overdue button opens `wa.me` with that exact body (render → edit → save → open link).
 - Other WhatsApp buttons were checked for the same pattern; none call the handler during render.
+
+---
+
+## F-016 — The students table renders one heading with no matching cell
+
+**Severity:** Low (visual only; the row actions still work, but every table heading after the
+missing cell is misaligned and the empty header is read out by screen readers)
+
+**Found:** 2026-11-10 while rebuilding the students page for the design phase 1 comparison.
+
+**Symptom**
+
+The desktop students table (`/students`, `StudentTable.jsx`) renders **eight** `<th>` cells but
+only **seven** `<td>` cells per row:
+
+```
+COLUMNS = ["الطالب", "رقم الهاتف", "رقم هاتف ولي الأمر", "المجموعة",
+           "تاريخ الانضمام", "نوع الاشتراك", "الحالة", ""]
+```
+
+The row renders: name, phone, parent phone, group, join date, subscription type, then
+`<RowActions>` — there is no status cell. `الحالة` therefore has no data under it, the actions
+column sits under the `الحالة` heading, and the intentionally empty last heading has nothing under
+it. The mismatch is also why the row actions can look attached to the wrong column on wide screens.
+
+**Evidence**
+
+- `Frontend/CenterManagement/src/pages/StudentPage/StudentTable.jsx:4-13` — eight column labels,
+  the seventh being `الحالة` and the eighth an empty actions column.
+- `StudentTable.jsx:48-90` — seven `<td>` cells per row; no cell reads or renders a status.
+- The phase 1 comparison reproduces the defect on purpose: `compare-students.html?variant=before`
+  hides `.col-status` so the “before” table has the same 8-heading/7-cell shape, while
+  `variant=after` restores a visible status column.
+
+**Impact on the design phase**
+
+None on behaviour or the API; the comparison is CSS/HTML only and no application file was changed.
+The fixed version in the mock-up adds the status cell and keeps the actions column last.
+
+**Status: FIXED (2026-11-11).** `StudentTable.jsx` now renders a `<StatusBadge status={student.isActive}>` cell under `الحالة`, so every row has eight cells matching the eight headings and the actions column stays last. Verified by `students-table` probe (8 headings / 8 cells at every viewport) and `studentsPage.integration.test.jsx` (asserts 8/8 plus the visible status text).
+
+---
+
+## F-017 — The subscription banner never rendered for real center owners
+
+**Severity:** Medium (an owner whose subscription is in its grace period or about to expire never
+saw the banner or its renew call to action)
+
+**Found:** 2026-11-11 while building the phase 3 batch 1 banner fixtures.
+
+**Symptom**
+
+`SubscriptionBanner` asked the auth context for a field that does not exist:
+
+```jsx
+// before
+const { subscription, isCenterOwner, impersonating, ... } = useAuth();
+...
+if (!isCenterOwner && !soloTeacher && !impersonating) return null;
+```
+
+`AuthContext` exposes `role` (`"CenterOwner"`, `"Teacher"`, `"SuperAdmin"`, …) and never
+`isCenterOwner`, so the flag was always `undefined`. The `soloTeacher` escape hatch only covers a
+teacher who is alone in the center, which means a real owner on any normal account had
+`isCenterOwner === undefined` **and** `soloTeacher === false`, and the component returned `null`
+before reading `subscription` at all.
+
+**Evidence**
+
+- `Frontend/CenterManagement/src/context/AuthContext.jsx` — the context value contains `role`,
+  `subscription`, `modulesLoaded`, `impersonating`, `stopImpersonation`; no `isCenterOwner`.
+- `Frontend/CenterManagement/src/components/common/SubscriptionBanner.jsx` — the guard read
+  `isCenterOwner` directly from `useAuth()`.
+- The visual audit fixture for `/my-subscription` as a `CenterOwner` produced no
+  `[data-testid="subscription-banner"]` node until the guard was changed.
+
+**Fix applied**
+
+The guard now derives the flag from the field the context actually provides:
+
+```jsx
+const isCenterOwner = role === "CenterOwner";
+```
+
+Product copy, variants, and the renew link are unchanged. Covered by
+`src/components/banners.integration.test.jsx` (the grace and expiring cases mount with
+`role: "CenterOwner"`) and by the `subscription-grace` / `subscription-expiring` scenarios in
+`docs/design/phase3/batch1-verify.mjs`.
+
+**Status: FIXED** in phase 3 batch 1 (commit on `redesign/ui-identity`).
+
+---
+
+## F-018 — The “add your email” reminder came back after every reload
+
+**Severity:** Low (the reminder is non-blocking; it just reappeared on every page load, so an
+owner who had already seen and dismissed it could never get rid of it)
+
+**Found:** 2026-11-11 while adding the owner-email banner to the phase 3 batch 2 fixtures.
+
+**Symptom**
+
+`OwnerEmailWarning` kept its dismissed flag in component state only:
+
+```jsx
+const [dismissed, setDismissed] = useState(false);
+...
+<button onClick={() => setDismissed(true)} ... />
+```
+
+Any navigation that remounted the banner (or a reload) reset the flag, so the reminder returned
+immediately. It also rendered during an admin impersonation session, where the owner cannot act on
+it and the platform admin must not be nudged to edit someone else's recovery address.
+
+**Behaviour change (approved with this batch)**
+
+- The dismissal now records `cm.ownerEmailWarning.dismissedAt:<userId>` in `localStorage` (the
+  id comes from the token's `nameidentifier` claim) and stays hidden for **14 days**; after that the
+  reminder returns once. Because the key is per user, dismissing it on a shared browser never hides
+  the reminder for a different account. Storage failures (private mode) degrade to the old
+  session-only dismissal.
+- The banner still shows only for `role === "CenterOwner"` or a solo teacher **without an email**,
+  and now also returns `null` while `impersonating` is true. No copy, link or styling changed.
+
+**Evidence**
+
+- `Frontend/CenterManagement/src/components/OwnerEmailWarning.jsx` — `DISMISS_KEY`, the
+  `dismissKeyFor(userId)` helper, `DISMISS_WINDOW_MS`, and the `impersonating` guard.
+- `src/context/AuthContext.jsx` — exposes `userId` (decoded from the token) so browser-persisted UI
+  state can be scoped to the caller.
+- `src/components/banners.integration.test.jsx` — dismissal persists after reload, expires after two
+  weeks, shows for a solo teacher without an email, stays hidden for every other role plus the
+  impersonation session, and **does not leak owner A's dismissal to owner B on the same browser**
+  (14 banner tests total).
+
+**Status: FIXED** in phase 3 batch 2.
+
+---
+
+## F-019 — The receipt-counter concurrency test can fail inside Microsoft.Data.Sqlite's pooled-connection cleanup
+
+**Severity:** None for receipt numbering (no duplicate or reused number was ever observed). Low for
+test reliability: the SQLite-only failure can abort a full backend run before the numbering
+assertions execute.
+
+**Classification:** an **unreproduced Microsoft.Data.Sqlite connection-lifecycle failure**, not a
+receipt-number race. The database has two independent guards against duplicates (the atomic counter
+update and a unique index), and the recorded stack never reached a numbering statement. No backend
+code, test, or migration was changed in this design branch.
+
+**Found:** 2026-11-11 during the phase 3 batch 2 full backend run (first run after the students
+commit).
+
+**Symptom**
+
+One full run (batch 2) failed in
+`PaymentReceiptTests.Counter_Twenty_Parallel_Allocations_Are_Unique_And_Consecutive` with:
+
+```
+SQLite Error 5: 'unable to delete/modify collation sequence due to active statements'
+   at Microsoft.Data.Sqlite.SqliteConnectionPool.Return(...)
+   at Microsoft.Data.Sqlite.SqliteConnection.Open()/OpenAsync()
+   at CenterManagement.Infrustructure.Services.ReceiptNumberService.NextAsync(...)
+      ReceiptNumberService.cs:48
+```
+
+The failure is an exception thrown while the service opens the connection. It is **not** a failed
+assertion: no duplicate, gap, or reused receipt number was produced by that test.
+
+**Evidence (re-run on 2026-11-11, 17:43–17:56)**
+
+- **20 consecutive isolated runs** of exactly this test, one OS process per run, using the already
+  built test assembly:
+
+  ```
+  dotnet test --no-build --filter "FullyQualifiedName~PaymentReceiptTests.Counter_Twenty_Parallel_Allocations_Are_Unique_And_Consecutive"
+  ```
+
+  | Metric | Result |
+  |---|---|
+  | Passed | **20 / 20** |
+  | Failed | **0** |
+  | Exit code | 0 on every run |
+  | Duration per run | 9.7–11.5 s (median 10.5 s) |
+  | Failure messages / stack lines | **none** — no run failed, so there is no message or line to record |
+
+  The per-run logs (plus `summary.json`) were kept outside the repo under
+  `%TEMP%\opencode\f019\run-01.log` … `run-20.log`.
+- The only failure on record is the single batch-2 occurrence quoted above. Its exception is thrown
+  at `ReceiptNumberService.cs:48` (`OpenAsync`) **before** the first SQL statement runs, so that
+  attempt never read or incremented the counter.
+- Full-suite runs after the batch-3 commit: **356/356 passed** (1.54 min) and a second **356/356**
+  pass. No exception in either run.
+- The test file is unchanged: `git diff HEAD -- PaymentReceiptTests.cs` is empty. It still starts
+  20 parallel tasks, asserts 20 distinct numbers, asserts the exact `1..20` sequence, and asserts
+  that the counter ends at 20. It was neither weakened nor disabled.
+
+**Likely mechanism (provider source); not reproduced in round 2**
+
+1. EF Core's SQLite provider registers a custom `EF_DECIMAL` collation on **every** `SqliteConnection`
+   (`SqliteRelationalConnection.InitializeDbConnection` → `sqliteConnection.CreateCollation("EF_DECIMAL", …)`).
+2. Microsoft.Data.Sqlite pools connections. Returning one to the pool calls
+   `SqliteConnectionInternal.Deactivate()` → `SqliteConnection.Deactivate()`, which unregisters the
+   registered collations; opening a pooled handle re-registers them.
+3. SQLite returns `SQLITE_BUSY` — surfaced as error 5, “unable to delete/modify collation sequence
+   due to active statements” — when a collation is added/removed while a prepared statement is still
+   active on that handle.
+4. The test opens and closes 20 EF contexts concurrently against one SQLite file. A close/return can
+   overlap another open of the same pooled handle, hitting that SQLite guard. This is a
+   connection-lifecycle detail of `Microsoft.Data.Sqlite` + EF Core, only present because the tests
+   run on SQLite.
+
+**Why the numbering itself is safe (review of the actual code)**
+
+- `ReceiptNumberService.NextAsync` never reads the last number and writes `+1`. It uses one atomic
+  statement:
+  - SQL Server: `UPDATE CenterReceiptCounters SET LastNumber = LastNumber + 1 OUTPUT INSERTED.LastNumber WHERE CenterId = @centerId`
+  - SQLite: `UPDATE CenterReceiptCounters SET LastNumber = LastNumber + 1 WHERE CenterId = @centerId RETURNING LastNumber`
+- If no counter row exists yet, it inserts `(CenterId, 1)`; a losing concurrent insert hits the
+  primary key, is caught, and the atomic update is retried, so one request gets 1 and the other gets 2.
+- `AddPaymentCommandHandler` reserves the number inside the same transaction as the payment insert
+  (`CreateExecutionStrategy` → `BeginTransactionAsync` → `NextAsync` → payment `SaveChanges` →
+  `Commit`). If the payment fails, the counter increment rolls back with it.
+- `IX_Payments_CenterId_ReceiptNumber` is a **unique** index on `(CenterId, ReceiptNumber)` (the
+  migration creates it filtered on non-null values). Even if the application logic were wrong, the
+  database would reject a second identical `(center, receipt)` row instead of storing a duplicate.
+- SQL Server additionally serialises concurrent updates on the same counter row with an exclusive
+  row lock; under RCSI an update conflict would surface as error 3960 (request fails, no duplicate),
+  not as a repeated number. SQLite has a single writer at a time and a 30 s busy timeout, so the same
+  guarantee holds there; contention surfaces as `SQLITE_BUSY`, which is exactly the flake observed.
+
+**Verdict**
+
+There **is** a database-level guarantee, so this is not a race:
+
+1. `CenterReceiptCounters` has a primary key on `CenterId`, so one counter row per center.
+2. `NextAsync` increments and reads in one statement (`UPDATE … OUTPUT INSERTED` on SQL Server,
+   `UPDATE … RETURNING` on SQLite). SQL Server holds an exclusive row lock on that counter row until
+   the surrounding transaction ends, so two concurrent payments serialise on the row and receive
+   consecutive values.
+3. The “first payment for this center” insert race is resolved by the primary key: the loser gets a
+   duplicate-key exception and retries the same atomic update.
+4. `IX_Payments_CenterId_ReceiptNumber` is a **unique** index on `(CenterId, ReceiptNumber)`
+   (filtered to non-null values). Even a hypothetical bug in step 2 could not persist two identical
+   numbers: the payment insert would fail and the transaction would roll back, returning the
+   counter value.
+5. The counter update and the payment insert share one transaction under
+   `CreateExecutionStrategy`, so a failed payment never consumes a number.
+
+A duplicate number would require the atomic `UPDATE` to return the same value twice **and** the
+unique index to be missing; neither is possible in the current schema, and no duplicate was ever
+observed. The failing frame is a connection open/return inside the SQLite provider.
+**No fix or migration is applied in this design branch.**
+
+**Follow-up rule (separate backend branch, not applied here)**
+
+- Do **not** apply `Pooling=False` as a fix without a diagnosis. If the failure recurs, first capture
+  the full exception (including inner exceptions), the provider version, the concurrent test list,
+  and run the same test against SQL Server (LocalDB or a throwaway SQL Server database). Only then
+  decide whether the mitigation belongs in the test harness or the provider configuration.
+- `Pooling=False` in `BuildOptions` would be a **test-only** diagnostic. Production runs SQL Server,
+  so this entry has no expected product-availability impact.
+- **Backlog (future):** add a CI job that starts SQL Server in Docker (service container), runs the
+  receipt-counter concurrency test against it, and keeps the SQLite run as the fast local default.
+  This closes the current gap where the design branch only exercises the SQLite provider.
+
+---
+
+## F-020 — The bulk parent-accounts "skip already linked" label contained Chinese characters
+
+**Severity:** Low (visible copy defect; the checkbox still worked)
+
+**Found:** 2026-11-11 while rebuilding `/bulk-parent-accounts` for phase 3 batch 3.
+
+**Symptom**
+
+The checkbox label rendered literal CJK characters in the middle of the Arabic sentence:
+
+```
+تخطي الطلاب الذين跟他们 ولي أمر مرتبط بالفعل
+```
+
+The bug predates this branch (`git show HEAD:Frontend/.../BulkParentAccountsPage.jsx` has the same
+line), so it was a latent translation/paste defect that only became visible once the page was
+audited at every viewport.
+
+**Fix**
+
+Copy-only change in `Frontend/CenterManagement/src/pages/BulkParentAccountsPage.jsx`:
+
+```
+تخطي الطلاب المرتبطين بالفعل بحساب ولي أمر
+```
+
+Behaviour, `name`/`id`, and the request body (`skipAlreadyLinked`) are unchanged. The new copy is
+recorded in `docs/ui-text-changes.md` (row 29).
+
+**Status: FIXED** in phase 3 batch 3.
+
+**Regression guard (added 2026-11-11)**
+
+- A full source scan found **no other occurrence** of a non-Arabic/non-Latin script or mojibake:
+  - `Frontend/CenterManagement/src/**` — **303 files** (`.js`, `.jsx`, `.css`, `.json`, plus
+    `.ts`/`.tsx`): **0 hits**.
+  - `API/CenterManagementCleanArchitecture/**/*.cs` — **832 files**, including the Arabic error
+    and notification strings the API returns: **0 hits**.
+- The scan covers CJK, Hangul, Kana, Cyrillic, Greek, Hebrew, the Indic scripts, Thai, Georgian,
+  Ethiopic, fullwidth forms, U+FFFD, and the common UTF-8→Latin-1 / Windows-1256 mojibake signatures.
+- `src/utils/uiTextCharacters.js` holds the detector (ASCII-only, so it cannot flag itself) and
+  `src/utils/uiTextCharacters.test.js` runs with Vitest:
+  - self-tests the detector against planted CJK/Hangul/Cyrillic and mojibake samples;
+  - fails if any product file under `src/` contains a forbidden script or mojibake;
+  - also scans the backend `.cs` tree when the API solution is present, and skips that part in a
+    standalone frontend checkout.
+- No backend file was modified.
+
+---
+
+## F-021 — Editing a group could not be saved without re-entering the price per session and the whole weekly schedule
+
+**Severity:** High (the edit dialog was blocked and the workaround silently zeroed the per-session price of future sessions)
+
+**Found:** 2026-11-11 while rebuilding the groups screens for phase 3 batch 4.
+
+**Symptom**
+
+Opening **تعديل** on an existing group filled the name, the monthly price and the sessions per
+month, but left **سعر الحصة** empty and the weekly schedule with no selected days. Pressing
+**حفظ التعديلات** always failed validation with `أدخل سعر الحصة` and `اختر يومًا واحدًا على الأقل`,
+so a centre owner could not change any other field without retyping the price and re-picking the
+whole schedule. When they did retype them, the future sessions were recreated with a session
+price of **0** and the group list then showed **0 ج.م** as the price per session.
+
+**Root cause** — three separate gaps in the same edit flow:
+
+1. `GroupsList.openEditModal` built `initialData` from `id`, `name`, `monthlyPrice`,
+   `sessionsPerMonth` and `teacherId` only, so `GroupForm` never received `perSessionPrice` or
+   `schedule`. `GroupForm` is a zod form where `perSessionPrice` is a required number and
+   `schedule` needs at least one slot, hence the two validation errors.
+2. `GroupsList.handleUpdate` posted only `Id`, `Name`, `MonthlyPrice`, `SessionsPerMonth`
+   (plus `TeacherId` on multi-teacher centres). `UpdateGroupCommand.PerSessionPrice` is a
+   non-nullable `decimal` (default 0) and `Schedule` defaults to an empty list.
+3. The API replaces every **future** session of the group when `Schedule` is non-empty
+   (`GroupCommandHandler`, `UpdateGroupCommand` branch) and stamps each new row with
+   `SessionPrice = request.PerSessionPrice`. Re-saving with the price the user retyped — or with
+   the default `0` — therefore rewrote the price of all future sessions, and the list query
+   derives the displayed `PerSessionPrice` from the first session of the group.
+
+The API side is correct as written: it trusts the client to send the full group. The defect was
+that this client never did.
+
+**Fix** — frontend only, no API and no migration:
+
+- `GroupForm` now accepts `perSessionPrice`, `schedule` and `sessionsPerMonth` from `initialData`.
+- `GroupsList` preloads `perSessionPrice` and maps the API day indexes to the form order with
+  `apiDayToFormDay` (`(dayOfWeek + 1) % 7`); `handleUpdate` now sends `PerSessionPrice`,
+  `SessionsPerMonth` and `Schedule`, and the page refetches after a successful update instead of
+  trusting the SignalR echo alone (`GroupUpdated` is merged, not substituted).
+- `AddGroupForm` now sends `SessionsPerMonth` on create as well — the form already collected it but
+  the request dropped it, so new groups always took the server default.
+
+**Regression guard**
+
+`Frontend/CenterManagement/src/components/groups/groups.batch4.test.jsx` (Vitest, 2 tests):
+
+1. opens the edit dialog, asserts the preloaded price `40`, sessions `4` and the two schedule rows
+   (`17:00–19:00` on Saturday, `16:00–18:00` on Monday), changes only the monthly price, and
+   asserts the exact update payload still carries `PerSessionPrice: 40`, `SessionsPerMonth: 4` and
+   both `DayIndex` values;
+2. creates a group and asserts `SessionsPerMonth: 4` is sent.
+
+**Status: FIXED** in phase 3 batch 4.
+
+---
+
+## F-022 — The hardware scanner lost the caret after every scan (the closed mobile drawer counted as an open modal)
+
+**Severity:** High (the keyboard-wedge scanner stopped working after the first student, while the UI still showed the scan result)
+
+**Found:** 2026-11-11 while recording the phase 3 batch 4 scanner states.
+
+**Symptom**
+
+On `/scanner`, the **سكانر** tab focused `#scanner-code-input` and the card switched to
+**الماسح جاهز**. The first scan registered correctly, but after the result card appeared the
+caret fell back to `<body>` and the card flipped to **اضغط للتركيز** — the next barcode burst
+went nowhere until the operator clicked the field or the pill by hand. No error was logged; the
+POST and the on-screen log were fine, so the failure was invisible in the API data.
+
+**Root cause**
+
+`QrScannerModal` restores the focus after each submit, but `isAnotherModalOpen()` bailed out as
+soon as *any* element matching `[role="dialog"], [aria-modal="true"], dialog[open]` existed
+outside the scanner overlay. The mobile navigation drawer
+(`#mobile-nav-drawer.app-drawer[role="dialog"]` in `AppSidebar`/`StudentSidebar`) stays mounted
+all the time: it is `inert`, `md:hidden` and parked at `transform: translateX(100%)` when closed,
+but it still matched that query. Every focus restore therefore returned early while the scanner
+dialog was on screen — the drawer was open in name only.
+
+**Fix** — frontend only, no API and no migration:
+
+- Added `isDialogOnScreen()` in `QrScannerModal`: a dialog only blocks the restore when it is
+  actually interactive on screen — no `aria-hidden="true"`, no ancestor (or self) with `inert`,
+  `display` not `none`, `visibility` not `hidden`, and (when the element has a box) a centre point
+  inside the viewport. The closed drawer fails three of those checks.
+- `isAnotherModalOpen()` now ignores every off-screen or inert dialog, so the caret returns to
+  `#scanner-code-input` after each scan while a real modal (unsaved-changes prompt, group editor)
+  still wins over the scanner.
+
+**Regression guard**
+
+`Frontend/CenterManagement/src/components/common/QrScannerModal.scanner.test.jsx` — new test
+«keeps the focus when a hidden drawer sits in the tree»: mounts an `inert` `role="dialog"` drawer
+in `document.body`, opens the scanner tab, blurs the field, waits past the restore delay and
+asserts the field owns the focus again. The suite is 15 tests.
+
+`docs/design/phase3-batch4-verify.mjs` — the scanner page check now asserts
+`document.activeElement` is `scanner-code-input` after a real scan (`activeId`). Before the fix
+all four `scanner-code` runs failed with `scanner focus state is missing`; after it they pass.
+The «الماسح جاهز» pill is driven by a DOM `focus`/`focusout` pair, and headless Chrome suppresses
+those events while the page itself is unfocused (`document.hasFocus() === false`), so that pill
+is asserted only when `document.hasFocus()` is true; the focus assertion itself does not depend
+on it.
+
+**Status: FIXED** in phase 3 batch 4.
+
+---
+
+## F-023 — The e-exam warning and the timer/submit header were two separate sticky bars
+
+**Severity:** High (the timer and the submit button could scroll under the fullscreen warning during an attempt)
+
+**Found:** 2026-11-12 while recording the phase 3 batch 6 attempt states.
+
+**Symptom**
+
+On `/student/attempt/:attemptId` the fullscreen warning strip and the exam header were both
+`sticky top-0`. Because the warning rendered *above* the header, the header's sticky offset
+started below the warning height; when the student scrolled, the header slid up and the warning
+covered the top of it. On a short phone viewport the covered part included the remaining-time
+badge and, in the worst case, the submit button — exactly the controls the screen must keep
+visible at all times.
+
+**Root cause**
+
+Two independent `sticky top-0` siblings inside the same scroll container. Each one stuck to the
+same offset, so their occupied rectangles stacked and overlapped once scrolling began.
+
+**Fix** — frontend only, no API and no grading/violation change:
+
+- Wrapped the fullscreen warning and `<header data-testid="exam-header">` in a single
+  `sticky top-0 z-40` container. The warning is an ordinary row inside that container, so the
+  timer, violation counter and submit button are always below it and never covered.
+- The scroll container keeps one sticky box, matching the intent of the original design.
+
+**Regression guard**
+
+`Frontend/CenterManagement/src/pages/studentExamAttempt.batch6.test.jsx` — the test asserts that
+`exam-header` and `exam-fullscreen-warning` share exactly one `.sticky.top-0` ancestor. The
+batch-6 harness also screenshots the attempt screen at 390/1440 in both themes and fails any
+overlap or covered control (`docs/design/phase3-batch6-verify.mjs`).
+
+**Status: FIXED** in phase 3 batch 6.
+
+---
+
+## F-024 — The student desktop sidebar stayed visible on phones and squeezed the page at 200% text
+
+**Severity:** High (horizontal page scroll and truncated content on the student mobile pages once the user raised the text size)
+
+**Found:** 2026-11-12 by the batch 6 200% text-zoom audit.
+
+**Symptom**
+
+At 390px with the browser text size at 200%, `/student/results` reported 206px of horizontal
+page scroll: the page content was squeezed into a 53px-wide `.app-main` next to a 337px sidebar.
+The exam cards carried their own min-content width as well, so `/student/exams` still scrolled
+150px sideways even after the rail was hidden. At the default 100% text size the same rail was
+narrow enough (icon-only) to hide the bug visually, so the earlier 100% screenshots had looked
+fine.
+
+**Root cause**
+
+`SidebarPanel` renders `<aside className={cn("flex h-full flex-col", className)}>`. The `flex`
+utility sets `display: flex`, while the screen rule that should hide the rail on phones
+(`.app-sidebar { display: none }`) lives in `@layer components`. Tailwind's utilities layer wins
+over components, so `display: none` never applied. `AppSidebar` had already compensated with
+`hidden md:flex`; `StudentSidebar` had only `app-sidebar`, so its desktop rail rendered at all
+widths. The rail's rem-based content grew with the 200% root font and squeezed the main column.
+Independently, the student exam card grid had no explicit single column and the exam title /
+status row could not shrink, so the card's min-content width exceeded the narrow viewport.
+
+**Fix** — frontend only:
+
+- `StudentSidebar` now passes `className="app-sidebar hidden md:flex"`, matching `AppSidebar`.
+  The mobile drawer (`.app-drawer`) is unchanged.
+- The student exam list uses `grid-cols-1`, `min-w-0` on the cards and
+  `[overflow-wrap:anywhere]` on the date row so long values wrap instead of widening the page.
+
+**Regression guard**
+
+The batch-6 harness audits every student page at 390px with `fontSize = 200%` and fails on any
+horizontal page scroll or element outside the viewport. Before the fixes `/student/results`
+failed with 206px and `/student/exams` with 150px; after them both pass at 0px. The full
+6-viewport × 2-theme run also checks the default text size.
+
+**Status: FIXED** in phase 3 batch 6.
+
+---
+
+## F-025 — Batch-6 table headers inherited 12px text
+
+**Severity:** Medium (primary text below the 14px accessibility floor in the results and exam-results tables)
+
+**Found:** 2026-11-12 by the batch 6 base audit at 390px.
+
+**Symptom**
+
+The student results table and the exam-results dialog rendered their `<th>` cells at 12px: the
+`text-xs` sat on the `<tr>`/`<thead>` and was inherited by the header cells. The batch-6 audit
+flagged 7 header nodes on `/student/results` and 5 inside the exam-results dialog. The other
+batch-6 tables hid their desktop view on phones, so the same inherited size only mattered at
+`md` and above.
+
+**Root cause**
+
+The header row/thead used `text-xs` for compactness, and the `<th>` cells had no size of their
+own. `th` text is primary content, so the 14px floor applies.
+
+**Fix** — frontend only:
+
+- The header row/thead in `StudentResultsPage`, `ExamsPage`, `QuestionBankPage`,
+  `StudyNotesPage` and `QuestionExamResultsModal` now uses `text-sm` (14px). Cell markup and
+  data are unchanged.
+
+**Regression guard**
+
+The batch-6 harness counts visible primary text nodes under 14px on every page and dialog at all
+six viewports; the run fails if any remain.
+
+**Status: FIXED** in phase 3 batch 6.
+
+---
+
+## F-026 — New primary/danger buttons hard-coded white text and failed AA contrast in dark mode
+
+**Severity:** Medium (four buttons fell below the 4.5:1 floor for normal text in the dark theme)
+
+**Found:** 2026-11-13 by the full batch 6 matrix (6 viewports × 2 themes).
+
+**Symptom**
+
+Every dark-theme run of four batch-6 states failed the contrast audit:
+
+| State | Control | Measured |
+|---|---|---|
+| `/notes` | **إضافة مذكرة** (14px bold) | 3.39:1 |
+| `/student/notes` | **تحميل** on both cards (14px medium) | 2.72:1 |
+| note dialog | **حفظ وإرسال** (12px bold) | 3.39:1 |
+| delete confirm | **حذف** (14px bold) | 2.16:1 |
+
+Light-theme runs were fine, so the earlier 390px light pass never saw it. The full run reported
+24 failures — the same four controls repeated for each viewport.
+
+**Root cause**
+
+The buttons hard-coded `text-white`. In dark mode `--color-primary-val` is `#8b93ff` and
+`--color-status-danger` is `#ff8fa3`, both light tints that need dark text. The design system
+already exposes the correct semantic tokens: `text-primary-contrast` (white in light, `#0b102a`
+in dark) and `text-text-inverse` (white in light, `#080b18` in dark). White text on the light
+tints is what failed.
+
+**Fix** — frontend only, colours only, no text or behaviour change:
+
+- `StudentNotesPage` download, `StudyNotesPage` add, `StudyNoteModal` submit and selected type,
+  and `ConfirmModal` confirm now use `text-primary-contrast` / `text-text-inverse`.
+- The same hard-coded pattern was corrected in `QuestionModal` (delete-image button and selected
+  correct answer), the attempt violation-counter hover, and the legacy exam-management delete
+  hover, so the hover states do not reintroduce white-on-light-tint.
+
+**Regression guard**
+
+The batch-6 harness computes WCAG contrast from computed styles for every visible text node on
+every page and dialog, and fails below 4.5:1 (3:1 for large text). After the fix the full
+6-viewport × 2-theme run is clean.
+
+**Status: FIXED** in phase 3 batch 6.
+
+---
+
+## F-027 — The exam's sticky header took 36.7% of a landscape phone screen
+
+**Severity:** High (the header covered a third of the question area exactly when the on-screen keyboard or a landscape phone left the least room)
+
+**Found:** 2026-11-13 during the post-acceptance review of batch 6, by measuring the sticky wrapper on `/student/attempt/:attemptId`.
+
+**Symptom**
+
+At 844×390 the single sticky wrapper (fullscreen warning + timer + submit + violation
+counter) measured **143px of a 390px viewport = 36.7%**. The first question was pushed below
+the fold before the student had read it.
+
+**Root cause**
+
+The warning row, the title row and the timer row were three stacked rows with no compact
+mode. The full warning also stayed expanded forever, so it kept consuming height after the
+student had acknowledged it.
+
+**Fix** — layout only, no behaviour change:
+
+- When `window.innerHeight < 520` the header collapses to **one row**: no subtitle, no
+  progress bar, and the warning becomes a 44px icon inside the row (`exam-fullscreen-inline`).
+- Dismissing the full warning (`exam-fullscreen-dismiss`) remembers the choice
+  (`exam-fullscreen-dismiss` → `exam-fullscreen-inline`) so it does not re-expand on scroll
+  or re-render; the collapsed icon can still request fullscreen again.
+- Measured after the fix: 143px where the viewport is tall enough, **53px (13.3–13.6%)** at
+  390–400px heights, **max 17.9%** at 360×800 and 1280×800 — under the 20% limit.
+
+**Regression guard:** the batch-6 harness now records `stickyHeight`/`stickyRatio` for every
+attempt run and fails when a viewport under 520px exceeds 20%.
+
+**Status: FIXED** in phase 3 batch 6 (post-acceptance).
+
+---
+
+## F-028 — An answered question could look lost when the connection dropped
+
+**Severity:** Medium (no crash, but the student had no signal that the answer survived a failed submit)
+
+**Found:** 2026-11-13 by dispatching `offline` on the attempt screen.
+
+**Symptom**
+
+With the network offline the draft was saved, but the screen gave no notice; if the student
+pressed تسليم the generic failure toast was the only feedback, and it did not say the answers
+were kept.
+
+**Fix** — presentation and local persistence only, no payload or scoring change:
+
+- Answers are written to `localStorage` 250ms after a change (unchanged key/shape).
+- `exam-offline-note` shows «لا يوجد اتصال بالإنترنت. إجاباتك تُحفظ على هذا الجهاز، وتُرسل
+  عند التسليم بعد عودة الاتصال.» while offline.
+- The submit-failure message now says «لا يوجد اتصال. لم يُسلَّم الامتحان بعد، وإجاباتك محفوظة
+  على هذا الجهاز — أعد المحاولة بعد عودة الاتصال.» instead of a generic error.
+- The submit body stays `{questionId, selectedOptionId, essayAnswer}` and the draft is cleared
+  only after a successful submit.
+
+**Regression guard:** the harness dispatches `offline`, asserts the note, the local draft and
+the «غير متصل — حفظ محلي» state, then submits and re-checks the payload and that the draft is
+gone.
+
+**Status: FIXED** in phase 3 batch 6 (post-acceptance).
+
+---
+
+## F-029 — iPhone Safari was promised a fullscreen mode it does not have
+
+**Severity:** Medium (misleading instruction on a supported device; no data loss)
+
+**Found:** 2026-11-13 while reviewing the Fullscreen API branch on a browser without
+`requestFullscreen` (iPhone Safari).
+
+**Root cause**
+
+The screen always rendered the «أنت خارج وضع ملء الشاشة» warning and the start-screen rule
+«الخروج من ملء الشاشة يُسجَّل كمخالفة», even when the browser can never enter fullscreen. On
+iPhone Safari the student would see a permanent warning and a rule they cannot satisfy,
+without any violation actually being recorded.
+
+**Fix** — display branch only; the violation logic did not change:
+
+- The start-screen rule becomes «متصفح هذا الجهاز لا يدعم ملء الشاشة؛ التزم بالبقاء داخل
+  صفحة الامتحان وعدم مغادرتها.» when `fsSupported` is false.
+- The warning row and its «ملء الشاشة» button are not rendered without API support, so no
+  impossible promise is shown.
+- Violations are still emitted only by the existing path; no branch was added, removed or
+  reordered, and the submit contract is unchanged.
+
+**Regression guard:** the harness runs the attempt without injecting the Fullscreen API and
+asserts the fallback text plus the absence of the warning, while the violation/submit probes
+still pass.
+
+**Status: FIXED** in phase 3 batch 6 (post-acceptance).
+
+---
+
+## F-030 — The profile page scrolled sideways at 200% text zoom
+
+**Severity:** Low–Medium (horizontal scrolling at 200% text; no data or logic impact)
+
+**Found:** 2026-11-13 by the batch-7 text-zoom pass (`text200 profile 390 light`), 43px of
+horizontal overflow.
+
+**Root cause**
+
+Long values in the account summary (`InfoItem`) and the current email were plain `<p>`
+elements without any break opportunity. At 200% text a long address cannot wrap, so it grew
+past its 244px card and pushed the whole page 43px wider than the viewport.
+
+**Fix** — one class per element, layout only: `break-words` on the `InfoItem` value and on the
+current-email paragraph in `Profile.jsx`. The same 390px/200% state now reports 0px overflow,
+and the full batch-7 matrix (232 runs) is clean.
+
+**Regression guard:** the batch-7 harness runs every page at 200% text zoom (and 200% page
+zoom) and fails on any horizontal overflow.
+
+**Status: FIXED** in phase 3 batch 7.
+
+---
+
+## F-031 — Two portal controls were smaller than a 44px touch target
+
+**Severity:** Low (touch accessibility; nothing blocked)
+
+**Found:** 2026-11-13 while preparing the batch-8 audit for the student portal.
+
+**Root cause**
+
+- `NotificationBell` (both portals) was a `40×40` button (`h-10 w-10`).
+- The two «عرض الكل» links in the student dashboard were inline text links with no
+  vertical padding, so their hit box was ~20px tall.
+
+**Fix** — layout only: the bell is `h-11 w-11` with `rounded-control`, and both section
+links are `inline-flex min-h-11 items-center px-1`. The audit measures 44×44 for both.
+
+**Status: FIXED** in phase 3 batch 8.
+
+---
+
+## F-032 — Portal sections pushed the page sideways at 390px and at 200% text
+
+**Severity:** Medium (horizontal page scroll; the mobile-first portal is meant to be read on a phone)
+
+**Found:** 2026-11-13 by the batch-8 harness on `student-dashboard 390 light` (65px) and the
+same page at 200% text (517px).
+
+**Root cause**
+
+`PortalSection` was a grid item with the default `min-width: auto`. Its rows use `truncate`
+and the performance chart draws wide labels, so the section's min-content width was larger
+than the 358px phone column. The implicit `auto` grid track grew to that min-content width
+and the whole document inherited the overflow.
+
+**Fix** — one class: `min-w-0` on the `PortalSection` root, so a grid/flex parent can shrink
+the track. The same states now report 0px overflow; the fix covers every portal page because
+they all share the component.
+
+**Regression guard:** the batch-8 harness audits every page at 360/390/768/1280/1920 plus
+landscape, and repeats the matrix at 200% text and 200% page zoom.
+
+**Status: FIXED** in phase 3 batch 8.
+
+---
+
+## F-033 — The parent bottom nav lost its current item on a child page
+
+**Severity:** Low (orientation only; no navigation was broken)
+
+**Found:** 2026-11-13 by the batch-8 harness on `parent-child 390 light` — zero items carried
+`aria-current="page"`.
+
+**Root cause**
+
+The nav marks an item current when the pathname equals its path or starts with `path/`.
+`/parent/children/101` matches neither `/parent/dashboard` nor `/parent/notifications`, even
+though child details belong to the «أبنائي» tab.
+
+**Fix** — `MobileBottomNav` now accepts an optional `match` list of path prefixes per item, and
+the parent «أبنائي» item lists `/parent/dashboard` and `/parent/children`. Exactly one item is
+current on every parent screen, including when arriving from an absence notification.
+
+**Status: FIXED** in phase 3 batch 8.
+
+---
+
+## F-034 — The parent logout control was 42px wide on phones
+
+**Severity:** Low (touch accessibility)
+
+**Found:** 2026-11-13 by the batch-8 shell audit (`parent-child 390 light`), 42×44.
+
+**Root cause**
+
+Below `sm` the button hides its label but keeps `px-3`, so the width was the icon (16px) plus
+24px of padding, not the required 44px.
+
+**Fix** — the control is `h-11 w-11 justify-center p-0` below `sm` and returns to
+`sm:w-auto sm:px-3` with the visible label above it. Measured 44×44 on the phone and the same
+appearance as before on desktop.
+
+**Status: FIXED** in phase 3 batch 8.
+
+---
+
+## F-035 — Two portal table header rows inherited 12px text
+
+**Severity:** Low (readability; the values were correct)
+
+**Found:** 2026-11-13 by the batch-8 desktop audit on `student-attendance 1280 light`
+(6 cells) and `student-payments 1280 light` (7 cells).
+
+**Root cause**
+
+Both tables put `text-xs` on the header `<tr>`, so every `<th>` inherited 12px. The audit
+only exempts an element that carries `text-xs` itself, not one that inherits it, which is
+why the batch-6 fix (F-025) already moved the size onto the cells. These two tables were
+rebuilt in batch 8 and reintroduced the pattern.
+
+**Fix** — the header row is `text-sm` in both tables; the headers are 14px at every desktop
+width and the measured cell text stays 14px.
+
+**Status: FIXED** in phase 3 batch 8.
 
 ---
 

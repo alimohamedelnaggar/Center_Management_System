@@ -1,6 +1,13 @@
-import { X } from "@/components/icons";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { Building2 } from "@/components/icons";
+
+import AdminModal from "../ui/AdminModal";
+import Button from "../ui/Button";
+import { fieldBaseClass } from "../ui/Input";
+
+const inputClass = fieldBaseClass;
+const labelClass = "mb-1.5 block text-sm font-medium text-text-main";
 
 export default function CenterModal({ isOpen, onClose, onSubmit, initialData }) {
   const [formData, setFormData] = useState({
@@ -43,95 +50,79 @@ export default function CenterModal({ isOpen, onClose, onSubmit, initialData }) 
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="flex w-full max-w-lg max-h-[90vh] flex-col rounded-2xl border border-surface-border bg-surface-card shadow-2xl">
-        <div className="shrink-0 flex items-center justify-between border-b border-surface-border p-6">
-          <h2 className="text-xl font-extrabold text-text-main">
-            {initialData ? "تعديل المركز" : "إضافة مركز جديد"}
-          </h2>
-          <button
+    <AdminModal
+      open={isOpen}
+      onClose={onClose}
+      busy={saving}
+      title={initialData ? "تعديل المركز" : "إضافة مركز جديد"}
+      icon={Building2}
+      testId="center-modal"
+      formProps={{ onSubmit: handleSubmit, noValidate: true }}
+      footer={
+        <div className="flex gap-3">
+          <Button
+            type="button"
+            variant="outline"
             onClick={onClose}
-            className="text-text-muted hover:text-text-main"
+            disabled={saving}
+            className="flex-1"
           >
-            <X className="w-5 h-5" />
-          </button>
+            إلغاء
+          </Button>
+          <Button type="submit" loading={saving} className="flex-1">
+            {saving ? "جارٍ الحفظ..." : "حفظ"}
+          </Button>
         </div>
-        <form
-          onSubmit={handleSubmit}
-          noValidate
-          className="flex-1 overflow-y-auto p-6 space-y-4"
-        >
-          <div>
-            <label className="block text-sm font-medium mb-1 text-text-main">
-              اسم المركز *
-            </label>
-            <input
-              type="text"
-              className="w-full p-2.5 rounded-xl border border-surface-border bg-surface-muted text-text-main focus:outline-none focus:border-primary"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1 text-text-main">
-              رقم الهاتف
-            </label>
-            <input
-              type="text"
-              placeholder="01012345678"
-              className="w-full p-2.5 rounded-xl border border-surface-border bg-surface-muted text-text-main focus:outline-none focus:border-primary"
-              value={formData.phone}
-              onChange={(e) =>
-                setFormData({ ...formData, phone: e.target.value })
-              }
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1 text-text-main">
-              العنوان
-            </label>
-            <input
-              type="text"
-              className="w-full p-2.5 rounded-xl border border-surface-border bg-surface-muted text-text-main focus:outline-none focus:border-primary"
-              value={formData.address}
-              onChange={(e) =>
-                setFormData({ ...formData, address: e.target.value })
-              }
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1 text-text-main">
-              وصف
-            </label>
-            <textarea
-              rows={3}
-              className="w-full p-2.5 rounded-xl border border-surface-border bg-surface-muted text-text-main focus:outline-none focus:border-primary"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-            />
-          </div>
-          <div className="sticky bottom-0 shrink-0 flex gap-3 border-t border-surface-border bg-surface-card pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-1/2 py-2.5 rounded-xl border border-surface-border text-text-muted hover:bg-surface-muted font-bold transition-all"
-            >
-              إلغاء
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-1/2 py-2.5 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-all disabled:opacity-60"
-            >
-              {saving ? "جارٍ الحفظ..." : "حفظ"}
-            </button>
-          </div>
-        </form>
+      }
+    >
+      <div className="space-y-4">
+        <div>
+          <label className={labelClass}>اسم المركز *</label>
+          <input
+            type="text"
+            className={inputClass}
+            value={formData.name}
+            onChange={(e) =>
+              setFormData({ ...formData, name: e.target.value })
+            }
+          />
+        </div>
+        <div>
+          <label className={labelClass}>رقم الهاتف</label>
+          <input
+            type="text"
+            dir="ltr"
+            placeholder="01012345678"
+            className={inputClass}
+            value={formData.phone}
+            onChange={(e) =>
+              setFormData({ ...formData, phone: e.target.value })
+            }
+          />
+        </div>
+        <div>
+          <label className={labelClass}>العنوان</label>
+          <input
+            type="text"
+            className={inputClass}
+            value={formData.address}
+            onChange={(e) =>
+              setFormData({ ...formData, address: e.target.value })
+            }
+          />
+        </div>
+        <div>
+          <label className={labelClass}>وصف</label>
+          <textarea
+            rows={3}
+            className={inputClass}
+            value={formData.description}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
+          />
+        </div>
       </div>
-    </div>
+    </AdminModal>
   );
 }

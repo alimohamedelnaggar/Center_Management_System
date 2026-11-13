@@ -39,7 +39,7 @@ export default function AddCategoryModal({
             type="button"
             onClick={onClose}
             aria-label="إغلاق"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
           >
             <X className="h-4 w-4" />
           </button>
@@ -56,7 +56,7 @@ export default function AddCategoryModal({
             onChange={(e) => setName(e.target.value)}
             placeholder="مثال: كهرباء"
             autoFocus
-            className="w-full rounded-lg border border-surface-border bg-surface-card px-3 py-2.5 text-sm text-text-main placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
+            className="w-full rounded-lg border border-surface-border bg-surface-card px-3 min-h-11 py-2.5 text-sm text-text-main placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
           />
         </div>
 
@@ -65,14 +65,14 @@ export default function AddCategoryModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-lg border border-surface-border bg-surface-card py-2.5 text-sm font-medium text-text-main transition-colors hover:bg-surface-muted"
+            className="flex-1 rounded-lg border border-surface-border bg-surface-card min-h-11 py-2.5 text-sm font-medium text-text-main transition-colors hover:bg-surface-muted"
           >
             إلغاء
           </button>
           <button
             type="button"
             onClick={handleSave}
-            className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover"
+            className="flex-1 rounded-lg bg-primary min-h-11 py-2.5 text-sm font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover"
           >
             حفظ
           </button>

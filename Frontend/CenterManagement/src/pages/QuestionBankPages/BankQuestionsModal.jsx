@@ -110,12 +110,13 @@ export default function BankQuestionsModal({ open = false, bank = null, onClose 
 
   return (
     <div
+      data-testid="bank-questions-modal"
       dir="rtl"
       className="fixed inset-0 z-50 flex items-center justify-center bg-text-main/40 px-4 font-sans"
       onClick={onClose}
     >
       <div
-        className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-surface-card shadow-xl"
+        className="flex max-h-[calc(100dvh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-surface-card shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -130,7 +131,7 @@ export default function BankQuestionsModal({ open = false, bank = null, onClose 
             <button
               type="button"
               onClick={openAddQuestion}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 min-h-11 py-2 text-xs font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover"
             >
               <Plus className="h-4 w-4" />
               إضافة سؤال
@@ -139,7 +140,7 @@ export default function BankQuestionsModal({ open = false, bank = null, onClose 
               type="button"
               onClick={onClose}
               aria-label="إغلاق"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
             >
               <X className="h-4 w-4" />
             </button>
@@ -186,7 +187,7 @@ export default function BankQuestionsModal({ open = false, bank = null, onClose 
                       type="button"
                       aria-label="تعديل"
                       onClick={() => openEditQuestion(q)}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary-subtle text-primary transition-colors hover:bg-primary hover:text-text-inverse"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-primary-subtle text-primary transition-colors hover:bg-primary hover:text-text-inverse"
                     >
                       <Pencil className="h-4 w-4" />
                     </button>
@@ -197,7 +198,7 @@ export default function BankQuestionsModal({ open = false, bank = null, onClose 
                         setSelectedQuestion(q);
                         setIsDeleteOpen(true);
                       }}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-status-danger-bg text-status-danger transition-colors hover:bg-status-danger hover:text-text-inverse"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-status-danger-bg text-status-danger transition-colors hover:bg-status-danger hover:text-text-inverse"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -217,7 +218,7 @@ export default function BankQuestionsModal({ open = false, bank = null, onClose 
                     {q.options.map((opt, idx) => (
                       <li
                         key={opt.id ?? idx}
-                        className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${
+                        className={`flex items-center gap-2 rounded-lg px-3 min-h-11 py-2 text-sm ${
                           opt.isCorrect
                             ? "bg-status-success-bg text-status-success"
                             : "bg-surface-muted text-text-main"

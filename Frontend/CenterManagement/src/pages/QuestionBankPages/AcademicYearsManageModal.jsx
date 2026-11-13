@@ -98,7 +98,7 @@ export default function AcademicYearsManageModal({ open = false, onClose }) {
       onClick={onClose}
     >
       <div
-        className="flex max-h-[90vh] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-surface-card shadow-xl"
+        className="flex max-h-[calc(100dvh-2rem)] w-full max-w-md flex-col overflow-hidden rounded-2xl bg-surface-card shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-surface-border px-5 py-4">
@@ -110,7 +110,7 @@ export default function AcademicYearsManageModal({ open = false, onClose }) {
                 setEditingYear(null);
                 setShowYearModal(true);
               }}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-xs font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 min-h-11 py-2 text-xs font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover"
             >
               <Plus className="h-4 w-4" />
               إضافة سنة
@@ -119,7 +119,7 @@ export default function AcademicYearsManageModal({ open = false, onClose }) {
               type="button"
               onClick={onClose}
               aria-label="إغلاق"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
+              className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
             >
               <X className="h-4 w-4" />
             </button>
@@ -143,7 +143,7 @@ export default function AcademicYearsManageModal({ open = false, onClose }) {
               {years.map((year) => (
                 <li key={year.id} className="flex items-center justify-between gap-3 py-3">
                   <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-subtle text-xs font-bold text-primary">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary-subtle text-xs font-bold text-primary">
                       {year.order}
                     </span>
                     <span className="text-sm font-medium text-text-main">{year.name}</span>
@@ -156,7 +156,7 @@ export default function AcademicYearsManageModal({ open = false, onClose }) {
                         setEditingYear(year);
                         setShowYearModal(true);
                       }}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary-subtle text-primary transition-colors hover:bg-primary hover:text-text-inverse"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-primary-subtle text-primary transition-colors hover:bg-primary hover:text-text-inverse"
                     >
                       <Pencil className="h-4 w-4" />
                     </button>
@@ -167,7 +167,7 @@ export default function AcademicYearsManageModal({ open = false, onClose }) {
                         setSelectedYear(year);
                         setIsDeleteOpen(true);
                       }}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-status-danger-bg text-status-danger transition-colors hover:bg-status-danger hover:text-text-inverse"
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-status-danger-bg text-status-danger transition-colors hover:bg-status-danger hover:text-text-inverse"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>

@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
   CalendarCheck,
-  ChevronLeft,
   ClipboardList,
   GraduationCap,
   Loader2,
@@ -13,6 +12,13 @@ import {
   Wallet,
 } from "@/components/icons";
 import ModuleGuard from "../../components/common/ModuleGuard";
+import PageHeader from "../../components/ui/PageHeader";
+import {
+  PortalEmpty,
+  PortalLoading,
+  PortalSection,
+  PortalStatus,
+} from "../../components/portal/PortalUI";
 import { MODULES } from "../../constants/modules";
 import { parentPortalService } from "../../services/parentPortalService";
 import { formatCurrency } from "../../utils/formatCurrency";
@@ -60,43 +66,38 @@ const SECTIONS = [
   },
 ];
 
-function statusClasses(statusName) {
+function statusTone(statusName) {
   switch (statusName) {
     case "حاضر":
-      return "bg-status-success-bg text-status-success";
+      return "success";
     case "غائب":
-      return "bg-status-danger-bg text-status-danger";
+      return "danger";
     case "متأخر":
-      return "bg-status-warning-bg text-status-warning";
+      return "warning";
     case "بعذر":
-      return "bg-status-info-bg text-status-info";
+      return "info";
     default:
-      return "bg-surface-muted text-text-muted";
+      return "neutral";
   }
 }
 
 function Loading() {
-  return (
-    <div className="flex items-center justify-center gap-2 py-10 text-sm text-text-muted">
-      <Loader2 className="h-4 w-4 animate-spin" />
-      جاري التحميل...
-    </div>
-  );
+  return <PortalLoading icon={Loader2} />;
 }
 
 function SectionError({ message, onRetry }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
-      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-status-danger-bg text-status-danger">
-        <TriangleAlert className="h-5 w-5" />
+      <div className="flex h-12 w-12 items-center justify-center rounded-control bg-status-danger-bg text-status-danger">
+        <TriangleAlert className="h-6 w-6" aria-hidden="true" />
       </div>
-      <p className="text-sm text-text-muted">{message}</p>
+      <p className="text-sm leading-6 text-text-muted">{message}</p>
       <button
         type="button"
         onClick={onRetry}
-        className="inline-flex items-center gap-2 rounded-lg border border-surface-border bg-surface-card px-3 py-2 text-xs font-medium text-text-main transition hover:bg-surface-muted"
+        className="inline-flex min-h-11 items-center gap-2 rounded-action border border-surface-border bg-surface-card px-3 py-2 text-sm font-medium text-text-main transition hover:bg-surface-muted"
       >
-        <RefreshCw className="h-3.5 w-3.5" />
+        <RefreshCw className="h-4 w-4" aria-hidden="true" />
         إعادة المحاولة
       </button>
     </div>
@@ -104,9 +105,7 @@ function SectionError({ message, onRetry }) {
 }
 
 function Empty({ text }) {
-  return (
-    <p className="py-10 text-center text-sm text-text-muted">{text}</p>
-  );
+  return <p className="py-10 text-center text-sm text-text-muted">{text}</p>;
 }
 
 /**
@@ -153,28 +152,24 @@ export function ChildSection({
 
   return (
     <ModuleGuard moduleKey={moduleKey}>
-      <section className="rounded-xl border border-surface-border bg-surface-card shadow-sm">
-        <header className="flex items-center gap-2.5 border-b border-surface-border px-4 py-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-subtle text-primary">
-            <Icon className="h-4 w-4" />
-          </div>
-          <h2 className="text-sm font-bold text-text-main">{title}</h2>
-        </header>
-
-        <div className="px-4 py-2">
-          {state.loading && <Loading />}
-          {!state.loading && state.error && (
-            <SectionError message={state.error} onRetry={fetchData} />
-          )}
-          {!state.loading && !state.error && state.data && (
-            isEmpty(state.data) ? (
-              <Empty text={emptyText} />
-            ) : (
-              children(state.data)
-            )
-          )}
-        </div>
-      </section>
+      <PortalSection
+        icon={Icon}
+        title={title}
+        testId={`parent-child-section-${moduleKey}`}
+        bodyClassName="px-4 py-2 sm:px-5"
+      >
+        {state.loading && <Loading />}
+        {!state.loading && state.error && (
+          <SectionError message={state.error} onRetry={fetchData} />
+        )}
+        {!state.loading && !state.error && state.data && (
+          isEmpty(state.data) ? (
+            <Empty text={emptyText} />
+          ) : (
+            children(state.data)
+          )
+        )}
+      </PortalSection>
     </ModuleGuard>
   );
 }
@@ -189,7 +184,7 @@ function AttendanceBody({ data }) {
 
   return (
     <div>
-      <div className="grid grid-cols-2 gap-2 py-3 sm:grid-cols-6">
+      <div className="grid grid-cols-2 gap-2 py-3 sm:grid-cols-3 lg:grid-cols-6">
         <Stat label="إجمالي الحصص" value={data.totalSessions} />
         <Stat label="حاضر" value={data.presentCount} tone="success" />
         <Stat label="غائب" value={data.absentCount} tone="danger" />
@@ -205,25 +200,21 @@ function AttendanceBody({ data }) {
         {data.records.map((record, index) => (
           <li
             key={`${record.attendanceDate}-${index}`}
-            className="flex items-center justify-between gap-3 py-2.5"
+            className="flex items-center justify-between gap-3 py-3"
           >
             <div className="min-w-0">
-              <p className="text-sm font-medium text-text-main">
+              <p className="text-base font-bold text-text-main">
                 {formatShortDate(record.attendanceDate) || "—"}
               </p>
-              <p className="truncate text-xs text-text-muted">
+              <p className="mt-0.5 break-words text-sm text-text-muted">
                 {record.groupName}
                 {record.dayOfWeek ? ` · ${record.dayOfWeek}` : ""}
                 {record.startTime ? ` · ${record.startTime} - ${record.endTime}` : ""}
               </p>
             </div>
-            <span
-              className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${statusClasses(
-                record.statusName,
-              )}`}
-            >
+            <PortalStatus tone={statusTone(record.statusName)}>
               {rtlLabel(record.statusName)}
-            </span>
+            </PortalStatus>
           </li>
         ))}
       </ul>
@@ -237,7 +228,9 @@ function GradesBody({ data }) {
       {data.exams.map((exam, index) => (
         <li key={`${exam.examName}-${index}`} className="py-3">
           <div className="mb-2 flex items-center justify-between gap-2">
-            <p className="text-sm font-bold text-text-main">{exam.examName}</p>
+            <p className="min-w-0 break-words text-base font-bold text-text-main">
+              {exam.examName}
+            </p>
             <span className="shrink-0 text-xs text-text-muted">
               {formatShortDate(exam.examDate) || ""}
             </span>
@@ -246,14 +239,14 @@ function GradesBody({ data }) {
             {exam.components.map((component, cIndex) => (
               <span
                 key={`${component.componentName}-${cIndex}`}
-                className={`inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-xs ${
+                className={`inline-flex items-center gap-1 rounded-control border px-2.5 py-1.5 text-sm ${
                   component.isAbsent
                     ? "border-status-danger-bg bg-status-danger-bg text-status-danger"
                     : "border-surface-border bg-surface-muted text-text-main"
                 }`}
               >
                 <span className="text-text-muted">{component.componentName}:</span>
-                <span className="font-bold">
+                <span className="font-bold tabular-nums">
                   {component.isAbsent ? "غائب" : component.mark}
                 </span>
                 {!component.isAbsent && (
@@ -277,17 +270,17 @@ function ExamsBody({ data }) {
           className="flex items-center justify-between gap-3 py-3"
         >
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-text-main">
+            <p className="break-words text-base font-bold text-text-main">
               {exam.examName}
             </p>
-            <p className="text-xs text-text-muted">
+            <p className="mt-0.5 text-xs text-text-muted">
               {formatShortDate(exam.submittedAt) || "—"}
               {exam.hasPendingManualGrading ? " · بانتظار التصحيح" : ""}
             </p>
           </div>
-          <span className="shrink-0 rounded-full bg-primary-subtle px-3 py-1 text-xs font-bold text-primary">
+          <PortalStatus tone="primary" className="text-sm">
             {exam.score} / {exam.totalMark}
-          </span>
+          </PortalStatus>
         </li>
       ))}
     </ul>
@@ -310,13 +303,13 @@ function PaymentsBody({ data }) {
         {data.payments.map((payment, index) => (
           <li
             key={`${payment.paymentDate}-${index}`}
-            className="flex items-center justify-between gap-3 py-2.5"
+            className="flex items-center justify-between gap-3 py-3"
           >
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-text-main">
+              <p className="break-words text-base font-bold text-text-main">
                 {payment.groupName}
               </p>
-              <p className="text-xs text-text-muted">
+              <p className="mt-0.5 text-xs text-text-muted">
                 {formatShortDate(payment.paymentDate) || "—"}
                 {payment.billingPeriod
                   ? ` · ${formatShortDate(payment.billingPeriod)}`
@@ -324,7 +317,7 @@ function PaymentsBody({ data }) {
               </p>
             </div>
             <div className="shrink-0 text-left">
-              <p className="text-sm font-bold text-text-main">
+              <p className="text-base font-extrabold tabular-nums text-text-main">
                 {formatCurrency(payment.paidAmount)}
               </p>
               {payment.remainingAmount > 0 && (
@@ -353,9 +346,11 @@ function Stat({ label, value, tone }) {
             : "text-text-main";
 
   return (
-    <div className="rounded-lg border border-surface-border bg-surface-muted px-3 py-2 text-center">
-      <p className={`text-base font-bold ${toneClass}`}>{value}</p>
-      <p className="mt-0.5 text-xs text-text-muted">{label}</p>
+    <div className="rounded-control border border-surface-border bg-surface-muted px-3 py-2.5 text-center">
+      <p className={`text-xl font-extrabold tabular-nums sm:text-2xl ${toneClass}`}>
+        {value}
+      </p>
+      <p className="mt-0.5 text-xs font-medium text-text-muted">{label}</p>
     </div>
   );
 }
@@ -398,20 +393,14 @@ export default function ParentChildDetailsPage() {
     loadSummary();
   }, [loadSummary]);
 
-  const backLink = (
-    <Link
-      to="/parent/dashboard"
-      className="inline-flex items-center gap-1.5 text-sm font-medium text-text-muted transition hover:text-text-main"
-    >
-      <ChevronLeft className="h-4 w-4" />
-      أبنائي
-    </Link>
-  );
-
   if (loading) {
     return (
-      <div className="p-4 md:p-6">
-        {backLink}
+      <div data-testid="parent-child-page" className="p-4 font-sans md:p-6">
+        <PageHeader
+          className="mb-5"
+          breadcrumbs={[{ label: "أبنائي", to: "/parent/dashboard" }]}
+          title="بيانات الطالب"
+        />
         <Loading />
       </div>
     );
@@ -419,26 +408,30 @@ export default function ParentChildDetailsPage() {
 
   if (unavailable) {
     return (
-      <div className="p-4 md:p-6">
-        {backLink}
-        <div className="mt-4 flex flex-col items-center justify-center gap-3 rounded-xl border border-surface-border bg-surface-card py-16 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-status-warning-bg text-status-warning">
-            <TriangleAlert className="h-7 w-7" />
-          </div>
-          <p className="text-sm font-bold text-text-main">هذا الطالب غير مرتبط بحسابك</p>
-          <p className="max-w-sm text-xs text-text-muted">
-            ربما تم إلغاء الربط أو حذف الطالب. تواصل مع إدارة المركز.
-          </p>
-        </div>
+      <div data-testid="parent-child-page" className="p-4 font-sans md:p-6">
+        <PageHeader
+          className="mb-5"
+          breadcrumbs={[{ label: "أبنائي", to: "/parent/dashboard" }]}
+          title="بيانات الطالب"
+        />
+        <PortalEmpty
+          icon={TriangleAlert}
+          title="هذا الطالب غير مرتبط بحسابك"
+          description="ربما تم إلغاء الربط أو حذف الطالب. تواصل مع إدارة المركز."
+        />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-4 md:p-6">
-        {backLink}
-        <div className="mt-4 rounded-xl border border-surface-border bg-surface-card">
+      <div data-testid="parent-child-page" className="p-4 font-sans md:p-6">
+        <PageHeader
+          className="mb-5"
+          breadcrumbs={[{ label: "أبنائي", to: "/parent/dashboard" }]}
+          title="بيانات الطالب"
+        />
+        <div className="rounded-card border border-surface-border bg-surface-card">
           <SectionError message={error} onRetry={loadSummary} />
         </div>
       </div>
@@ -446,28 +439,34 @@ export default function ParentChildDetailsPage() {
   }
 
   return (
-    <div className="space-y-4 p-4 font-sans md:p-6">
-      {backLink}
+    <div
+      data-testid="parent-child-page"
+      className="space-y-4 p-4 font-sans md:p-6"
+    >
+      <PageHeader
+        breadcrumbs={[{ label: "أبنائي", to: "/parent/dashboard" }]}
+        title={summary?.fullName}
+        actions={
+          <PortalStatus tone={summary?.isActive ? "success" : "danger"}>
+            {summary?.isActive ? "نشط" : "غير نشط"}
+          </PortalStatus>
+        }
+      />
 
-      <div className="flex items-center gap-3 rounded-xl border border-surface-border bg-surface-card p-4 shadow-sm">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary-subtle text-primary">
-          <UserRound className="h-6 w-6" />
+      <div className="flex items-center gap-3 rounded-card border border-surface-border bg-surface-card p-4 shadow-soft">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary-subtle text-primary">
+          <UserRound className="h-7 w-7" aria-hidden="true" />
         </div>
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-lg font-bold text-text-main">
+          <p className="text-sm font-medium text-text-muted">ملخص الطالب</p>
+          <p className="mt-0.5 break-words text-lg font-extrabold text-text-main">
             {summary?.fullName}
-          </h1>
-          <span
-            className={`mt-1 inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${
-              summary?.isActive
-                ? "bg-status-success-bg text-status-success"
-                : "bg-status-danger-bg text-status-danger"
-            }`}
-          >
-            {summary?.isActive ? "نشط" : "غير نشط"}
-          </span>
+          </p>
         </div>
-        <GraduationCap className="hidden h-8 w-8 shrink-0 text-text-muted sm:block" />
+        <GraduationCap
+          className="hidden h-8 w-8 shrink-0 text-text-muted sm:block"
+          aria-hidden="true"
+        />
       </div>
 
       {SECTIONS.map((section) => (

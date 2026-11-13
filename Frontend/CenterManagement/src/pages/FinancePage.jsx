@@ -1,25 +1,39 @@
 import {
   BadgeCheck,
-  ChevronLeft,
-  ChevronRight,
   Pencil,
   Printer,
+  Receipt,
   Trash2,
+  Wallet,
 } from "@/components/icons";
 import { useEffect, useState } from "react";
 
 import AddPaymentModal from "../components/common/AddPaymentModal";
 import ConfirmModal from "../components/common/ConfirmModal";
+import Pagination from "../components/common/Pagination";
 import PaymentReceiptModal from "../components/common/PaymentReceiptModal";
+
+import Button from "@/components/ui/Button";
+import EmptyState from "@/components/ui/EmptyState";
+import Input from "@/components/ui/Input";
+import PageHeader from "@/components/ui/PageHeader";
+import Select from "@/components/ui/Select";
+import StatusPill from "@/components/ui/StatusPill";
+import Tabs from "@/components/ui/Tabs";
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+  TableCell,
+} from "@/components/ui/Table";
 
 import { examService } from "../services/examService";
 import { financeService } from "../services/financeService";
 import { startFinanceConnection } from "../services/signalr/financeSignalR";
 
 import { formatCurrency } from "../utils/formatCurrency";
-
-const BASE_BUTTON_CLASS =
-  "p-2 rounded-lg border transition-all duration-200 inline-flex items-center justify-center cursor-pointer group";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -400,30 +414,6 @@ export default function FinancePage() {
   // =========================================================
   // Pagination Helpers
   // =========================================================
-  const getPageNumbers = (currentPage, totalPages) => {
-    if (!totalPages || totalPages <= 1) {
-      return [];
-    }
-
-    const pages = [];
-
-    const maxVisiblePages = 5;
-
-    let startPage = Math.max(1, currentPage - 2);
-
-    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-    if (endPage - startPage < maxVisiblePages - 1) {
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
-    }
-
-    for (let page = startPage; page <= endPage; page++) {
-      pages.push(page);
-    }
-
-    return pages;
-  };
-
   const currentPage =
     activeTab === "payments" ? paymentsPageNumber : studentsPageNumber;
 
@@ -435,11 +425,6 @@ export default function FinancePage() {
 
   const currentPageSize =
     activeTab === "payments" ? paymentsPageSize : studentsPageSize;
-
-  const currentDataLength =
-    activeTab === "payments" ? paymentsData.length : studentsFinanceData.length;
-
-  const pageNumbers = getPageNumbers(currentPage, currentTotalPages);
 
   const handlePageChange = (page) => {
     if (page < 1 || page > currentTotalPages || page === currentPage) {
@@ -604,420 +589,332 @@ export default function FinancePage() {
   const students = studentsFinanceData || [];
 
   // =========================================================
-  // Pagination Component
+  // Pagination
   // =========================================================
-  const renderPagination = () => {
-    if (currentTotalCount === 0 || currentTotalPages <= 1) {
-      return null;
-    }
+  const paginationName = activeTab === "payments" ? "دفعة" : "طالب";
 
-    const from = (currentPage - 1) * currentPageSize + 1;
+  const renderActions = (item) => (
+    <div className="flex items-center gap-2 md:justify-center">
+      <Button
+        size="icon"
+        variant="secondary"
+        onClick={() => handleOpenReceipt(item)}
+        aria-label={`Print receipt for ${item.studentName}`}
+        title="طباعة الإيصال"
+        className="text-primary"
+      >
+        <Printer className="h-4 w-4" aria-hidden="true" />
+      </Button>
 
-    const to = Math.min(currentPage * currentPageSize, currentTotalCount);
+      <Button
+        size="icon"
+        variant="secondary"
+        onClick={() => handleOpenEditModal(item)}
+        aria-label={`Edit ${item.studentName}`}
+        title="تعديل الدفعة"
+        className="text-status-warning"
+      >
+        <Pencil className="h-4 w-4" aria-hidden="true" />
+      </Button>
 
-    return (
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-4 border-t border-[var(--color-surface-border)] bg-[var(--color-surface-card)]">
-        {/* Results Info */}
-        <div className="flex items-center gap-3 text-sm text-[var(--color-text-muted)]">
-          <span>
-            عرض{" "}
-            <span className="font-bold text-[var(--color-text-main)]">
-              {from}
-            </span>{" "}
-            إلى{" "}
-            <span className="font-bold text-[var(--color-text-main)]">
-              {to}
-            </span>{" "}
-            من{" "}
-            <span className="font-bold text-[var(--color-text-main)]">
-              {currentTotalCount}
-            </span>
-          </span>
+      <Button
+        size="icon"
+        variant="secondary"
+        onClick={() =>
+          handleDeletePayment(
+            item.paymentId || item.id,
+            item.studentName,
+          )
+        }
+        aria-label={`Delete ${item.studentName}`}
+        title="حذف الدفعة"
+        className="text-status-danger"
+      >
+        <Trash2 className="h-4 w-4" aria-hidden="true" />
+      </Button>
+    </div>
+  );
 
-          {/* Page Size */}
-          <select
-            value={currentPageSize}
-            onChange={handlePageSizeChange}
-            className="p-2 rounded-lg border border-[var(--color-surface-border)] bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-          >
-            <option value={10}>10 / صفحة</option>
-            <option value={20}>20 / صفحة</option>
-            <option value={50}>50 / صفحة</option>
-          </select>
-        </div>
-
-        {/* Pagination Buttons */}
-        <div className="flex items-center gap-1" dir="ltr">
-          {/* Previous */}
-          <button
-            type="button"
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className={`w-9 h-9 rounded-lg border flex items-center justify-center transition-all ${
-              currentPage === 1
-                ? "text-slate-300 border-slate-200 bg-slate-50 cursor-not-allowed"
-                : "text-slate-600 border-slate-200 bg-white hover:bg-slate-50 hover:border-[var(--color-primary)] cursor-pointer"
-            }`}
-            title="الصفحة السابقة"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-
-          {/* First Page */}
-          {pageNumbers[0] > 1 && (
-            <>
-              <button
-                type="button"
-                onClick={() => handlePageChange(1)}
-                className="w-9 h-9 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 cursor-pointer"
-              >
-                1
-              </button>
-
-              {pageNumbers[0] > 2 && (
-                <span className="w-9 h-9 flex items-center justify-center text-slate-400">
-                  ...
-                </span>
-              )}
-            </>
-          )}
-
-          {/* Page Numbers */}
-          {pageNumbers.map((page) => (
-            <button
-              type="button"
-              key={page}
-              onClick={() => handlePageChange(page)}
-              className={`w-9 h-9 rounded-lg border text-sm font-bold transition-all ${
-                page === currentPage
-                  ? "bg-[var(--color-primary)] text-white border-[var(--color-primary)] shadow-sm"
-                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-[var(--color-primary)] cursor-pointer"
-              }`}
-            >
-              {page}
-            </button>
-          ))}
-
-          {/* Last Page */}
-          {pageNumbers[pageNumbers.length - 1] < currentTotalPages && (
-            <>
-              {pageNumbers[pageNumbers.length - 1] < currentTotalPages - 1 && (
-                <span className="w-9 h-9 flex items-center justify-center text-slate-400">
-                  ...
-                </span>
-              )}
-
-              <button
-                type="button"
-                onClick={() => handlePageChange(currentTotalPages)}
-                className="w-9 h-9 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 cursor-pointer"
-              >
-                {currentTotalPages}
-              </button>
-            </>
-          )}
-
-          {/* Next */}
-          <button
-            type="button"
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === currentTotalPages}
-            className={`w-9 h-9 rounded-lg border flex items-center justify-center transition-all ${
-              currentPage === currentTotalPages
-                ? "text-slate-300 border-slate-200 bg-slate-50 cursor-not-allowed"
-                : "text-slate-600 border-slate-200 bg-white hover:bg-slate-50 hover:border-[var(--color-primary)] cursor-pointer"
-            }`}
-            title="الصفحة التالية"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-    );
-  };
+  const formatDate = (value) =>
+    value ? new Date(value).toLocaleDateString("ar-EG") : "-";
 
   return (
-    <div className="p-6 bg-[var(--color-surface-bg)] min-h-screen text-[var(--color-text-main)] dir-rtl space-y-6">
-      {/* =====================================================
-          Delete Success
-      ====================================================== */}
-      {deleteSuccess && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[100]">
-          <div className="flex items-center gap-3 bg-green-50 border border-green-200 text-green-700 px-5 py-3 rounded-xl shadow-lg">
-            <BadgeCheck className="w-5 h-5" />
+    <div
+      dir="rtl"
+      data-testid="finance-page"
+      className="min-h-screen bg-surface-bg font-sans text-text-main"
+    >
+      <div className="mx-auto max-w-[90rem] space-y-5 px-4 py-6 sm:px-6 lg:px-8">
+        {/* =====================================================
+            Delete Success
+        ====================================================== */}
+        {deleteSuccess && (
+          <div
+            role="status"
+            className="fixed left-1/2 top-6 z-[100] -translate-x-1/2"
+          >
+            <div className="flex items-center gap-3 rounded-card border border-status-success/40 bg-status-success-bg px-5 py-3 text-status-success shadow-lg">
+              <BadgeCheck className="h-5 w-5" aria-hidden="true" />
 
-            <span className="text-sm font-bold">تم حذف الدفعة بنجاح</span>
+              <span className="text-sm font-bold">تم حذف الدفعة بنجاح</span>
+            </div>
           </div>
-        </div>
-      )}
-
-      {/* =====================================================
-          Header
-      ====================================================== */}
-      <div className="flex flex-wrap justify-between items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--color-primary)]">
-            إدارة المالية والاشتراكات
-          </h1>
-
-          <p className="text-sm text-[var(--color-text-muted)]">
-            متابعة تحصيل المدفوعات واشتراكات الطلاب
-          </p>
-        </div>
-
-        <div className="flex gap-3">
-          <button
-            onClick={handleOpenAddModal}
-            className="bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white px-5 py-2 rounded-xl text-sm font-bold shadow-md transition-all cursor-pointer"
-          >
-            + إضافة دفعة جديدة
-          </button>
-        </div>
-      </div>
-
-      {/* =====================================================
-          Tabs
-      ====================================================== */}
-      <div className="flex border-b border-[var(--color-surface-border)] gap-6">
-        <button
-          onClick={() => {
-            setActiveTab("payments");
-          }}
-          className={`pb-3 font-bold text-sm border-b-2 transition-colors cursor-pointer ${
-            activeTab === "payments"
-              ? "border-[var(--color-primary)] text-[var(--color-primary)]"
-              : "border-transparent text-[var(--color-text-muted)] hover:text-gray-700"
-          }`}
-        >
-          سجل الحركات المالية
-        </button>
-
-        <button
-          onClick={() => {
-            setActiveTab("students");
-          }}
-          className={`pb-3 font-bold text-sm border-b-2 transition-colors cursor-pointer ${
-            activeTab === "students"
-              ? "border-[var(--color-primary)] text-[var(--color-primary)]"
-              : "border-transparent text-[var(--color-text-muted)] hover:text-gray-700"
-          }`}
-        >
-          حالة دفع الطلاب (متابعة الاشتراكات)
-        </button>
-      </div>
-
-      {/* =====================================================
-          Filters
-      ====================================================== */}
-      <div className="flex flex-wrap items-center gap-4 bg-[var(--color-surface-card)] p-4 rounded-xl border border-[var(--color-surface-border)] shadow-sm">
-        {/* Search */}
-        <input
-          type="text"
-          placeholder="بحث باسم الطالب..."
-          value={searchQuery}
-          onChange={(e) => {
-            setSearchQuery(e.target.value);
-          }}
-          className="p-2.5 rounded-lg border border-[var(--color-surface-border)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] min-w-[200px]"
-        />
-
-        {/* Group */}
-        <select
-          value={selectedGroup}
-          onChange={(e) => {
-            setSelectedGroup(e.target.value);
-          }}
-          className="p-2.5 rounded-lg border border-[var(--color-surface-border)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-        >
-          <option value="">جميع المجموعات</option>
-
-          {groups.map((g) => (
-            <option key={g.id} value={g.id}>
-              {g.name}
-            </option>
-          ))}
-        </select>
-
-        {/* Subscription Type */}
-        <select
-          value={selectedSubscriptionType}
-          onChange={(e) => {
-            setSelectedSubscriptionType(e.target.value);
-
-            if (e.target.value !== "2") {
-              setSelectedPaymentStatus("all");
-            }
-          }}
-          className="p-2.5 rounded-lg border border-[var(--color-surface-border)] bg-white text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-        >
-          <option value="all">جميع الاشتراكات</option>
-
-          <option value="2">اشتراك شهري</option>
-
-          <option value="1">دفع بالحصة</option>
-        </select>
-
-        {/* Payment Status */}
-        {activeTab === "students" && selectedSubscriptionType === "2" && (
-          <select
-            value={selectedPaymentStatus}
-            onChange={(e) => {
-              setSelectedPaymentStatus(e.target.value);
-            }}
-            className="p-2.5 rounded-lg border border-[var(--color-surface-border)] bg-white text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-          >
-            <option value="all">كل حالات الشهري</option>
-
-            <option value="unpaid">غير مدفوع (عليهم فلوس)</option>
-
-            <option value="partial">تم دفع جزء</option>
-
-            <option value="paid">تم الدفع</option>
-          </select>
         )}
 
-        {/* Month */}
-        <select
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
-          className="p-2.5 rounded-lg border border-[var(--color-surface-border)] bg-white text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-        >
-          <option value="all">كل الشهور</option>
+        <PageHeader
+          title="إدارة المالية والاشتراكات"
+          subtitle="متابعة تحصيل المدفوعات واشتراكات الطلاب"
+          actions={
+            <Button onClick={handleOpenAddModal}>+ إضافة دفعة جديدة</Button>
+          }
+        />
 
-          <option value="1">يناير</option>
+        <Tabs
+          tabs={[
+            { id: "payments", label: "سجل الحركات المالية" },
+            { id: "students", label: "حالة دفع الطلاب (متابعة الاشتراكات)" },
+          ]}
+          activeId={activeTab}
+          onChange={setActiveTab}
+        />
 
-          <option value="2">فبراير</option>
+        {/* =====================================================
+            Filters
+        ====================================================== */}
+        <div className="rounded-card border border-surface-border bg-surface-card p-4 shadow-soft">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <Input
+              type="text"
+              aria-label="بحث باسم الطالب"
+              placeholder="بحث باسم الطالب..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
 
-          <option value="3">مارس</option>
+            <Select
+              aria-label="المجموعة"
+              value={selectedGroup}
+              onChange={(e) => setSelectedGroup(e.target.value)}
+            >
+              <option value="">جميع المجموعات</option>
 
-          <option value="4">أبريل</option>
+              {groups.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
+                </option>
+              ))}
+            </Select>
 
-          <option value="5">مايو</option>
+            <Select
+              aria-label="نوع الاشتراك"
+              value={selectedSubscriptionType}
+              onChange={(e) => {
+                setSelectedSubscriptionType(e.target.value);
 
-          <option value="6">يونيو</option>
+                if (e.target.value !== "2") {
+                  setSelectedPaymentStatus("all");
+                }
+              }}
+            >
+              <option value="all">جميع الاشتراكات</option>
+              <option value="2">اشتراك شهري</option>
+              <option value="1">دفع بالحصة</option>
+            </Select>
 
-          <option value="7">يوليو</option>
+            {activeTab === "students" && selectedSubscriptionType === "2" && (
+              <Select
+                aria-label="حالة الدفع"
+                value={selectedPaymentStatus}
+                onChange={(e) => setSelectedPaymentStatus(e.target.value)}
+              >
+                <option value="all">كل حالات الشهري</option>
+                <option value="unpaid">غير مدفوع (عليهم فلوس)</option>
+                <option value="partial">تم دفع جزء</option>
+                <option value="paid">تم الدفع</option>
+              </Select>
+            )}
 
-          <option value="8">أغسطس</option>
+            <Select
+              aria-label="الشهر"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+            >
+              <option value="all">كل الشهور</option>
+              <option value="1">يناير</option>
+              <option value="2">فبراير</option>
+              <option value="3">مارس</option>
+              <option value="4">أبريل</option>
+              <option value="5">مايو</option>
+              <option value="6">يونيو</option>
+              <option value="7">يوليو</option>
+              <option value="8">أغسطس</option>
+              <option value="9">سبتمبر</option>
+              <option value="10">أكتوبر</option>
+              <option value="11">نوفمبر</option>
+              <option value="12">ديسمبر</option>
+            </Select>
 
-          <option value="9">سبتمبر</option>
+            <Select
+              aria-label="السنة"
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+            >
+              <option value="all">كل السنين</option>
 
-          <option value="10">أكتوبر</option>
+              {availableYears.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </Select>
 
-          <option value="11">نوفمبر</option>
+            <Select
+              aria-label="عدد الصفوف في الصفحة"
+              value={currentPageSize}
+              onChange={handlePageSizeChange}
+            >
+              <option value={10}>10 / صفحة</option>
+              <option value={20}>20 / صفحة</option>
+              <option value={50}>50 / صفحة</option>
+            </Select>
+          </div>
+        </div>
 
-          <option value="12">ديسمبر</option>
-        </select>
-
-        {/* Year */}
-        <select
-          value={selectedYear}
-          onChange={(e) => setSelectedYear(e.target.value)}
-          className="p-2.5 rounded-lg border border-[var(--color-surface-border)] bg-white text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-        >
-          <option value="all">كل السنين</option>
-
-          {availableYears.map((year) => (
-            <option key={year} value={year}>
-              {year}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* =====================================================
-          Tables
-      ====================================================== */}
-      <div className="bg-[var(--color-surface-card)] rounded-xl border border-[var(--color-surface-border)] shadow-sm overflow-hidden">
+        {/* =====================================================
+            Data
+        ====================================================== */}
         {loading ? (
-          <div className="p-12 text-center text-[var(--color-text-muted)] font-medium">
+          <div className="rounded-card border border-surface-border bg-surface-card p-12 text-center text-sm font-medium text-text-muted">
             جاري التحميل...
           </div>
         ) : activeTab === "payments" ? (
-          <>
-            {/* =================================================
-                Payments Table
-            ================================================== */}
-            <div className="w-full overflow-x-auto rounded-xl border border-surface-border shadow-xs">
-              <table className="w-full min-w-[600px] text-right text-sm">
-                <thead className="bg-[var(--color-surface-muted)] text-[var(--color-text-muted)] font-bold">
-                  <tr>
-                    <th className="p-3">الطالب</th>
+          paymentsData.length === 0 ? (
+            <div className="rounded-card border border-surface-border bg-surface-card shadow-soft">
+              <EmptyState
+                icon={Wallet}
+                title="لا توجد مدفوعات تطابق خيارات الفلترة الحالية"
+              />
+            </div>
+          ) : (
+            <>
+              {/* Phones: payment cards */}
+              <ul data-testid="payments-cards" className="space-y-3 md:hidden">
+                {paymentsData.map((item) => (
+                  <li
+                    key={item.paymentId || item.id}
+                    className="rounded-card border border-surface-border bg-surface-card p-4 shadow-soft"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="break-words font-bold text-text-main">
+                          {item.studentName}
+                        </p>
+                        <p className="mt-0.5 break-words text-sm text-text-muted">
+                          {item.groupName || "-"}
+                        </p>
+                      </div>
 
-                    <th className="p-3">المجموعة</th>
+                      <span className="num shrink-0 whitespace-nowrap text-base font-extrabold text-status-success">
+                        {formatCurrency(item.amount)}
+                      </span>
+                    </div>
 
-                    <th className="p-3">نوع الاشتراك</th>
-
-                    <th className="p-3">المبلغ</th>
-
-                    <th className="p-3">التاريخ</th>
-
-                    <th className="p-3">استلم بواسطة</th>
-
-                    <th className="p-3">الفترة / الحصة</th>
-
-                    <th className="p-3">الإجراءات</th>
-                  </tr>
-                </thead>
-
-                <tbody className="divide-y divide-[var(--color-surface-border)]">
-                  {paymentsData.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan="8"
-                        className="p-12 text-center text-slate-400"
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <StatusPill
+                        tone={item.subscriptionType === 1 ? "warning" : "info"}
                       >
-                        لا توجد مدفوعات تطابق خيارات الفلترة الحالية
-                      </td>
-                    </tr>
-                  ) : (
-                    paymentsData.map((item) => (
-                      <tr
-                        key={item.paymentId || item.id}
-                        className="hover:bg-slate-50"
-                      >
-                        {/* Student */}
-                        <td className="p-3 font-medium">{item.studentName}</td>
+                        {item.subscriptionType === 1 ? "بالحصة" : "شهري"}
+                      </StatusPill>
 
-                        {/* Group */}
-                        <td className="p-3">{item.groupName}</td>
+                      <span className="num text-sm text-text-muted">
+                        {formatDate(item.paymentDate)}
+                      </span>
+                    </div>
 
-                        {/* Subscription */}
-                        <td className="p-3">
-                          <span
-                            className={`px-2 py-1 rounded-md text-xs font-bold ${
-                              item.subscriptionType === 1
-                                ? "bg-amber-100 text-amber-800"
-                                : "bg-blue-100 text-blue-800"
-                            }`}
+                    <dl className="mt-3 space-y-1.5 text-sm">
+                      <div className="flex items-center justify-between gap-3">
+                        <dt className="text-text-muted">استلم بواسطة</dt>
+                        <dd className="min-w-0 break-words text-text-main">
+                          {item.receivedByName || "-"}
+                        </dd>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-3">
+                        <dt className="text-text-muted">الفترة / الحصة</dt>
+                        <dd className="min-w-0 break-words text-text-main">
+                          {item.subscriptionType === 2
+                            ? item.billingPeriod
+                              ? `شهر ${new Date(
+                                  item.billingPeriod,
+                                ).toLocaleDateString("ar-EG", {
+                                  month: "long",
+                                  year: "numeric",
+                                })}`
+                              : "-"
+                            : item.sessionName || "حصة عادية"}
+                        </dd>
+                      </div>
+                    </dl>
+
+                    <div className="mt-3">{renderActions(item)}</div>
+                  </li>
+                ))}
+              </ul>
+
+              {/* Tablets and up */}
+              <div data-testid="payments-table" className="hidden md:block">
+                <Table className="min-w-[64rem] whitespace-nowrap">
+                  <TableHead>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHeaderCell>الطالب</TableHeaderCell>
+                      <TableHeaderCell>المجموعة</TableHeaderCell>
+                      <TableHeaderCell>نوع الاشتراك</TableHeaderCell>
+                      <TableHeaderCell>المبلغ</TableHeaderCell>
+                      <TableHeaderCell>التاريخ</TableHeaderCell>
+                      <TableHeaderCell>استلم بواسطة</TableHeaderCell>
+                      <TableHeaderCell>الفترة / الحصة</TableHeaderCell>
+                      <TableHeaderCell className="text-center">
+                        الإجراءات
+                      </TableHeaderCell>
+                    </TableRow>
+                  </TableHead>
+
+                  <TableBody>
+                    {paymentsData.map((item) => (
+                      <TableRow key={item.paymentId || item.id}>
+                        <TableCell className="max-w-[14rem] break-words font-medium">
+                          {item.studentName}
+                        </TableCell>
+
+                        <TableCell className="max-w-[12rem] truncate text-text-muted">
+                          {item.groupName || "-"}
+                        </TableCell>
+
+                        <TableCell>
+                          <StatusPill
+                            tone={
+                              item.subscriptionType === 1 ? "warning" : "info"
+                            }
                           >
                             {item.subscriptionType === 1 ? "بالحصة" : "شهري"}
-                          </span>
-                        </td>
+                          </StatusPill>
+                        </TableCell>
 
-                        {/* Amount */}
-                        <td className="p-3 font-bold text-green-600">
+                        <TableCell className="num font-bold text-status-success">
                           {formatCurrency(item.amount)}
-                        </td>
+                        </TableCell>
 
-                        {/* Payment Date */}
-                        <td className="p-3 text-[var(--color-text-muted)]">
-                          {item.paymentDate
-                            ? new Date(item.paymentDate).toLocaleDateString(
-                                "ar-EG",
-                              )
-                            : "-"}
-                        </td>
+                        <TableCell className="num text-text-muted">
+                          {formatDate(item.paymentDate)}
+                        </TableCell>
 
-                        {/* Received By */}
-                        <td className="p-3 text-[var(--color-text-muted)]">
-                          {item.receivedByName ? item.receivedByName : "-"}
-                        </td>
-                        <td className="p-3">
+                        <TableCell className="max-w-[12rem] truncate text-text-muted">
+                          {item.receivedByName || "-"}
+                        </TableCell>
+
+                        <TableCell>
                           {item.subscriptionType === 2 ? (
-                            <div className="flex items-center gap-1.5 font-medium text-slate-700">
-                              <span className="w-2 h-2 rounded-full bg-blue-500 inline-block"></span>
-
+                            <span className="font-medium text-text-main">
                               {item.billingPeriod ? (
                                 <span>
                                   شهر{" "}
@@ -1029,18 +926,16 @@ export default function FinancePage() {
                                   })}
                                 </span>
                               ) : (
-                                <span className="text-slate-400">-</span>
+                                <span className="text-text-muted">-</span>
                               )}
-                            </div>
+                            </span>
                           ) : (
                             <div className="flex flex-col gap-0.5">
-                              <div className="flex items-center gap-1.5 font-semibold text-slate-800">
-                                <span className="w-2 h-2 rounded-full bg-amber-500 inline-block"></span>
+                              <span className="font-semibold text-text-main">
+                                {item.sessionName || "حصة عادية"}
+                              </span>
 
-                                <span>{item.sessionName || "حصة عادية"}</span>
-                              </div>
-
-                              <span className="text-xs text-slate-500 font-normal pr-3">
+                              <span className="num text-xs text-text-muted">
                                 بتاريخ:{" "}
                                 {item.paymentDate
                                   ? new Date(
@@ -1053,233 +948,271 @@ export default function FinancePage() {
                               </span>
                             </div>
                           )}
-                        </td>
+                        </TableCell>
 
-                        {/* Actions */}
-                        <td className="p-3 font-medium">
-                          <div className="flex items-center gap-2">
-                            {/* Print Receipt */}
-                            <button
-                              onClick={() => handleOpenReceipt(item)}
-                              aria-label={`Print receipt for ${item.studentName}`}
-                              title="طباعة الإيصال"
-                              className={`${BASE_BUTTON_CLASS} text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100 hover:border-blue-300 hover:text-blue-700`}
-                            >
-                              <Printer className="h-4 w-4 transition-transform group-hover:scale-110" />
-                            </button>
-
-                            {/* Edit */}
-                            <button
-                              onClick={() => handleOpenEditModal(item)}
-                              aria-label={`Edit ${item.studentName}`}
-                              title="تعديل الدفعة"
-                              className={`${BASE_BUTTON_CLASS} text-amber-600 border-amber-200 bg-amber-50 hover:bg-amber-100 hover:border-amber-300 hover:text-amber-700`}
-                            >
-                              <Pencil className="h-4 w-4 transition-transform group-hover:rotate-6 group-hover:scale-110" />
-                            </button>
-
-                            {/* Delete */}
-                            <button
-                              onClick={() =>
-                                handleDeletePayment(
-                                  item.paymentId || item.id,
-                                  item.studentName,
-                                )
-                              }
-                              aria-label={`Delete ${item.studentName}`}
-                              title="حذف الدفعة"
-                              className={`${BASE_BUTTON_CLASS} text-red-600 border-red-200 bg-red-50 hover:bg-red-100 hover:border-red-300 hover:text-red-700`}
-                            >
-                              <Trash2 className="h-4 w-4 transition-transform group-hover:scale-110" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Payments Pagination */}
-            {renderPagination()}
-          </>
+                        <TableCell>{renderActions(item)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
+          )
+        ) : students.length === 0 ? (
+          <div className="rounded-card border border-surface-border bg-surface-card shadow-soft">
+            <EmptyState
+              icon={Receipt}
+              title="لا توجد نتائج تطابق خيارات الفلترة الحالية"
+            />
+          </div>
         ) : (
           <>
-            {/* =================================================
-                Students Finance Table
-            ================================================== */}
-            <div className="w-full overflow-x-auto bg-white rounded-xl border border-[var(--color-surface-border)] shadow-sm">
-              <table className="w-full min-w-[750px] text-right text-sm whitespace-nowrap">
-                <thead className="bg-[var(--color-surface-muted)] text-[var(--color-text-muted)] font-semibold border-b border-[var(--color-surface-border)]">
-                  <tr>
-                    <th className="p-4">اسم الطالب</th>
+            {/* Phones: subscription-status cards */}
+            <ul data-testid="students-cards" className="space-y-3 md:hidden">
+              {students.map((item) => {
+                const status = getStudentPaymentStatus(item);
 
-                    <th className="p-4">المجموعة</th>
+                return (
+                  <li
+                    key={item.studentId}
+                    className="rounded-card border border-surface-border bg-surface-card p-4 shadow-soft"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        <p className="break-words font-bold text-text-main">
+                          {item.studentName}
+                        </p>
 
-                    <th className="p-4">نوع الاشتراك</th>
-
-                    <th className="p-4 text-center">حالة الشهر الحالي</th>
-
-                    <th className="p-4">آخر مبلغ مدفوع</th>
-
-                    <th className="p-4">تاريخ آخر دفع</th>
-                  </tr>
-                </thead>
-
-                <tbody className="divide-y divide-[var(--color-surface-border)]">
-                  {students.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan="6"
-                        className="p-12 text-center text-slate-400"
-                      >
-                        <div className="flex flex-col items-center justify-center gap-2">
-                          <svg
-                            className="w-8 h-8 text-slate-300"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={1.5}
-                              d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a2 2 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                        {item.isPaidAlways && (
+                          <span title="تم الدفع دائمًا" className="shrink-0">
+                            <BadgeCheck
+                              size={18}
+                              className="text-status-success"
+                              aria-hidden="true"
                             />
-                          </svg>
-
-                          <span>
-                            لا توجد نتائج تطابق خيارات الفلترة الحالية
                           </span>
+                        )}
+                      </div>
+
+                      {item.subscriptionType === 2 ? (
+                        status === 3 ? (
+                          <StatusPill tone="info">لم يكن مشتركًا</StatusPill>
+                        ) : (
+                          <StatusPill
+                            tone={
+                              status === 2
+                                ? "success"
+                                : status === 1
+                                  ? "warning"
+                                  : "danger"
+                            }
+                          >
+                            {status === 2
+                              ? "تم الدفع"
+                              : status === 1
+                                ? "دفع جزء"
+                                : "غير مدفوع"}
+                          </StatusPill>
+                        )
+                      ) : (
+                        <StatusPill tone="neutral">دفع بالحصة</StatusPill>
+                      )}
+                    </div>
+
+                    <p className="mt-1 break-words text-sm text-text-muted">
+                      {item.groupName || "-"} ·{" "}
+                      {item.subscriptionType === 2 ? "شهري" : "بالحصة"}
+                    </p>
+
+                    <dl className="mt-3 grid grid-cols-2 gap-2 rounded-control bg-surface-muted/60 p-2.5">
+                      <div className="min-w-0">
+                        <dt className="text-xs text-text-muted">
+                          آخر مبلغ مدفوع
+                        </dt>
+                        <dd className="num mt-0.5 break-words text-sm font-semibold text-text-main">
+                          {item.lastPaymentAmount
+                            ? `${item.lastPaymentAmount} ج.م`
+                            : "-"}
+                        </dd>
+                      </div>
+
+                      <div className="min-w-0">
+                        <dt className="text-xs text-text-muted">
+                          تاريخ آخر دفع
+                        </dt>
+                        <dd className="num mt-0.5 break-words text-sm text-text-main">
+                          {formatDate(item.lastPaymentDate)}
+                        </dd>
+                      </div>
+
+                      {item.subscriptionType === 2 &&
+                        status !== 3 &&
+                        item.remainingAmount > 0 && (
+                          <div className="col-span-2">
+                            <dt className="text-xs text-text-muted">متبقي</dt>
+                            <dd className="num mt-0.5 break-words text-sm font-bold text-status-danger">
+                              متبقي: {formatCurrency(item.remainingAmount)}
+                            </dd>
+                          </div>
+                        )}
+
+                      {item.subscriptionType === 2 && status === 3 && (
+                        <div className="col-span-2">
+                          <dt className="text-xs text-text-muted">
+                            تاريخ الانضمام
+                          </dt>
+                          <dd className="num mt-0.5 break-words text-sm text-text-main">
+                            {item.joinDate
+                              ? new Date(item.joinDate).toLocaleDateString(
+                                  "ar-EG",
+                                  {
+                                    month: "long",
+                                    year: "numeric",
+                                  },
+                                )
+                              : "-"}
+                          </dd>
                         </div>
-                      </td>
-                    </tr>
-                  ) : (
-                    students.map((item) => {
-                      const status = getStudentPaymentStatus(item);
+                      )}
+                    </dl>
+                  </li>
+                );
+              })}
+            </ul>
 
-                      return (
-                        <tr
-                          key={item.studentId}
-                          className="hover:bg-slate-50 transition-colors duration-200"
-                        >
-                          {/* Student */}
-                          <td className="p-4 font-medium text-slate-800">
-                            <div className="flex items-center gap-2">
-                              <span>{item.studentName}</span>
+            {/* Tablets and up */}
+            <div data-testid="students-table" className="hidden md:block">
+              <Table className="min-w-[56rem] whitespace-nowrap">
+                <TableHead>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHeaderCell>اسم الطالب</TableHeaderCell>
+                    <TableHeaderCell>المجموعة</TableHeaderCell>
+                    <TableHeaderCell>نوع الاشتراك</TableHeaderCell>
+                    <TableHeaderCell className="text-center">
+                      حالة الشهر الحالي
+                    </TableHeaderCell>
+                    <TableHeaderCell>آخر مبلغ مدفوع</TableHeaderCell>
+                    <TableHeaderCell>تاريخ آخر دفع</TableHeaderCell>
+                  </TableRow>
+                </TableHead>
 
-                              {item.isPaidAlways && (
-                                <span title="تم الدفع دائمًا">
-                                  <BadgeCheck
-                                    size={18}
-                                    className="text-green-500"
-                                  />
-                                </span>
+                <TableBody>
+                  {students.map((item) => {
+                    const status = getStudentPaymentStatus(item);
+
+                    return (
+                      <TableRow key={item.studentId}>
+                        <TableCell className="max-w-[14rem] break-words font-medium">
+                          <span className="flex items-center gap-2">
+                            <span className="min-w-0 break-words">
+                              {item.studentName}
+                            </span>
+
+                            {item.isPaidAlways && (
+                              <span title="تم الدفع دائمًا" className="shrink-0">
+                                <BadgeCheck
+                                  size={18}
+                                  className="text-status-success"
+                                  aria-hidden="true"
+                                />
+                              </span>
+                            )}
+                          </span>
+                        </TableCell>
+
+                        <TableCell className="max-w-[12rem] truncate text-text-muted">
+                          {item.groupName}
+                        </TableCell>
+
+                        <TableCell className="text-text-muted">
+                          {item.subscriptionType === 2 ? "شهري" : "بالحصة"}
+                        </TableCell>
+
+                        <TableCell className="text-center">
+                          {item.subscriptionType === 2 ? (
+                            <div className="flex min-h-[52px] flex-col items-center justify-center gap-1.5">
+                              {status === 3 ? (
+                                <>
+                                  <StatusPill tone="info">
+                                    لم يكن مشتركًا
+                                  </StatusPill>
+
+                                  {item.joinDate && (
+                                    <span className="num text-xs text-text-muted">
+                                      انضم في{" "}
+                                      {new Date(
+                                        item.joinDate,
+                                      ).toLocaleDateString("ar-EG", {
+                                        month: "long",
+                                        year: "numeric",
+                                      })}
+                                    </span>
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  <StatusPill
+                                    tone={
+                                      status === 2
+                                        ? "success"
+                                        : status === 1
+                                          ? "warning"
+                                          : "danger"
+                                    }
+                                  >
+                                    {status === 2
+                                      ? "تم الدفع"
+                                      : status === 1
+                                        ? "دفع جزء"
+                                        : "غير مدفوع"}
+                                  </StatusPill>
+
+                                  {item.remainingAmount > 0 && (
+                                    <span className="num rounded-control bg-status-danger-bg px-2 py-0.5 text-xs font-bold text-status-danger">
+                                      متبقي:{" "}
+                                      {formatCurrency(item.remainingAmount)}
+                                    </span>
+                                  )}
+                                </>
                               )}
                             </div>
-                          </td>
-
-                          {/* Group */}
-                          <td className="p-4 text-slate-600">
-                            {item.groupName}
-                          </td>
-
-                          {/* Subscription */}
-                          <td className="p-4 text-slate-600">
-                            {item.subscriptionType === 2 ? "شهري" : "بالحصة"}
-                          </td>
-
-                          {/* Status */}
-                          {/* Status */}
-                          {item.subscriptionType === 2 ? (
-                            <td className="p-4 text-center align-middle">
-                              <div className="flex flex-col items-center justify-center gap-1.5 min-h-[52px]">
-                                {/* Student Joined After Selected Month */}
-                                {status === 3 ? (
-                                  <div className="flex flex-col items-center justify-center gap-1">
-                                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                                      لم يكن مشتركًا
-                                    </span>
-
-                                    {item.joinDate && (
-                                      <span className="text-[11px] text-slate-500">
-                                        انضم في{" "}
-                                        {new Date(
-                                          item.joinDate,
-                                        ).toLocaleDateString("ar-EG", {
-                                          month: "long",
-                                          year: "numeric",
-                                        })}
-                                      </span>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <>
-                                    {/* Payment Status */}
-                                    <span
-                                      className={`px-3 py-1 rounded-full text-xs font-bold inline-block border ${
-                                        status === 2
-                                          ? "bg-green-50 text-green-700 border-green-200"
-                                          : status === 1
-                                            ? "bg-yellow-50 text-yellow-700 border-yellow-200"
-                                            : "bg-red-50 text-red-700 border-red-200"
-                                      }`}
-                                    >
-                                      {status === 2
-                                        ? "تم الدفع"
-                                        : status === 1
-                                          ? "دفع جزء"
-                                          : "غير مدفوع"}
-                                    </span>
-
-                                    {/* Remaining Amount */}
-                                    {item.remainingAmount > 0 && (
-                                      <span className="text-[11px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-100">
-                                        متبقي:{" "}
-                                        {formatCurrency(item.remainingAmount)}
-                                      </span>
-                                    )}
-                                  </>
-                                )}
-                              </div>
-                            </td>
                           ) : (
-                            <td className="p-4 text-center align-middle">
-                              <div className="flex items-center justify-center min-h-[52px]">
-                                <span className="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200 inline-block">
-                                  دفع بالحصة
-                                </span>
-                              </div>
-                            </td>
+                            <div className="flex min-h-[52px] items-center justify-center">
+                              <StatusPill tone="neutral">
+                                دفع بالحصة
+                              </StatusPill>
+                            </div>
                           )}
+                        </TableCell>
 
-                          {/* Last Payment Amount */}
-                          <td className="p-4 font-semibold text-slate-700">
-                            {item.lastPaymentAmount
-                              ? `${item.lastPaymentAmount} ج.م`
-                              : "-"}
-                          </td>
+                        <TableCell className="num font-semibold text-text-main">
+                          {item.lastPaymentAmount
+                            ? `${item.lastPaymentAmount} ج.م`
+                            : "-"}
+                        </TableCell>
 
-                          {/* Last Payment Date */}
-                          <td className="p-4 text-[var(--color-text-muted)]">
-                            {item.lastPaymentDate
-                              ? new Date(
-                                  item.lastPaymentDate,
-                                ).toLocaleDateString("ar-EG")
-                              : "-"}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
+                        <TableCell className="num text-text-muted">
+                          {formatDate(item.lastPaymentDate)}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </div>
-
-            {/* Students Pagination */}
-            {renderPagination()}
           </>
+        )}
+
+        {!loading && currentTotalCount > 0 && currentTotalPages > 1 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={currentTotalPages}
+            totalItems={currentTotalCount}
+            pageSize={currentPageSize}
+            name={paginationName}
+            testId="finance-pagination"
+            onPageChange={handlePageChange}
+          />
         )}
       </div>
 

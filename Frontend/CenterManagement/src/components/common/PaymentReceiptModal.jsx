@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Printer, X } from "@/components/icons";
 import toast from "react-hot-toast";
 
+import Button from "@/components/ui/Button";
+
 import { financeService } from "../../services/financeService";
 import { formatCurrency } from "../../utils/formatCurrency";
 import { resolveImageUrl } from "../../utils/media";
@@ -95,6 +97,7 @@ export default function PaymentReceiptModal({ isOpen, paymentId, onClose }) {
 
   return (
     <div
+      data-testid="receipt-modal"
       className="fixed inset-0 z-[10000] flex items-start justify-center overflow-y-auto bg-black/40 backdrop-blur-xs p-4 dir-rtl text-right"
       onClick={onClose}
     >
@@ -102,34 +105,30 @@ export default function PaymentReceiptModal({ isOpen, paymentId, onClose }) {
         className="w-full max-w-md my-6"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Toolbar (hidden while printing) */}
-        <div className="no-print mb-3 flex items-center justify-between">
-          <button
+        {/* Toolbar (hidden while printing). The receipt below is intentionally
+            a fixed black-on-white 80mm layout and must not be re-themed. */}
+        <div className="no-print mb-3 flex items-center justify-between gap-2">
+          <Button
             type="button"
             onClick={() => window.print()}
             disabled={loading || !receipt}
-            className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-primary)] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[var(--color-primary-hover)] disabled:opacity-50"
           >
-            <Printer className="h-4 w-4" />
+            <Printer className="h-4 w-4" aria-hidden="true" />
             طباعة
-          </button>
+          </Button>
 
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-gray-600 shadow-sm border border-gray-200 hover:bg-gray-50"
-          >
-            <X className="h-4 w-4" />
+          <Button type="button" variant="secondary" onClick={onClose}>
+            <X className="h-4 w-4" aria-hidden="true" />
             إغلاق
-          </button>
+          </Button>
         </div>
 
         {loading ? (
-          <div className="rounded-2xl bg-white p-12 text-center text-sm font-medium text-gray-500 shadow-lg">
+          <div className="rounded-card border border-surface-border bg-surface-card p-12 text-center text-sm font-medium text-text-muted shadow-soft">
             جاري تحميل الإيصال...
           </div>
         ) : error ? (
-          <div className="rounded-2xl bg-white p-12 text-center text-sm font-medium text-red-600 shadow-lg">
+          <div className="rounded-card border border-status-danger/40 bg-surface-card p-12 text-center text-sm font-medium text-status-danger shadow-soft">
             {error}
           </div>
         ) : (

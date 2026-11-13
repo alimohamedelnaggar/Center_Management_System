@@ -11,15 +11,12 @@ import {
   Lock,
   MoreHorizontal,
   Percent,
-  RefreshCw,
   Save,
   ScanLine,
   Search,
   ShieldCheck,
-  UserCheck,
   Users,
   WhatsappLogo,
-  X,
 } from "@/components/icons";
 import { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
@@ -61,6 +58,17 @@ import {
   selectAttendanceRows,
 } from "../../utils/attendanceHubPayload";
 import AttendanceStatsCards from "./AttendanceStatsCards";
+import AppModal from "../../components/ui/AppModal";
+import Button from "../../components/ui/Button";
+import Card, { CardBody } from "../../components/ui/Card";
+import EmptyState from "../../components/ui/EmptyState";
+import FormField from "../../components/ui/FormField";
+import Input from "../../components/ui/Input";
+import PageHeader from "../../components/ui/PageHeader";
+import Select from "../../components/ui/Select";
+import Skeleton from "../../components/ui/Skeleton";
+import StatusPill from "../../components/ui/StatusPill";
+import Textarea from "../../components/ui/Textarea";
 
 const STATUS_ICONS = {
   [ATTENDANCE_STATUS.PRESENT]: CalendarCheck,
@@ -477,7 +485,7 @@ export default function AttendanceSheet() {
   const ensureEditable = () => {
     if (isReadOnly) {
       toast.error(
-        "الكشف مفعل عليه وضع الحفظ. اضغطي على زر 'تعديل الحضور' لتتمكني من التعديل.",
+        "الكشف مقفول. اضغط على زر «تعديل الحضور» للبدء في التعديل.",
       );
       return false;
     }
@@ -764,103 +772,177 @@ export default function AttendanceSheet() {
   };
 
   return (
-    <div className="p-4 md:p-6 max-w-7xl mx-auto space-y-5 dir-rtl">
+    <div
+      data-testid="attendance-page"
+      className="dir-rtl mx-auto w-full max-w-7xl space-y-5 p-4 md:p-6"
+    >
       {isAdmin && (
         <AttendanceStatsCards stats={attendanceStats} loading={loadingStats} />
       )}
 
-      {/* Header */}
-      <div
-        className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-surface-card border border-surface-border p-5
-       rounded-2xl shadow-sm"
-      >
-        <div className="flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-primary-subtle text-primary">
-            <UserCheck className="w-6 h-6" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-base font-bold text-text-main">
-                تسجيل حضور الحصة
-              </h2>
-              {isSaved && (
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-status-success-bg text-status-success flex items-center gap-1 border border-status-success/20">
-                  <CheckCircle2 className="w-3 h-3" /> تم اعتماد الحضور
-                </span>
-              )}
-              {isDirty && !isSaved && (
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-status-warning-bg text-status-warning flex items-center gap-1 border border-status-warning/20">
-                  تغييرات غير محفوظة
-                </span>
-              )}
-              {isSessionEnded && (
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-status-danger-bg text-status-danger flex items-center gap-1 border border-status-danger/20">
-                  <Lock className="w-3 h-3" /> الحصة منتهية
-                </span>
-              )}
-            </div>
-            <p className="text-xs text-text-muted mt-0.5">
-              {isReadOnly
-                ? "تم قفل الحضور لهذا الشيت، اضغط على زر 'تعديل الحضور' للبدء في التعديل."
-                : "اختر المجموعة والحصة ثم اضغط على كارت الطالب لتسجيل الحضور"}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 bg-surface-muted px-3 py-1.5 rounded-xl border border-surface-border min-w-[180px]">
-            <Users className="w-4 h-4 text-primary" />
-            <select
-              value={selectedGroupId}
-              onChange={(e) => handleGroupChange(e.target.value)}
-              disabled={loadingGroups || isReadOnly}
-              className="bg-transparent text-xs font-bold text-text-main focus:outline-none w-full cursor-pointer disabled:opacity-60"
+      <PageHeader
+        title="تسجيل حضور الحصة"
+        subtitle={
+          isReadOnly
+            ? "تم قفل الكشف. اضغط على زر «تعديل الحضور» للبدء في التعديل."
+            : "اختر المجموعة والحصة، ثم اضغط على كارت الطالب للتبديل بين حاضر وغائب."
+        }
+        actions={
+          <>
+            {isSaved && !isSessionEnded && (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setIsSaved(false)}
+                data-testid="attendance-edit"
+              >
+                <Edit3 className="h-4 w-4" aria-hidden="true" />
+                تعديل الحضور
+              </Button>
+            )}
+            <Button
+              size="sm"
+              onClick={handleSave}
+              loading={isSaving}
+              disabled={
+                loadingStudents ||
+                students.length === 0 ||
+                isReadOnly ||
+                !selectedSessionId
+              }
+              data-testid="attendance-save"
             >
-              {loadingGroups ? (
-                <option value="">جاري تحميل المجموعات...</option>
-              ) : groups.length === 0 ? (
-                <option value="">لا توجد مجموعات</option>
+              {isReadOnly ? (
+                <Lock className="h-4 w-4" aria-hidden="true" />
               ) : (
-                groups.map((group) => (
-                  <option key={group.id} value={group.id}>
-                    {group.name || group.Name}
-                  </option>
-                ))
+                <Save className="h-4 w-4" aria-hidden="true" />
               )}
-            </select>
-          </div>
+              {isReadOnly ? "محفوظ ومغلق" : "حفظ الحضور"}
+            </Button>
+          </>
+        }
+      />
 
-          <div className="flex items-center gap-2 bg-surface-muted px-3 py-1.5 rounded-xl border border-surface-border min-w-[180px]">
-            <BookOpen className="w-4 h-4 text-primary" />
-            <select
-              value={selectedSessionId}
-              onChange={(e) => handleSessionChange(e.target.value)}
-              disabled={loadingSessions || isReadOnly || sessions.length === 0}
-              className="bg-transparent text-xs font-bold text-text-main focus:outline-none w-full cursor-pointer disabled:opacity-60"
-            >
-              {loadingSessions ? (
-                <option value="">جاري تحميل الحصص...</option>
-              ) : sessions.length === 0 ? (
-                <option value="">لا توجد حصص للمجموعة</option>
-              ) : (
-                sessions.map((session) => (
-                  <option key={session.id} value={session.id}>
-                    {getSessionLabel(session)}
-                  </option>
-                ))
-              )}
-            </select>
-          </div>
+      <div className="flex flex-wrap items-center gap-2">
+        {isSaved && (
+          <StatusPill tone="success">
+            <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+            تم اعتماد الحضور
+          </StatusPill>
+        )}
+        {isDirty && !isSaved && (
+          <StatusPill tone="warning">تغييرات غير محفوظة</StatusPill>
+        )}
+        {isSessionEnded && (
+          <StatusPill tone="danger">
+            <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+            الحصة منتهية
+          </StatusPill>
+        )}
+        <StatusPill tone="neutral" dot={false}>
+          <Users className="h-3.5 w-3.5" aria-hidden="true" />
+          {students.length} طالب في الكشف
+        </StatusPill>
+      </div>
 
-          <div className="flex items-center gap-2 bg-surface-muted px-3 py-1.5 rounded-xl border border-surface-border">
-            <Calendar className="w-4 h-4 text-text-muted" />
-            <input
-              type="date"
-              value={attendanceDate}
-              disabled={isReadOnly}
-              onChange={(e) => handleDateChange(e.target.value)}
-              className="bg-transparent text-xs font-bold text-text-main focus:outline-none disabled:opacity-60"
-            />
+      <Card data-testid="attendance-controls">
+        <CardBody className="space-y-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <FormField label="المجموعة" htmlFor="attendance-group">
+              <div className="relative">
+                <Users
+                  className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary"
+                  aria-hidden="true"
+                />
+                <Select
+                  id="attendance-group"
+                  data-testid="attendance-group"
+                  value={selectedGroupId}
+                  onChange={(event) => handleGroupChange(event.target.value)}
+                  disabled={loadingGroups || isReadOnly}
+                  className="pe-10"
+                >
+                  {loadingGroups ? (
+                    <option value="">جاري تحميل المجموعات...</option>
+                  ) : groups.length === 0 ? (
+                    <option value="">لا توجد مجموعات</option>
+                  ) : (
+                    groups.map((group) => (
+                      <option key={group.id} value={group.id}>
+                        {group.name || group.Name}
+                      </option>
+                    ))
+                  )}
+                </Select>
+              </div>
+            </FormField>
+
+            <FormField label="الحصة" htmlFor="attendance-session">
+              <div className="relative">
+                <BookOpen
+                  className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary"
+                  aria-hidden="true"
+                />
+                <Select
+                  id="attendance-session"
+                  data-testid="attendance-session"
+                  value={selectedSessionId}
+                  onChange={(event) => handleSessionChange(event.target.value)}
+                  disabled={
+                    loadingSessions || isReadOnly || sessions.length === 0
+                  }
+                  className="pe-10"
+                >
+                  {loadingSessions ? (
+                    <option value="">جاري تحميل الحصص...</option>
+                  ) : sessions.length === 0 ? (
+                    <option value="">لا توجد حصص للمجموعة</option>
+                  ) : (
+                    sessions.map((session) => (
+                      <option key={session.id} value={session.id}>
+                        {getSessionLabel(session)}
+                      </option>
+                    ))
+                  )}
+                </Select>
+              </div>
+            </FormField>
+
+            <FormField label="تاريخ الحضور" htmlFor="attendance-date">
+              <div className="relative">
+                <Calendar
+                  className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted"
+                  aria-hidden="true"
+                />
+                <Input
+                  id="attendance-date"
+                  data-testid="attendance-date"
+                  type="date"
+                  value={attendanceDate}
+                  disabled={isReadOnly}
+                  onChange={(event) => handleDateChange(event.target.value)}
+                  className="pe-10"
+                />
+              </div>
+            </FormField>
+
+            <FormField label="بحث" htmlFor="attendance-search">
+              <div className="relative">
+                <Search
+                  className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted"
+                  aria-hidden="true"
+                />
+                <Input
+                  id="attendance-search"
+                  data-testid="attendance-search"
+                  type="search"
+                  placeholder="ابحث باسم الطالب أو الهاتف..."
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  className="pe-10"
+                />
+              </div>
+            </FormField>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
@@ -879,137 +961,124 @@ export default function AttendanceSheet() {
               return (
                 <span
                   key={status}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-transparent ${meta.pillClass}`}
+                  data-testid={`attendance-count-${meta.key}`}
+                  className={`inline-flex min-h-11 items-center gap-1.5 rounded-pill border border-transparent px-3 py-1.5 ${meta.pillClass}`}
                 >
-                  <Icon className="w-3.5 h-3.5" />
+                  <Icon className="h-3.5 w-3.5" aria-hidden="true" />
                   {meta.shortLabel}: {count}
                 </span>
               );
             })}
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-subtle text-primary rounded-xl border border-transparent">
-              <Percent className="w-3.5 h-3.5" />
+            <span className="inline-flex min-h-11 items-center gap-1.5 rounded-pill border border-transparent bg-primary-subtle px-3 py-1.5 text-primary">
+              <Percent className="h-3.5 w-3.5" aria-hidden="true" />
               النسبة: {formatAttendanceRate(sheetAttendanceRate)}
             </span>
           </div>
-        </div>
-      </div>
 
-      {/* Search and save attendance */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-        <div className="relative w-full sm:w-72">
-          <Search className="w-4 h-4 absolute right-3.5 top-3 text-text-muted" />
-          <input
-            type="text"
-            placeholder="ابحث باسم الطالب أو الهاتف..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pr-10 pl-4 py-2 rounded-xl border border-surface-border bg-surface-card text-xs text-text-main focus:outline-none focus:border-primary transition-colors"
-          />
-        </div>
+          <div className="flex flex-col gap-3 border-t border-surface-border pt-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+              <div className="rounded-control border border-surface-border bg-surface-muted/60 p-2">
+                <span className="mb-1 block text-[11px] font-bold text-text-muted">
+                  تسجيل جماعي
+                </span>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={bulkStatus}
+                    onChange={(event) =>
+                      setBulkStatus(Number(event.target.value))
+                    }
+                    disabled={isReadOnly || students.length === 0}
+                    aria-label="حالة التسجيل الجماعي"
+                    className="min-h-11 cursor-pointer rounded-control border border-surface-border bg-surface-card px-2 text-xs font-bold text-text-main outline-none focus:border-primary disabled:opacity-60"
+                  >
+                    {STATUS_ORDER.map((status) => (
+                      <option key={status} value={status}>
+                        {ATTENDANCE_STATUS_META[status].label}
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleBulkSetStatus}
+                    disabled={isReadOnly || students.length === 0}
+                    data-testid="attendance-bulk-apply"
+                  >
+                    تطبيق
+                  </Button>
+                </div>
+              </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-2 w-full sm:w-auto">
-          <div className="flex items-center gap-1.5 rounded-xl border border-surface-border bg-surface-muted/60 px-2 py-1.5">
-            <span className="text-[11px] font-bold text-text-muted whitespace-nowrap">
-              تسجيل جماعي
-            </span>
-            <select
-              value={bulkStatus}
-              onChange={(e) => setBulkStatus(Number(e.target.value))}
-              disabled={isReadOnly || students.length === 0}
-              aria-label="حالة التسجيل الجماعي"
-              className="bg-transparent text-[11px] font-bold text-text-main focus:outline-none cursor-pointer disabled:opacity-60"
-            >
-              {STATUS_ORDER.map((status) => (
-                <option key={status} value={status}>
-                  {ATTENDANCE_STATUS_META[status].label}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={handleBulkSetStatus}
-              disabled={isReadOnly || students.length === 0}
-              className="rounded-lg bg-surface-card border border-surface-border px-2.5 py-1 text-[11px] font-bold text-text-main transition-colors hover:bg-surface-border disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-            >
-              تطبيق
-            </button>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setIsScannerOpen(true)}
+                disabled={!selectedGroupId || !selectedSessionId}
+                data-testid="attendance-scan"
+              >
+                <ScanLine className="h-4 w-4 text-primary" aria-hidden="true" />
+                مسح كارت
+              </Button>
+
+              <ModuleOnly moduleKey="whatsapp">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleBulkNotifyAbsentees}
+                  disabled={absentCount === 0}
+                  title={
+                    absentCount === 0
+                      ? "لا يوجد غائبون"
+                      : "فتح واتساب لإشعار أول غائب ثم متابعة الباقي"
+                  }
+                  data-testid="attendance-whatsapp-bulk"
+                >
+                  <WhatsappLogo className="h-4 w-4" aria-hidden="true" />
+                  إشعار الغائبين
+                </Button>
+              </ModuleOnly>
+            </div>
           </div>
+        </CardBody>
+      </Card>
 
-          <button
-            type="button"
-            onClick={() => setIsScannerOpen(true)}
-            disabled={!selectedGroupId || !selectedSessionId}
-            className="w-full sm:w-auto px-4 py-2.5 bg-surface-card hover:bg-surface-muted text-text-main rounded-xl font-bold text-xs flex items-center justify-center gap-2 border border-primary/40 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-          >
-            <ScanLine className="w-4 h-4 text-primary" />
-            مسح كارت
-          </button>
-
-          <ModuleOnly moduleKey="whatsapp">
-          <button
-            type="button"
-            onClick={handleBulkNotifyAbsentees}
-            disabled={absentCount === 0}
-            title={
-              absentCount === 0
-                ? "لا يوجد غائبون"
-                : "فتح واتساب لإشعار أول غائب ثم متابعة الباقي"
-            }
-            className="w-full sm:w-auto px-4 py-2.5 bg-green-50 hover:bg-green-100 text-green-700 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border border-green-200 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-          >
-            <WhatsappLogo className="w-4 h-4" />
-            إشعار الغائبين
-          </button>
-          </ModuleOnly>
-
-          {isSaved && !isSessionEnded && (
-            <button
-              onClick={() => setIsSaved(false)}
-              className="px-4 py-2.5 bg-surface-muted hover:bg-surface-border text-text-main rounded-xl font-bold text-xs flex items-center justify-center gap-2 border border-surface-border transition-all active:scale-95 cursor-pointer"
-            >
-              <Edit3 className="w-4 h-4 text-primary" />
-              تعديل الحضور
-            </button>
-          )}
-
-          <button
-            onClick={handleSave}
-            disabled={
-              isSaving ||
-              loadingStudents ||
-              students.length === 0 ||
-              isReadOnly ||
-              !selectedSessionId
-            }
-            className="w-full sm:w-auto px-6 py-2.5 bg-primary hover:bg-primary-hover text-text-inverse rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-sm transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-          >
-            {isSaving ? (
-              <RefreshCw className="w-4 h-4 animate-spin" />
-            ) : isReadOnly ? (
-              <Lock className="w-4 h-4" />
-            ) : (
-              <Save className="w-4 h-4" />
-            )}
-            {isReadOnly ? "محفوظ ومغلق" : "حفظ الحضور"}
-          </button>
-        </div>
-      </div>
-
-      {/* loadingStudents */}
       {loadingStudents ? (
-        <div className="flex justify-center items-center py-16">
-          <RefreshCw className="w-8 h-8 animate-spin text-primary" />
+        <div
+          data-testid="attendance-loading"
+          className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        >
+          {Array.from({ length: 8 }).map((_, index) => (
+            <div
+              key={index}
+              className="rounded-card border border-surface-border bg-surface-card p-4 shadow-soft"
+            >
+              <Skeleton className="mb-3 h-5 w-2/3" />
+              <Skeleton className="mb-4 h-4 w-1/2" />
+              <Skeleton className="h-10 w-full" />
+            </div>
+          ))}
         </div>
       ) : !selectedGroupId ? (
-        <div className="text-center py-12 bg-surface-card rounded-2xl border border-surface-border text-text-muted text-xs">
-          برجاء اختيار مجموعة لعرض الطلاب.
-        </div>
+        <Card data-testid="attendance-empty-group">
+          <EmptyState
+            icon={Users}
+            title="اختر مجموعة لعرض الطلاب"
+            description="اختر المجموعة والحصة والتاريخ من الأعلى، ثم ابدأ تسجيل الحضور."
+          />
+        </Card>
       ) : students.length === 0 ? (
-        <div className="text-center py-12 bg-surface-card rounded-2xl border border-surface-border text-text-muted text-xs">
-          لا يوجد طلاب مسجلين في هذه المجموعة.
-        </div>
+        <Card data-testid="attendance-empty-students">
+          <EmptyState
+            icon={CalendarX}
+            title="لا يوجد طلاب مسجلون في هذه المجموعة"
+            description="أضف طلابًا من صفحة الطلاب ثم ارجع لتسجيل الحضور."
+          />
+        </Card>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5">
+        <div
+          data-testid="attendance-grid"
+          className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        >
           {students.map((student) => {
             const studentItem = attendanceMap[student.id] || {};
             const studentStatus =
@@ -1026,114 +1095,121 @@ export default function AttendanceSheet() {
             );
 
             return (
-              <div
+              <article
                 key={student.id}
+                data-testid={`attendance-student-${student.id}`}
+                aria-label={`${student.fullName} - ${statusMeta.label}`}
                 onClick={() => toggleAttendance(student.id)}
-                className={`relative p-4 rounded-2xl border transition-all duration-200 flex flex-col justify-between select-none ${
+                className={`relative flex min-h-32 flex-col justify-between gap-3 rounded-card border p-4 transition-all duration-200 select-none ${
                   isReadOnly
                     ? "cursor-not-allowed opacity-90"
-                    : "cursor-pointer active:scale-95"
-                } ${statusMeta.panelClass} ${
-                  studentStatus === ATTENDANCE_STATUS.PRESENT
-                    ? "shadow-xs"
-                    : ""
-                }`}
+                    : "cursor-pointer active:scale-[0.98]"
+                } ${statusMeta.panelClass}`}
               >
-                <div className="space-y-1">
-                  <h4 className="font-bold text-xs text-text-main line-clamp-1">
-                    {student.fullName}
-                  </h4>
-                  <p className="text-[10px] text-text-muted dir-ltr text-right">
-                    {student.phone || student.phoneNumber || "لا يوجد رقم"}
-                  </p>
-
-                  {hasNote && (
-                    <p className="text-[10px] text-amber-600 font-semibold truncate mt-1 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 dir-rtl">
-                      {studentItem.note}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <h4 className="truncate text-sm font-bold text-text-main">
+                      {student.fullName}
+                    </h4>
+                    <p
+                      className="mt-0.5 truncate text-xs text-text-muted"
+                      dir="ltr"
+                    >
+                      {student.phone || student.phoneNumber || "لا يوجد رقم"}
                     </p>
-                  )}
-                </div>
+                  </div>
 
-                <div className="mt-3 pt-2.5 border-t border-surface-border/60 flex items-center justify-between gap-1">
                   <span
-                    title={`الحالة: ${statusMeta.label} — اضغطي على الكارت للتبديل بين حاضر وغائب`}
-                    className={`flex flex-1 items-center justify-center gap-1 py-1 rounded-lg text-[10px] font-bold transition-colors ${statusMeta.pillClass}`}
+                    title={`الحالة: ${statusMeta.label} — اضغط على الكارت للتبديل بين حاضر وغائب`}
+                    className={`inline-flex shrink-0 items-center gap-1 rounded-pill px-2 py-1 text-xs font-bold ${statusMeta.pillClass}`}
                   >
-                    <StatusIcon className="w-3.5 h-3.5" />
+                    <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />
                     {statusMeta.label}
                   </span>
+                </div>
 
-                  {studentStatus === ATTENDANCE_STATUS.ABSENT && (
-                    <ModuleOnly moduleKey="whatsapp">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleSendAbsence(student);
-                      }}
-                      disabled={!hasParentPhone}
-                      title={
-                        hasParentPhone
-                          ? "إرسال إشعار غياب عبر واتساب"
-                          : "لا يوجد رقم ولي أمر صحيح"
-                      }
-                      className={`p-1.5 rounded-lg transition ${
-                        hasParentPhone
-                          ? "hover:bg-green-50 text-green-600 cursor-pointer"
-                          : "text-slate-300 cursor-not-allowed"
-                      }`}
-                    >
-                      <WhatsappLogo className="w-4 h-4" />
-                    </button>
-                    </ModuleOnly>
-                  )}
+                {hasNote && (
+                  <p className="truncate rounded-control border border-status-warning/30 bg-status-warning-bg px-2 py-1 text-[11px] font-semibold text-status-warning">
+                    {studentItem.note}
+                  </p>
+                )}
 
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openNotesModal(student);
-                    }}
-                    title="ملاحظة"
-                    className="p-1.5 rounded-lg hover:bg-surface-muted transition cursor-pointer"
-                  >
-                    <FilePenLine
-                      className={`w-4 h-4 ${
-                        hasNote ? "text-amber-500" : "text-slate-400"
-                      }`}
-                    />
-                  </button>
-
+                <div className="flex items-center gap-1.5 border-t border-surface-border/60 pt-2.5">
                   <button
                     type="button"
                     aria-haspopup="menu"
                     aria-expanded={isMenuOpen}
                     aria-label={`تغيير حالة ${student.fullName}`}
                     title="متأخر / بعذر"
-                    onClick={(e) => {
-                      e.stopPropagation();
+                    onClick={(event) => {
+                      event.stopPropagation();
                       if (!ensureEditable()) return;
                       setStatusMenuStudentId(isMenuOpen ? null : student.id);
                     }}
-                    className="p-1.5 rounded-lg hover:bg-surface-muted transition cursor-pointer"
+                    className="inline-flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-control border border-surface-border bg-surface-card px-2 text-[11px] font-bold text-text-main transition-colors hover:bg-surface-muted"
                   >
-                    <MoreHorizontal className="w-4 h-4 text-slate-500" />
+                    <MoreHorizontal
+                      className="h-4 w-4 text-text-muted"
+                      aria-hidden="true"
+                    />
+                    متأخر / بعذر
+                  </button>
+
+                  {studentStatus === ATTENDANCE_STATUS.ABSENT && (
+                    <ModuleOnly moduleKey="whatsapp">
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleSendAbsence(student);
+                        }}
+                        disabled={!hasParentPhone}
+                        title={
+                          hasParentPhone
+                            ? "إرسال إشعار غياب عبر واتساب"
+                            : "لا يوجد رقم ولي أمر صحيح"
+                        }
+                        aria-label={`إشعار واتساب لولي أمر ${student.fullName}`}
+                        className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control border transition ${
+                          hasParentPhone
+                            ? "cursor-pointer border-status-success/30 bg-status-success-bg text-status-success hover:opacity-80"
+                            : "cursor-not-allowed border-surface-border text-text-muted/50"
+                        }`}
+                      >
+                        <WhatsappLogo
+                          className="h-4 w-4"
+                          aria-hidden="true"
+                        />
+                      </button>
+                    </ModuleOnly>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      openNotesModal(student);
+                    }}
+                    title="ملاحظة"
+                    aria-label={`ملاحظة ${student.fullName}`}
+                    className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-control border border-surface-border bg-surface-card transition-colors hover:bg-surface-muted"
+                  >
+                    <FilePenLine
+                      className={`h-4 w-4 ${
+                        hasNote ? "text-status-warning" : "text-text-muted"
+                      }`}
+                      aria-hidden="true"
+                    />
                   </button>
                 </div>
 
                 {isMenuOpen && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setStatusMenuStudentId(null);
-                      }}
-                    />
-                    <div
-                      role="menu"
-                      className="absolute z-20 bottom-2 left-2 right-2 rounded-xl border border-surface-border bg-surface-card p-1 shadow-lg"
-                    >
+                  <div
+                    role="menu"
+                    aria-label={`حالة ${student.fullName}`}
+                    className="rounded-control border border-surface-border bg-surface-muted/60 p-1"
+                  >
+                    <div className="grid grid-cols-2 gap-1">
                       {STATUS_ORDER.map((status) => {
                         const meta = ATTENDANCE_STATUS_META[status];
                         const MenuIcon = STATUS_ICONS[status];
@@ -1145,30 +1221,38 @@ export default function AttendanceSheet() {
                             type="button"
                             role="menuitemradio"
                             aria-checked={isActive}
-                            onClick={(e) => {
-                              e.stopPropagation();
+                            onClick={(event) => {
+                              event.stopPropagation();
                               setStudentStatus(student.id, status);
+                              setStatusMenuStudentId(null);
                             }}
-                            className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-right text-[11px] font-bold transition-colors cursor-pointer hover:bg-surface-muted ${
+                            className={`flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-control px-2 text-right text-xs font-bold transition-colors hover:bg-surface-muted ${
                               isActive ? meta.pillClass : "text-text-main"
                             }`}
                           >
-                            <MenuIcon className="w-3.5 h-3.5" />
+                            <MenuIcon
+                              className="h-3.5 w-3.5"
+                              aria-hidden="true"
+                            />
                             {meta.label}
                             {isActive && (
-                              <CheckCircle2 className="mr-auto w-3.5 h-3.5" />
+                              <CheckCircle2
+                                className="me-auto h-3.5 w-3.5"
+                                aria-hidden="true"
+                              />
                             )}
                           </button>
                         );
                       })}
                     </div>
-                  </>
+                  </div>
                 )}
-              </div>
+              </article>
             );
           })}
         </div>
       )}
+
       <Pagination
         currentPage={pageNumber}
         totalPages={totalPages}
@@ -1178,82 +1262,70 @@ export default function AttendanceSheet() {
         onPageChange={handlePageChange}
       />
 
-      {confirmModal.isOpen && (
-        <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-surface-card border border-surface-border w-full max-w-md rounded-2xl p-6 shadow-xl space-y-4 dir-rtl">
-            <div className="flex items-center justify-between border-b border-surface-border pb-3">
-              <div className="flex items-center gap-2 text-status-warning">
-                <AlertTriangle className="w-5 h-5" />
-                <h3 className="font-bold text-sm text-text-main">
-                  {confirmModal.title}
-                </h3>
-              </div>
-              <button
-                onClick={() =>
-                  setConfirmModal((prev) => ({ ...prev, isOpen: false }))
-                }
-                className="text-text-muted hover:text-text-main p-1 rounded-lg hover:bg-surface-muted transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <p className="text-xs text-text-muted leading-relaxed">
-              {confirmModal.message}
-            </p>
-
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                onClick={() =>
-                  setConfirmModal((prev) => ({ ...prev, isOpen: false }))
-                }
-                className="px-4 py-2 bg-surface-muted hover:bg-surface-border text-text-main rounded-xl text-xs font-bold transition-colors"
-              >
-                إلغاء
-              </button>
-              <button
-                onClick={confirmModal.onConfirm}
-                className="px-4 py-2 bg-status-danger text-text-inverse rounded-xl text-xs font-bold hover:bg-status-danger/90 transition-colors"
-              >
-                متابعة والتجاهل
-              </button>
-            </div>
+      <AppModal
+        open={confirmModal.isOpen}
+        onClose={() =>
+          setConfirmModal((prev) => ({ ...prev, isOpen: false }))
+        }
+        title={confirmModal.title}
+        icon={AlertTriangle}
+        testId="attendance-confirm"
+        size="max-w-md"
+        footer={
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() =>
+                setConfirmModal((prev) => ({ ...prev, isOpen: false }))
+              }
+            >
+              إلغاء
+            </Button>
+            <Button variant="danger" size="sm" onClick={confirmModal.onConfirm}>
+              متابعة والتجاهل
+            </Button>
           </div>
-        </div>
-      )}
+        }
+      >
+        <p className="text-sm leading-relaxed text-text-muted">
+          {confirmModal.message}
+        </p>
+      </AppModal>
 
-      {isNoteModalOpen && (
-        <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4">
-            <h3 className="font-bold text-sm text-slate-800">
-              ملاحظة الطالب: {selectedStudent?.fullName}
-            </h3>
-
-            <textarea
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              className="w-full h-32 border rounded-xl p-3 text-xs focus:outline-none focus:border-primary"
-              placeholder="اكتب الملاحظة هنا (مثال: سيحضر مع مجموعة الثلاثاء الساعة 5)..."
-            />
-
-            <div className="flex justify-end gap-2">
-              <button
-                onClick={() => setIsNoteModalOpen(false)}
-                className="px-4 py-2 rounded-xl border text-xs font-bold hover:bg-slate-50"
-              >
-                إلغاء
-              </button>
-
-              <button
-                onClick={saveNote}
-                className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold hover:bg-primary-hover"
-              >
-                حفظ الملاحظة
-              </button>
-            </div>
+      <AppModal
+        open={isNoteModalOpen}
+        onClose={() => setIsNoteModalOpen(false)}
+        title={`ملاحظة الطالب: ${selectedStudent?.fullName ?? ""}`}
+        icon={FilePenLine}
+        testId="attendance-note"
+        size="max-w-md"
+        footer={
+          <div className="flex flex-wrap justify-end gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setIsNoteModalOpen(false)}
+            >
+              إلغاء
+            </Button>
+            <Button size="sm" onClick={saveNote} data-testid="attendance-note-save">
+              حفظ الملاحظة
+            </Button>
           </div>
-        </div>
-      )}
+        }
+      >
+        <FormField label="الملاحظة" htmlFor="attendance-note-input">
+          <Textarea
+            id="attendance-note-input"
+            data-testid="attendance-note-input"
+            value={note}
+            onChange={(event) => setNote(event.target.value)}
+            rows={5}
+            placeholder="اكتب الملاحظة هنا (مثال: سيحضر مع مجموعة الثلاثاء الساعة 5)..."
+          />
+        </FormField>
+      </AppModal>
 
       <QrScannerModal
         isOpen={isScannerOpen}
@@ -1261,77 +1333,74 @@ export default function AttendanceSheet() {
         onDetect={handleScanDetect}
         isBusy={isScanning}
         scanDisabled={!selectedGroupId || !selectedSessionId}
-        scanDisabledReason="اختر المجموعة والحصة قبل ما تبدأ المسح."
+        scanDisabledReason="اختر المجموعة والحصة قبل بدء المسح."
       />
 
-      {bulkAbsentQueue.length > 0 && (
-        <div role="dialog" aria-modal="true" className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md space-y-4 dir-rtl">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-              <h3 className="font-bold text-sm text-slate-800 flex items-center gap-2">
-                <WhatsappLogo className="w-5 h-5 text-green-600" />
-                متابعة إشعار باقي الغائبين
-              </h3>
-              <button
-                onClick={() => setBulkAbsentQueue([])}
-                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg hover:bg-slate-100 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <p className="text-xs text-slate-500 leading-relaxed">
-              تم فتح واتساب لأول غائب. اضغط "إرسال" لكل طالب من القائمة لإكمال
-              الإشعارات (بدون فتح كل الروابط مرة واحدة).
-            </p>
-
-            <ul className="space-y-2 max-h-72 overflow-y-auto">
-              {bulkAbsentQueue.map((student) => (
-                <li
-                  key={student.id}
-                  className="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2"
-                >
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold text-slate-800 truncate">
-                      {student.fullName}
-                    </p>
-                    <p className="text-[10px] text-slate-500 dir-ltr text-right">
-                      {student.parentPhoneNumber}
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      window.open(
-                        buildAbsenceWhatsAppLink(student),
-                        "_blank",
-                        "noopener,noreferrer",
-                      );
-                      setBulkAbsentQueue((prev) =>
-                        prev.filter((s) => s.id !== student.id),
-                      );
-                    }}
-                    className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors cursor-pointer"
-                  >
-                    <WhatsappLogo className="w-3.5 h-3.5" />
-                    إرسال
-                  </button>
-                </li>
-              ))}
-            </ul>
-
-            <div className="flex justify-end">
-              <button
-                onClick={() => setBulkAbsentQueue([])}
-                className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold hover:bg-slate-50 transition-colors"
-              >
-                إغلاق
-              </button>
-            </div>
+      <AppModal
+        open={bulkAbsentQueue.length > 0}
+        onClose={() => setBulkAbsentQueue([])}
+        title="متابعة إشعار باقي الغائبين"
+        icon={WhatsappLogo}
+        testId="attendance-bulk-whatsapp"
+        size="max-w-md"
+        footer={
+          <div className="flex justify-end">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setBulkAbsentQueue([])}
+            >
+              إغلاق
+            </Button>
           </div>
+        }
+      >
+        <div className="space-y-3">
+          <p className="text-sm leading-relaxed text-text-muted">
+            تم فتح واتساب لأول غائب. اضغط «إرسال» لكل طالب من القائمة لإكمال
+            الإشعارات (بدون فتح كل الروابط مرة واحدة).
+          </p>
+
+          <ul className="max-h-72 space-y-2 overflow-y-auto">
+            {bulkAbsentQueue.map((student) => (
+              <li
+                key={student.id}
+                className="flex items-center justify-between gap-2 rounded-control border border-surface-border bg-surface-muted px-3 py-2"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold text-text-main">
+                    {student.fullName}
+                  </p>
+                  <p
+                    className="truncate text-xs text-text-muted"
+                    dir="ltr"
+                  >
+                    {student.parentPhoneNumber}
+                  </p>
+                </div>
+
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    window.open(
+                      buildAbsenceWhatsAppLink(student),
+                      "_blank",
+                      "noopener,noreferrer",
+                    );
+                    setBulkAbsentQueue((prev) =>
+                      prev.filter((item) => item.id !== student.id),
+                    );
+                  }}
+                >
+                  <WhatsappLogo className="h-3.5 w-3.5" aria-hidden="true" />
+                  إرسال
+                </Button>
+              </li>
+            ))}
+          </ul>
         </div>
-      )}
+      </AppModal>
     </div>
   );
 }

@@ -6,9 +6,9 @@ import {
   Edit2,
   Trash2,
   Key,
+  Phone,
   Users,
   Wallet,
-  Loader2,
 } from "@/components/icons";
 
 import Pagination from "../components/common/Pagination";
@@ -18,6 +18,10 @@ import AssistantModal from "../components/common/AssistantModal";
 import ResetPasswordModal from "../components/common/ResetPasswordModal";
 import AssistantSalaryLogModal from "../components/common/AssistantSalaryLogModal";
 import EditAssistantPaymentModal from "../components/common/EditAssistantPaymentModal";
+import Spinner from "../components/common/Spinner";
+import PageHeader from "../components/ui/PageHeader";
+import Button from "../components/ui/Button";
+import { fieldBaseClass } from "../components/ui/Input";
 import AssistantsSalaryTab from "./AssistantsPages/AssistantsSalaryTab";
 import { assistantService } from "../services/assistantService";
 import { formatCurrency } from "../utils/formatCurrency";
@@ -257,75 +261,87 @@ export default function AssistantManagement() {
   };
 
   return (
-    <div className="p-6 space-y-4">
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <h1 className="text-2xl font-bold text-text-main">إدارة المساعدين</h1>
+    <div
+      data-testid="assistants-page"
+      dir="rtl"
+      className="mx-auto w-full max-w-7xl space-y-6 p-4 md:p-6"
+    >
+      <PageHeader
+        title="إدارة المساعدين"
+        subtitle="حسابات المساعدين ومرتباتهم والعمليات المسجّلة لكل شهر."
+        actions={
+          canManage ? (
+            <Button onClick={openCreate}>
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              إضافة مساعد
+            </Button>
+          ) : null
+        }
+      />
 
-        <div className="flex items-center gap-1 rounded-xl border border-surface-border bg-surface-muted p-1">
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.key;
-            return (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => setActiveTab(tab.key)}
-                className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-bold transition-colors ${
-                  isActive
-                    ? "bg-primary text-text-inverse shadow-sm"
-                    : "text-text-muted hover:text-text-main"
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
+      <div
+        role="tablist"
+        aria-label="أقسام المساعدين"
+        className="inline-flex flex-wrap items-center gap-1 rounded-action border border-surface-border bg-surface-muted p-1"
+      >
+        {TABS.map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.key;
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              onClick={() => setActiveTab(tab.key)}
+              className={`focus-ring inline-flex min-h-11 items-center gap-1.5 rounded-control px-4 text-sm font-bold transition-colors ${
+                isActive
+                  ? "bg-primary text-primary-contrast shadow-sm"
+                  : "text-text-muted hover:bg-surface-card hover:text-text-main"
+              }`}
+            >
+              <Icon className="h-4 w-4" aria-hidden="true" />
+              {tab.label}
+            </button>
+          );
+        })}
       </div>
 
       {activeTab === "assistants" ? (
-        <>
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative flex-1 min-w-56">
+        <section className="overflow-hidden rounded-card border border-surface-border bg-surface-card shadow-sm">
+          <div className="border-b border-surface-border p-4">
+            <div className="relative w-full max-w-sm">
               <Search
-                size={16}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted"
+                className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted"
+                aria-hidden="true"
               />
               <input
-                type="text"
+                type="search"
+                aria-label="بحث عن مساعد"
                 placeholder="بحث بالاسم أو الهاتف..."
                 value={search}
                 onChange={(e) => {
                   setPage(1);
                   setSearch(e.target.value);
                 }}
-                className="w-full rounded-lg border border-surface-border bg-surface-card py-2 pe-3 ps-9 text-text-main focus:border-primary focus:outline-none"
+                className={`${fieldBaseClass} pe-10 ps-3`}
               />
             </div>
-
-            {canManage && (
-              <button
-                onClick={openCreate}
-                className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-white hover:bg-primary/90"
-              >
-                <Plus size={16} /> إضافة مساعد
-              </button>
-            )}
           </div>
 
-          <div className="rounded-lg border border-surface-border bg-surface-card shadow">
-            {loading ? (
-              <div className="flex justify-center items-center py-16 text-text-muted">
-                <Loader2 className="w-6 h-6 animate-spin" />
-              </div>
-            ) : assistants.length === 0 ? (
-              <div className="flex flex-col items-center gap-3 p-10 text-text-muted">
-                <Users size={40} />
-                <p>لا يوجد مساعدون بعد</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
+          {loading ? (
+            <div className="p-10">
+              <Spinner msg="جارٍ تحميل المساعدين..." />
+            </div>
+          ) : assistants.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 p-10 text-text-muted">
+              <Users size={40} aria-hidden="true" />
+              <p>لا يوجد مساعدون بعد</p>
+            </div>
+          ) : (
+            <>
+              {/* Desktop table */}
+              <div className="hidden overflow-x-auto md:block">
                 <table className="w-full text-right">
                   <thead className="bg-surface-muted text-sm text-text-muted">
                     <tr>
@@ -352,7 +368,7 @@ export default function AssistantManagement() {
                         <td className="p-4 text-text-muted" dir="ltr">
                           {assistant.phoneNumber || "-"}
                         </td>
-                        <td className="p-4 text-text-main">
+                        <td className="p-4 font-semibold text-text-main">
                           {formatCurrency(assistant.salary)}
                         </td>
                         <td className="p-4 text-text-main">
@@ -365,30 +381,37 @@ export default function AssistantManagement() {
                         <td className="p-4">
                           {canManage && (
                             <div className="flex items-center gap-2">
-                              <button
+                              <Button
+                                variant="outline"
+                                size="icon"
                                 onClick={() => openEdit(assistant)}
+                                aria-label={`تعديل ${assistant.fullName}`}
                                 title="تعديل"
-                                className="rounded-lg border border-surface-border p-2 text-text-muted hover:bg-surface-muted hover:text-primary"
                               >
-                                <Edit2 size={16} />
-                              </button>
-                              <button
+                                <Edit2 className="h-4 w-4" aria-hidden="true" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="icon"
                                 onClick={() => setResetAssistant(assistant)}
+                                aria-label={`إعادة تعيين كلمة سر ${assistant.fullName}`}
                                 title="إعادة تعيين كلمة السر"
-                                className="rounded-lg border border-surface-border p-2 text-text-muted hover:bg-surface-muted hover:text-primary"
                               >
-                                <Key size={16} />
-                              </button>
-                              <button
+                                <Key className="h-4 w-4" aria-hidden="true" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={() => {
                                   setSelectedAssistant(assistant);
                                   setIsDeleteOpen(true);
                                 }}
+                                aria-label={`حذف ${assistant.fullName}`}
                                 title="حذف"
-                                className="rounded-lg border border-surface-border p-2 text-text-muted hover:bg-red-50 hover:text-red-600"
+                                className="text-status-danger hover:bg-status-danger-bg"
                               >
-                                <Trash2 size={16} />
-                              </button>
+                                <Trash2 className="h-4 w-4" aria-hidden="true" />
+                              </Button>
                             </div>
                           )}
                         </td>
@@ -397,20 +420,94 @@ export default function AssistantManagement() {
                   </tbody>
                 </table>
               </div>
-            )}
 
-            {!loading && assistants.length > 0 && (
-              <Pagination
-                currentPage={page}
-                totalPages={totalPages}
-                totalItems={total}
-                pageSize={PAGE_SIZE}
-                name="مساعد"
-                onPageChange={setPage}
-              />
-            )}
-          </div>
-        </>
+              {/* Mobile cards */}
+              <ul className="divide-y divide-surface-border md:hidden">
+                {assistants.map((assistant, index) => (
+                  <li key={assistant.id} className="space-y-3 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-xs text-text-muted">
+                          #{(page - 1) * PAGE_SIZE + index + 1}
+                        </p>
+                        <h3 className="truncate text-base font-bold text-text-main">
+                          {assistant.fullName}
+                        </h3>
+                        <p
+                          className="mt-1 flex items-center gap-1.5 text-sm text-text-muted"
+                          dir="ltr"
+                        >
+                          <Phone className="h-3.5 w-3.5" aria-hidden="true" />
+                          {assistant.phoneNumber || "-"}
+                        </p>
+                      </div>
+                      {canManage && (
+                        <div className="flex shrink-0 items-center gap-1">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => openEdit(assistant)}
+                            aria-label={`تعديل ${assistant.fullName}`}
+                          >
+                            <Edit2 className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setResetAssistant(assistant)}
+                            aria-label={`إعادة تعيين كلمة سر ${assistant.fullName}`}
+                          >
+                            <Key className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setSelectedAssistant(assistant);
+                              setIsDeleteOpen(true);
+                            }}
+                            aria-label={`حذف ${assistant.fullName}`}
+                            className="text-status-danger hover:bg-status-danger-bg"
+                          >
+                            <Trash2 className="h-4 w-4" aria-hidden="true" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+
+                    <dl className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="rounded-control border border-surface-border bg-surface-muted px-3 py-2">
+                        <dt className="text-xs text-text-muted">المرتب</dt>
+                        <dd className="font-bold text-text-main">
+                          {formatCurrency(assistant.salary)}
+                        </dd>
+                      </div>
+                      <div className="rounded-control border border-surface-border bg-surface-muted px-3 py-2">
+                        <dt className="text-xs text-text-muted">
+                          الأستاذ المرتبط
+                        </dt>
+                        <dd className="truncate text-text-main">
+                          {assistant.teacherName || "على مستوى المركز"}
+                        </dd>
+                      </div>
+                    </dl>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+
+          {!loading && assistants.length > 0 && (
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              totalItems={total}
+              pageSize={PAGE_SIZE}
+              name="مساعد"
+              onPageChange={setPage}
+            />
+          )}
+        </section>
       ) : (
         <AssistantsSalaryTab
           onPay={openPay}

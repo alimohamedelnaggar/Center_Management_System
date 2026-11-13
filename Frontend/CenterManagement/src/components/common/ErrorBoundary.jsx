@@ -1,5 +1,6 @@
 import { Component } from "react";
 import { AlertTriangle, RefreshCw } from "@/components/icons";
+import ScreenState from "@/components/ui/ScreenState";
 
 /**
  * Top-level safety net. If anything in the tree throws during render, we show a
@@ -30,29 +31,22 @@ export default class ErrorBoundary extends Component {
     if (!this.state.error) return this.props.children;
 
     return (
-      <div
-        dir="rtl"
-        className="flex min-h-screen flex-col items-center justify-center gap-4 bg-surface-muted p-6 text-center"
-      >
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-status-warning-bg text-status-warning">
-          <AlertTriangle className="h-8 w-8" />
-        </div>
-
-        <h1 className="text-xl font-bold text-text-main">حدث خطأ غير متوقع</h1>
-        <p className="max-w-md text-sm text-text-muted">
-          نعتذر عن هذا الخلل. يمكنك إعادة تحميل الصفحة للمتابعة، وإذا تكرر الخطأ
-          تواصل مع الدعم.
-        </p>
-
-        <button
-          type="button"
-          onClick={this.handleReload}
-          className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-text-inverse shadow-sm transition-all active:scale-95"
-        >
-          <RefreshCw className="h-4 w-4" />
-          إعادة تحميل الصفحة
-        </button>
-      </div>
+      <ScreenState
+        tone="danger"
+        icon={AlertTriangle}
+        eyebrow="خطأ غير متوقع"
+        title="حدث خطأ غير متوقع"
+        description="نعتذر عن هذا الخلل. يمكنك إعادة تحميل الصفحة للمتابعة، وإذا تكرر الخطأ تواصل مع الدعم."
+        actions={[
+          {
+            label: "إعادة تحميل الصفحة",
+            icon: RefreshCw,
+            onClick: this.handleReload,
+            testId: "error-reload",
+          },
+        ]}
+        testId="app-error"
+      />
     );
   }
 }

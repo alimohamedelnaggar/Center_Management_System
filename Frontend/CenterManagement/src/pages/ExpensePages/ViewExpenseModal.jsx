@@ -25,7 +25,7 @@ export default function ViewExpenseModal({
 
           <button
             onClick={onClose}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg hover:bg-surface-muted"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-lg hover:bg-surface-muted"
           >
             <X className="h-4 w-4" />
           </button>
@@ -47,7 +47,7 @@ export default function ViewExpenseModal({
               التاريخ
             </label>
 
-            <div className="flex items-center gap-2 rounded-lg border border-surface-border bg-surface-muted px-3 py-2.5">
+            <div className="flex items-center gap-2 rounded-lg border border-surface-border bg-surface-muted px-3 min-h-11 py-2.5">
               <Calendar className="h-4 w-4 text-text-muted" />
               <span className="text-sm text-text-main">
                 {expense.expenseDate}
@@ -60,7 +60,7 @@ export default function ViewExpenseModal({
               الملاحظات
             </label>
 
-            <div className="min-h-24 rounded-lg border border-surface-border bg-surface-muted px-3 py-2.5 text-sm text-text-main">
+            <div className="min-h-24 rounded-lg border border-surface-border bg-surface-muted px-3 min-h-11 py-2.5 text-sm text-text-main">
               {expense.notes || "لا توجد ملاحظات"}
             </div>
           </div>
@@ -70,7 +70,7 @@ export default function ViewExpenseModal({
         <div className="border-t border-surface-border px-5 py-4">
           <button
             onClick={onClose}
-            className="w-full rounded-lg bg-primary py-2.5 text-sm font-medium text-text-inverse hover:bg-primary-hover"
+            className="w-full rounded-lg bg-primary min-h-11 py-2.5 text-sm font-medium text-text-inverse hover:bg-primary-hover"
           >
             إغلاق
           </button>
@@ -87,7 +87,7 @@ function Info({ label, value }) {
         {label}
       </label>
 
-      <div className="rounded-lg border border-surface-border bg-surface-muted px-3 py-2.5 text-sm text-text-main">
+      <div className="rounded-lg border border-surface-border bg-surface-muted px-3 min-h-11 py-2.5 text-sm text-text-main">
         {value}
       </div>
     </div>

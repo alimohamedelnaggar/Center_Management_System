@@ -119,7 +119,7 @@ export default function QuestionExamGradeModal({
   const renderAnswer = (q) => {
     if (q.type === TYPE_ESSAY) {
       return (
-        <div className="rounded-lg border border-surface-border bg-surface-muted px-3 py-2 text-sm text-text-main">
+        <div className="rounded-lg border border-surface-border bg-surface-muted px-3 min-h-11 py-2 text-sm text-text-main">
           {q.essayAnswer ? (
             <span className="whitespace-pre-wrap">{q.essayAnswer}</span>
           ) : (
@@ -162,7 +162,7 @@ export default function QuestionExamGradeModal({
       onClick={saving ? null : onClose}
     >
       <div
-        className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-surface-card shadow-xl"
+        className="flex max-h-[calc(100dvh-2rem)] w-full max-w-2xl flex-col overflow-hidden rounded-2xl bg-surface-card shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-surface-border px-5 py-4">
@@ -183,7 +183,7 @@ export default function QuestionExamGradeModal({
             type="button"
             onClick={onClose}
             aria-label="إغلاق"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
           >
             <X className="h-4 w-4" />
           </button>
@@ -236,7 +236,7 @@ export default function QuestionExamGradeModal({
                       step="0.25"
                       value={marks[q.answerId] ?? ""}
                       onChange={(e) => handleChange(q.answerId, e.target.value)}
-                      className="w-28 rounded-lg border border-surface-border bg-surface-card px-3 py-2 text-sm text-text-main focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
+                      className="w-28 rounded-lg border border-surface-border bg-surface-card px-3 min-h-11 py-2 text-sm text-text-main focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
                     />
                     <span className="text-xs text-text-muted">
                       من {q.mark}
@@ -251,7 +251,7 @@ export default function QuestionExamGradeModal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg border border-surface-border bg-surface-card px-4 py-2.5 text-sm font-medium text-text-main transition-colors hover:bg-surface-muted"
+            className="rounded-lg border border-surface-border bg-surface-card px-4 min-h-11 py-2.5 text-sm font-medium text-text-main transition-colors hover:bg-surface-muted"
           >
             إلغاء
           </button>
@@ -259,7 +259,7 @@ export default function QuestionExamGradeModal({
             type="button"
             onClick={handleSave}
             disabled={saving || loading || !detail}
-            className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover disabled:opacity-60"
+            className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary px-4 min-h-11 py-2.5 text-sm font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover disabled:opacity-60"
           >
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}
             حفظ التصحيح

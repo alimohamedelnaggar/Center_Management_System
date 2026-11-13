@@ -35,24 +35,38 @@ export default function ImpersonationBanner() {
   };
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-300 bg-amber-100 px-4 py-2.5 text-sm text-amber-900">
-      <div className="flex items-center gap-2 font-semibold">
-        <ShieldAlert className="h-5 w-5 shrink-0" />
-        <span>
-          أنت تتصفّح الآن كـ <b>{targetName}</b>
+    <div
+      role="status"
+      data-testid="impersonation-banner"
+      className="relative flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-status-warning/40 bg-status-warning-bg px-4 py-2.5 text-sm text-status-warning"
+    >
+      <span
+        aria-hidden="true"
+        className="absolute inset-y-0 start-0 w-1 bg-status-warning"
+      />
+
+      <div className="flex min-w-0 flex-1 items-start gap-2">
+        <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-control bg-status-warning/15">
+          <ShieldAlert aria-hidden="true" className="h-5 w-5" />
+        </span>
+        <span className="min-w-0 flex-1 pt-1 leading-relaxed">
+          أنت تتصفّح الآن كـ{" "}
+          <b className="font-black text-text-main">{targetName}</b>
           {role ? ` (${role})` : ""} — تُسجَّل كل العمليات في سجل المراجعة.
           {impersonationWarning ? (
-            <span className="mt-0.5 block font-bold text-status-danger">
+            <span className="mt-1 block font-bold text-status-danger">
               تنبيه: {impersonationWarning}
             </span>
           ) : null}
         </span>
       </div>
+
       <button
         type="button"
         onClick={handleStop}
         disabled={busy}
-        className="rounded-lg bg-amber-900 px-4 py-1.5 font-bold text-white transition hover:bg-amber-800 disabled:opacity-60"
+        data-testid="impersonation-stop"
+        className="inline-flex min-h-11 w-full shrink-0 items-center justify-center rounded-full bg-text-main px-4 py-2 text-xs font-bold text-surface-card transition-all duration-150 hover:opacity-90 active:scale-[0.98] disabled:opacity-60 sm:w-auto"
       >
         {busy ? "جارٍ الإنهاء..." : "إنهاء الانتحال"}
       </button>

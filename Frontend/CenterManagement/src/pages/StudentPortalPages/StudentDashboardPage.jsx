@@ -23,6 +23,13 @@ import {
   YAxis,
 } from "recharts";
 import toast from "react-hot-toast";
+import Button from "../../components/ui/Button";
+import PageHeader from "../../components/ui/PageHeader";
+import {
+  PortalSection,
+  PortalStat,
+  PortalStatus,
+} from "../../components/portal/PortalUI";
 import { studentPortalService } from "../../services/studentPortalService";
 import { formatAttendanceRate } from "../../utils/attendance";
 import { useAuth } from "../../context/useAuth";
@@ -150,7 +157,7 @@ export default function StudentDashboardPage() {
       label: "امتحانات متاحة الآن",
       value: actionableExams.length,
       icon: PlayCircle,
-      tone: "bg-status-success-bg text-status-success",
+      tone: "success",
       to: "/student/exams",
       module: "online_exams",
     },
@@ -159,7 +166,7 @@ export default function StudentDashboardPage() {
       label: "متوسط النتائج المنشورة",
       value: `${averagePercentage}%`,
       icon: Star,
-      tone: "bg-primary-subtle text-primary",
+      tone: "primary",
       to: "/student/results",
       module: "grades",
     },
@@ -168,7 +175,7 @@ export default function StudentDashboardPage() {
       label: "نسبة الحضور",
       value: formatAttendanceRate(attendance?.attendancePercentage),
       icon: CalendarCheck,
-      tone: "bg-status-info-bg text-status-info",
+      tone: "info",
       to: "/student/attendance",
       module: "attendance",
     },
@@ -177,7 +184,7 @@ export default function StudentDashboardPage() {
       label: "المتبقي من الرسوم",
       value: formatMoney(payments?.totalDue),
       icon: Wallet,
-      tone: "bg-status-danger-bg text-status-danger",
+      tone: "danger",
       to: "/student/payments",
       module: "payments",
     },
@@ -208,56 +215,43 @@ export default function StudentDashboardPage() {
   ].filter((link) => hasCenterModule(link.module));
 
   return (
-    <div className="p-4 md:p-6 font-sans">
-      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-text-main">
-            {profile?.fullName ? `أهلاً، ${profile.fullName}` : "لوحة التحكم"}
-          </h1>
-          <p className="mt-0.5 text-sm text-text-muted">
-            {profile?.groups?.length
-              ? profile.groups.join(" • ")
-              : "نظرة سريعة على امتحاناتك ونتائجك"}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={load}
-          className="inline-flex items-center gap-2 rounded-lg border border-surface-border bg-surface-card px-3.5 py-2.5 text-sm font-medium text-text-main transition hover:bg-surface-muted"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          تحديث
-        </button>
-      </div>
+    <div data-testid="student-dashboard-page" className="p-4 font-sans md:p-6">
+      <PageHeader
+        className="mb-5"
+        title={profile?.fullName ? `أهلاً، ${profile.fullName}` : "لوحة التحكم"}
+        subtitle={
+          profile?.groups?.length
+            ? profile.groups.join(" • ")
+            : "نظرة سريعة على امتحاناتك ونتائجك"
+        }
+        actions={
+          <Button variant="secondary" onClick={load} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            تحديث
+          </Button>
+        }
+      />
 
       <div className="mb-5 grid grid-cols-2 gap-3 xl:grid-cols-4">
-        {stats.map((card) => {
-          const Icon = card.icon;
-          return (
-            <Link
-              key={card.key}
-              to={card.to}
-              className="rounded-xl border border-surface-border bg-surface-card p-4 shadow-sm transition hover:shadow-md"
-            >
-              <div
-                className={`mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg ${card.tone}`}
-              >
-                <Icon className="h-4 w-4" />
-              </div>
-              <p className="text-2xl font-bold text-text-main">{card.value}</p>
-              <p className="mt-0.5 text-xs text-text-muted">{card.label}</p>
-            </Link>
-          );
-        })}
+        {stats.map((card) => (
+          <PortalStat
+            key={card.key}
+            label={card.label}
+            value={card.value}
+            icon={card.icon}
+            tone={card.tone}
+            to={card.to}
+            testId={`student-stat-${card.key}`}
+          />
+        ))}
       </div>
 
-      {/* Performance over time */}
-      <section className="mb-4 rounded-xl border border-surface-border bg-surface-card p-4 shadow-sm">
-        <h2 className="mb-3 inline-flex items-center gap-2 text-sm font-bold text-text-main">
-          <TrendingUp className="h-4 w-4 text-primary" />
-          تطور الأداء عبر الزمن
-        </h2>
-
+      <PortalSection
+        icon={TrendingUp}
+        title="تطور الأداء عبر الزمن"
+        className="mb-4"
+        testId="student-performance-section"
+      >
         {loading && (
           <div className="flex items-center justify-center gap-2 py-10 text-sm text-text-muted">
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -272,12 +266,23 @@ export default function StudentDashboardPage() {
         )}
 
         {!loading && performanceData.length > 0 && (
-          <div className="h-64 w-full" dir="ltr">
+          <div className="h-56 w-full sm:h-64" dir="ltr">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={performanceData} margin={{ top: 8, right: 16, left: -10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-surface-border, #e5e7eb)" />
+              <LineChart
+                data={performanceData}
+                margin={{ top: 8, right: 16, left: -10, bottom: 0 }}
+              >
+                <CartesianGrid
+                  strokeDasharray="3 3"
+                  stroke="var(--color-surface-border, #e5e7eb)"
+                />
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#9ca3af" />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} stroke="#9ca3af" unit="%" />
+                <YAxis
+                  domain={[0, 100]}
+                  tick={{ fontSize: 11 }}
+                  stroke="#9ca3af"
+                  unit="%"
+                />
                 <Tooltip
                   formatter={(value) => [`${value}%`, "النسبة"]}
                   contentStyle={{ direction: "rtl", fontSize: 12, borderRadius: 8 }}
@@ -294,21 +299,22 @@ export default function StudentDashboardPage() {
             </ResponsiveContainer>
           </div>
         )}
-      </section>
+      </PortalSection>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        {/* Actionable exams */}
-        <section className="rounded-xl border border-surface-border bg-surface-card p-4 shadow-sm">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="inline-flex items-center gap-2 text-sm font-bold text-text-main">
-              <ClipboardList className="h-4 w-4 text-primary" />
-              امتحانات تنتظرك
-            </h2>
-            <Link to="/student/exams" className="text-xs font-medium text-primary">
+        <PortalSection
+          icon={ClipboardList}
+          title="امتحانات تنتظرك"
+          testId="student-actionable-exams"
+          action={
+            <Link
+              to="/student/exams"
+              className="inline-flex min-h-11 items-center px-1 text-sm font-bold text-primary"
+            >
               عرض الكل
             </Link>
-          </div>
-
+          }
+        >
           {loading && (
             <div className="flex items-center justify-center gap-2 py-8 text-sm text-text-muted">
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -328,26 +334,22 @@ export default function StudentDashboardPage() {
                 <Link
                   key={exam.examId}
                   to="/student/exams"
-                  className="flex items-center justify-between gap-3 rounded-lg border border-surface-border bg-surface-muted/50 px-3 py-2.5 transition hover:bg-surface-muted"
+                  className="flex items-center justify-between gap-3 rounded-control border border-surface-border bg-surface-muted/50 px-3 py-3 transition hover:bg-surface-muted"
                 >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-text-main">
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-bold text-text-main">
                       {exam.name}
-                    </p>
-                    <p className="mt-0.5 flex items-center gap-1 text-xs text-text-muted">
+                    </span>
+                    <span className="mt-1 flex items-center gap-1 text-xs text-text-muted">
                       <Clock className="h-3.5 w-3.5" />
                       {exam.durationMinutes} دقيقة • {exam.questionsCount} سؤال
-                    </p>
-                  </div>
-                  <span
-                    className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${
-                      exam.status === "inprogress"
-                        ? "bg-status-warning-bg text-status-warning"
-                        : "bg-status-success-bg text-status-success"
-                    }`}
+                    </span>
+                  </span>
+                  <PortalStatus
+                    tone={exam.status === "inprogress" ? "warning" : "success"}
                   >
                     {exam.status === "inprogress" ? "قيد الحل" : "متاح"}
-                  </span>
+                  </PortalStatus>
                 </Link>
               ))}
           </div>
@@ -372,20 +374,21 @@ export default function StudentDashboardPage() {
               </div>
             </div>
           )}
-        </section>
+        </PortalSection>
 
-        {/* Latest results */}
-        <section className="rounded-xl border border-surface-border bg-surface-card p-4 shadow-sm">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="inline-flex items-center gap-2 text-sm font-bold text-text-main">
-              <Star className="h-4 w-4 text-primary" />
-              أحدث النتائج
-            </h2>
-            <Link to="/student/results" className="text-xs font-medium text-primary">
+        <PortalSection
+          icon={Star}
+          title="أحدث النتائج"
+          testId="student-latest-results"
+          action={
+            <Link
+              to="/student/results"
+              className="inline-flex min-h-11 items-center px-1 text-sm font-bold text-primary"
+            >
               عرض الكل
             </Link>
-          </div>
-
+          }
+        >
           {loading && (
             <div className="flex items-center justify-center gap-2 py-8 text-sm text-text-muted">
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -409,55 +412,50 @@ export default function StudentDashboardPage() {
                 return (
                   <div
                     key={item.examId}
-                    className="flex items-center justify-between gap-3 rounded-lg border border-surface-border bg-surface-muted/50 px-3 py-2.5"
+                    className="flex items-center justify-between gap-3 rounded-control border border-surface-border bg-surface-muted/50 px-3 py-3"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-text-main">
+                      <p className="truncate text-sm font-bold text-text-main">
                         {item.examName}
                       </p>
-                      <p className="mt-0.5 text-xs text-text-muted">
+                      <p className="mt-1 text-xs text-text-muted">
                         {formatDateTime(item.submittedAt)}
                       </p>
                     </div>
-                    <div className="text-left">
-                      <p className="text-sm font-bold text-text-main">
+                    <div className="shrink-0 text-left">
+                      <p className="text-base font-extrabold tabular-nums text-text-main">
                         {item.score} / {item.totalMark}
                       </p>
-                      <p
-                        className={`text-xs font-medium ${
-                          percentage >= 50
-                            ? "text-status-success"
-                            : "text-status-danger"
-                        }`}
+                      <PortalStatus
+                        tone={percentage >= 50 ? "success" : "danger"}
+                        className="mt-1"
                       >
                         {percentage}%
-                      </p>
+                      </PortalStatus>
                     </div>
                   </div>
                 );
               })}
           </div>
-        </section>
+        </PortalSection>
       </div>
 
-      {/* Quick links */}
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
         {quickLinks.map((link) => {
           const Icon = link.icon;
-          const showBadge =
-            link.key === "notifications" && unread > 0;
+          const showBadge = link.key === "notifications" && unread > 0;
           return (
             <Link
               key={link.key}
               to={link.to}
-              className="flex items-center justify-between gap-3 rounded-xl border border-surface-border bg-surface-card p-4 text-sm font-medium text-text-main shadow-sm transition hover:bg-surface-muted"
+              className="flex min-h-14 items-center justify-between gap-3 rounded-card border border-surface-border bg-surface-card p-4 text-base font-bold text-text-main shadow-soft transition hover:border-primary/60 hover:bg-surface-muted"
             >
-              <span className="inline-flex items-center gap-3">
-                <Icon className="h-5 w-5 text-primary" />
-                {link.label}
+              <span className="inline-flex min-w-0 items-center gap-3">
+                <Icon className="h-5 w-5 shrink-0 text-primary" />
+                <span className="truncate">{link.label}</span>
               </span>
               {showBadge && (
-                <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-status-danger px-1.5 text-xs font-bold text-text-inverse">
+                <span className="inline-flex min-w-6 items-center justify-center rounded-full bg-status-danger px-1.5 py-0.5 text-xs font-bold text-text-inverse">
                   {unread}
                 </span>
               )}

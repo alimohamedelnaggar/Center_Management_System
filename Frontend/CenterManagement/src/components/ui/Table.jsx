@@ -10,7 +10,9 @@ import { cn } from "@/utils/cn";
 export function Table({ className, children }) {
   return (
     <div className="w-full overflow-x-auto rounded-card border border-surface-border bg-surface-card shadow-soft">
-      <table className={cn("w-full text-right text-sm", className)}>
+      <table
+        className={cn("w-full min-w-[36rem] text-right text-sm", className)}
+      >
         {children}
       </table>
     </div>
@@ -53,7 +55,7 @@ export function TableHeaderCell({ className, children, ...props }) {
     <th
       scope="col"
       className={cn(
-        "whitespace-nowrap px-5 py-3 text-xs font-semibold uppercase tracking-wide",
+        "whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wide sm:px-5",
         className,
       )}
       {...props}
@@ -65,7 +67,7 @@ export function TableHeaderCell({ className, children, ...props }) {
 
 export function TableCell({ className, children, ...props }) {
   return (
-    <td className={cn("px-5 py-3.5 text-text-main", className)} {...props}>
+    <td className={cn("px-4 py-3.5 text-sm text-text-main sm:px-5", className)} {...props}>
       {children}
     </td>
   );

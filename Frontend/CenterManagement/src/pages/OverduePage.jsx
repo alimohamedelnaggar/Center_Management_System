@@ -4,14 +4,17 @@ import toast from "react-hot-toast";
 
 import {
   AlertTriangle,
-  ChevronLeft,
-  ChevronRight,
+  Banknote,
   Plus,
+  Receipt,
   RefreshCw,
+  Users,
+  Wallet,
   WhatsappLogo,
 } from "@/components/icons";
 
 import AddPaymentModal from "../components/common/AddPaymentModal";
+import Pagination from "../components/common/Pagination";
 
 import { useAuth } from "../context/useAuth";
 import ModuleOnly from "../components/common/ModuleOnly";
@@ -19,6 +22,23 @@ import { useBranding } from "../context/useBranding";
 import { examService } from "../services/examService";
 import { financeService } from "../services/financeService";
 import { teacherService } from "../services/teacherService";
+
+import Button from "@/components/ui/Button";
+import EmptyState from "@/components/ui/EmptyState";
+import Input from "@/components/ui/Input";
+import PageHeader from "@/components/ui/PageHeader";
+import Select from "@/components/ui/Select";
+import StatCard from "@/components/ui/StatCard";
+import StatusPill from "@/components/ui/StatusPill";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableEmpty,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+} from "@/components/ui/Table";
 
 import { formatCurrency } from "../utils/formatCurrency";
 import { normalizeEgyptianPhone } from "../utils/phone";
@@ -271,310 +291,349 @@ export default function OverduePage() {
     setPageNumber(page);
   };
 
-  const from = totalCount === 0 ? 0 : (pageNumber - 1) * pageSize + 1;
-  const to = Math.min(pageNumber * pageSize, totalCount);
+  const statusTone = (status) => (status === 1 ? "warning" : "danger");
+  const statusText = (status) => (status === 1 ? "دفع جزء" : "غير مدفوع");
 
-  const statusLabel = (status) =>
-    status === 1
-      ? { text: "دفع جزء", className: "bg-yellow-50 text-yellow-700 border-yellow-200" }
-      : { text: "غير مدفوع", className: "bg-red-50 text-red-700 border-red-200" };
+  const renderActions = (row, { block = false } = {}) => {
+    const hasPhone = !!normalizeEgyptianPhone(row.parentPhoneNumber);
+
+    return (
+      <div
+        className={`flex items-center gap-2 ${
+          block ? "flex-col sm:flex-row" : "justify-center"
+        }`}
+      >
+        <Button
+          size="sm"
+          onClick={() => handleAddPayment(row)}
+          title="إضافة دفعة"
+          className={block ? "w-full sm:w-auto" : undefined}
+        >
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          إضافة دفعة
+        </Button>
+
+        <ModuleOnly moduleKey="whatsapp">
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => handleRemind(row)}
+            disabled={!hasPhone}
+            title={
+              hasPhone
+                ? "تذكير عبر واتساب لولي الأمر"
+                : "لا يوجد رقم ولي أمر صحيح"
+            }
+            className={`text-status-success ${
+              block ? "w-full sm:w-auto" : ""
+            }`}
+          >
+            <WhatsappLogo className="h-4 w-4" aria-hidden="true" />
+            تذكير واتساب
+          </Button>
+        </ModuleOnly>
+      </div>
+    );
+  };
+
+  const money = (value) => (
+    <span className="num whitespace-nowrap font-semibold">{formatCurrency(value)}</span>
+  );
 
   return (
-    <div className="p-6 bg-[var(--color-surface-bg)] min-h-screen text-[var(--color-text-main)] dir-rtl space-y-6">
-      {/* =====================================================
-          Header
-      ====================================================== */}
-      <div className="flex flex-wrap justify-between items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--color-primary)] flex items-center gap-2">
-            <AlertTriangle className="w-6 h-6 text-red-500" />
-            متابعة المتأخرين
-          </h1>
+    <div
+      dir="rtl"
+      data-testid="overdue-page"
+      className="min-h-screen bg-surface-bg font-sans text-text-main"
+    >
+      <div className="mx-auto max-w-[90rem] space-y-5 px-4 py-6 sm:px-6 lg:px-8">
+        <PageHeader
+          title="متابعة المتأخرين"
+          subtitle={`الطلاب الذين لم يسددوا اشتراك شهر ${billingPeriodLabel}`}
+          actions={
+            <Button variant="secondary" onClick={fetchOverdue}>
+              <RefreshCw className="h-4 w-4" aria-hidden="true" />
+              تحديث
+            </Button>
+          }
+        />
 
-          <p className="text-sm text-[var(--color-text-muted)]">
-            الطلاب الذين لم يسددوا اشتراك شهر {billingPeriodLabel}
-          </p>
+        {/* =====================================================
+            Totals
+        ====================================================== */}
+        <div className="grid grid-cols-1 gap-3 ph:grid-cols-2 lg:grid-cols-4 lg:gap-4">
+          <StatCard
+            label="عدد المتأخرين"
+            value={totals?.totalStudents ?? 0}
+            icon={Users}
+            tone="neutral"
+          />
+          <StatCard
+            label="إجمالي المستحق"
+            value={formatCurrency(totals?.totalDue ?? 0)}
+            icon={Receipt}
+            tone="info"
+          />
+          <StatCard
+            label="إجمالي المدفوع"
+            value={formatCurrency(totals?.totalPaid ?? 0)}
+            icon={Banknote}
+            tone="success"
+          />
+          <StatCard
+            label="إجمالي المتبقي"
+            value={formatCurrency(totals?.totalRemaining ?? 0)}
+            icon={AlertTriangle}
+            tone="danger"
+          />
         </div>
 
-        <button
-          onClick={fetchOverdue}
-          className="inline-flex items-center gap-2 bg-[var(--color-surface-card)] border border-[var(--color-surface-border)] px-4 py-2 rounded-xl text-sm font-bold hover:bg-[var(--color-surface-muted)] transition-all cursor-pointer"
-        >
-          <RefreshCw className="w-4 h-4" />
-          تحديث
-        </button>
-      </div>
+        {/* =====================================================
+            Filters
+        ====================================================== */}
+        <div className="rounded-card border border-surface-border bg-surface-card p-4 shadow-soft">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            <Input
+              type="text"
+              aria-label="بحث بالاسم أو الهاتف"
+              placeholder="بحث بالاسم أو الهاتف..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
 
-      {/* =====================================================
-          Totals
-      ====================================================== */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <SummaryCard
-          title="عدد المتأخرين"
-          value={totals?.totalStudents ?? 0}
-          tone="slate"
-        />
-        <SummaryCard
-          title="إجمالي المستحق"
-          value={formatCurrency(totals?.totalDue ?? 0)}
-          tone="blue"
-        />
-        <SummaryCard
-          title="إجمالي المدفوع"
-          value={formatCurrency(totals?.totalPaid ?? 0)}
-          tone="green"
-        />
-        <SummaryCard
-          title="إجمالي المتبقي"
-          value={formatCurrency(totals?.totalRemaining ?? 0)}
-          tone="red"
-        />
-      </div>
+            <Select
+              aria-label="المجموعة"
+              value={selectedGroup}
+              onChange={(e) => setSelectedGroup(e.target.value)}
+            >
+              <option value="">جميع المجموعات</option>
+              {groups.map((g) => (
+                <option key={g.id || g.groupId} value={g.id || g.groupId}>
+                  {g.name || g.groupName}
+                </option>
+              ))}
+            </Select>
 
-      {/* =====================================================
-          Filters
-      ====================================================== */}
-      <div className="flex flex-wrap items-center gap-4 bg-[var(--color-surface-card)] p-4 rounded-xl border border-[var(--color-surface-border)] shadow-sm">
-        <input
-          type="text"
-          placeholder="بحث بالاسم أو الهاتف..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="p-2.5 rounded-lg border border-[var(--color-surface-border)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] min-w-[200px]"
-        />
+            {showTeacherColumn && teachers.length > 0 && (
+              <Select
+                aria-label="المدرس"
+                value={selectedTeacher}
+                onChange={(e) => setSelectedTeacher(e.target.value)}
+              >
+                <option value="">جميع المدرسين</option>
+                {teachers.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.fullName || t.name}
+                  </option>
+                ))}
+              </Select>
+            )}
 
-        <select
-          value={selectedGroup}
-          onChange={(e) => setSelectedGroup(e.target.value)}
-          className="p-2.5 rounded-lg border border-[var(--color-surface-border)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-        >
-          <option value="">جميع المجموعات</option>
-          {groups.map((g) => (
-            <option key={g.id || g.groupId} value={g.id || g.groupId}>
-              {g.name || g.groupName}
-            </option>
-          ))}
-        </select>
+            <Select
+              aria-label="الشهر"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+            >
+              {MONTHS.map((month, index) => (
+                <option key={month} value={index + 1}>
+                  {month}
+                </option>
+              ))}
+            </Select>
 
-        {showTeacherColumn && teachers.length > 0 && (
-          <select
-            value={selectedTeacher}
-            onChange={(e) => setSelectedTeacher(e.target.value)}
-            className="p-2.5 rounded-lg border border-[var(--color-surface-border)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-          >
-            <option value="">جميع المدرسين</option>
-            {teachers.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.fullName || t.name}
-              </option>
-            ))}
-          </select>
-        )}
+            <Select
+              aria-label="السنة"
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+            >
+              {availableYears.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </Select>
 
-        <select
-          value={selectedMonth}
-          onChange={(e) => setSelectedMonth(e.target.value)}
-          className="p-2.5 rounded-lg border border-[var(--color-surface-border)] bg-white text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-        >
-          {MONTHS.map((month, index) => (
-            <option key={month} value={index + 1}>
-              {month}
-            </option>
-          ))}
-        </select>
+            <Select
+              aria-label="عدد الصفوف في الصفحة"
+              value={pageSize}
+              onChange={(e) => setPageSize(Number(e.target.value))}
+            >
+              <option value={10}>10 / صفحة</option>
+              <option value={20}>20 / صفحة</option>
+              <option value={50}>50 / صفحة</option>
+            </Select>
+          </div>
+        </div>
 
-        <select
-          value={selectedYear}
-          onChange={(e) => setSelectedYear(e.target.value)}
-          className="p-2.5 rounded-lg border border-[var(--color-surface-border)] bg-white text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-        >
-          {availableYears.map((year) => (
-            <option key={year} value={year}>
-              {year}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* =====================================================
-          Table
-      ====================================================== */}
-      <div className="bg-[var(--color-surface-card)] rounded-xl border border-[var(--color-surface-border)] shadow-sm overflow-hidden">
+        {/* =====================================================
+            Rows
+        ====================================================== */}
         {loading ? (
-          <div className="p-12 text-center text-[var(--color-text-muted)] font-medium">
+          <div className="rounded-card border border-surface-border bg-surface-card p-12 text-center text-sm font-medium text-text-muted">
             جاري التحميل...
+          </div>
+        ) : rows.length === 0 ? (
+          <div className="rounded-card border border-surface-border bg-surface-card shadow-soft">
+            <EmptyState
+              icon={Wallet}
+              title="لا يوجد طلاب متأخرون مطابقون للفلترة الحالية 🎉"
+            />
           </div>
         ) : (
           <>
-            <div className="w-full overflow-x-auto">
-              <table className="w-full min-w-[900px] text-right text-sm whitespace-nowrap">
-                <thead className="bg-[var(--color-surface-muted)] text-[var(--color-text-muted)] font-semibold border-b border-[var(--color-surface-border)]">
-                  <tr>
-                    <th className="p-4">اسم الطالب</th>
-                    <th className="p-4">المجموعة</th>
-                    {showTeacherColumn && <th className="p-4">المدرس</th>}
-                    <th className="p-4">هاتف ولي الأمر</th>
-                    <th className="p-4">المستحق</th>
-                    <th className="p-4">المدفوع</th>
-                    <th className="p-4">المتبقي</th>
-                    <th className="p-4">آخر دفعة</th>
-                    <th className="p-4 text-center">الحالة</th>
-                    <th className="p-4 text-center">الإجراءات</th>
-                  </tr>
-                </thead>
+            {/* Phones: stacked cards so amounts and actions stay readable */}
+            <ul data-testid="overdue-cards" className="space-y-3 md:hidden">
+              {rows.map((row) => (
+                <li
+                  key={row.studentId}
+                  className="rounded-card border border-surface-border bg-surface-card p-4 shadow-soft"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="break-words font-bold text-text-main">
+                        {row.studentName}
+                      </p>
+                      <p className="mt-0.5 break-words text-sm text-text-muted">
+                        {row.groupName || "-"}
+                        {showTeacherColumn && row.teacherName
+                          ? ` · ${row.teacherName}`
+                          : ""}
+                      </p>
+                    </div>
 
-                <tbody className="divide-y divide-[var(--color-surface-border)]">
-                  {rows.length === 0 ? (
-                    <tr>
-                      <td colSpan={showTeacherColumn ? 10 : 9} className="p-12 text-center text-slate-400">
-                        لا يوجد طلاب متأخرون مطابقون للفلترة الحالية 🎉
-                      </td>
-                    </tr>
-                  ) : (
-                    rows.map((row) => {
-                      const status = statusLabel(row.status);
+                    <StatusPill tone={statusTone(row.status)}>
+                      {statusText(row.status)}
+                    </StatusPill>
+                  </div>
 
-                      const hasPhone = !!normalizeEgyptianPhone(
-                        row.parentPhoneNumber,
-                      );
+                  <dl className="mt-3 grid grid-cols-3 gap-2 rounded-control bg-surface-muted/60 p-2.5 text-center">
+                    <div className="min-w-0">
+                      <dt className="text-xs text-text-muted">المستحق</dt>
+                      <dd className="num mt-0.5 break-words text-sm font-semibold text-text-main">
+                        {formatCurrency(row.totalAmount)}
+                      </dd>
+                    </div>
+                    <div className="min-w-0">
+                      <dt className="text-xs text-text-muted">المدفوع</dt>
+                      <dd className="num mt-0.5 break-words text-sm font-semibold text-status-success">
+                        {formatCurrency(row.paidAmount)}
+                      </dd>
+                    </div>
+                    <div className="min-w-0">
+                      <dt className="text-xs text-text-muted">المتبقي</dt>
+                      <dd className="num mt-0.5 break-words text-sm font-bold text-status-danger">
+                        {formatCurrency(row.remainingAmount)}
+                      </dd>
+                    </div>
+                  </dl>
 
-                      return (
-                        <tr
-                          key={row.studentId}
-                          className="hover:bg-slate-50 transition-colors duration-200"
-                        >
-                          <td className="p-4 font-medium text-slate-800">
-                            {row.studentName}
-                          </td>
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-text-muted">
+                    <span dir="ltr" className="num">
+                      {row.parentPhoneNumber || "-"}
+                    </span>
+                    <span>
+                      آخر دفعة:{" "}
+                      {row.lastPaymentDate
+                        ? new Date(row.lastPaymentDate).toLocaleDateString(
+                            "ar-EG",
+                          )
+                        : "-"}
+                    </span>
+                  </div>
 
-                          <td className="p-4 text-slate-600">
-                            {row.groupName || "-"}
-                          </td>
+                  <div className="mt-3">{renderActions(row, { block: true })}</div>
+                </li>
+              ))}
+            </ul>
 
-                          {showTeacherColumn && (
-                            <td className="p-4 text-slate-600">
-                              {row.teacherName || "-"}
-                            </td>
-                          )}
+            {/* Tablets and up */}
+            <div data-testid="overdue-table" className="hidden md:block">
+              <Table className="min-w-[64rem] whitespace-nowrap">
+                <TableHead>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHeaderCell>اسم الطالب</TableHeaderCell>
+                    <TableHeaderCell>المجموعة</TableHeaderCell>
+                    {showTeacherColumn && (
+                      <TableHeaderCell>المدرس</TableHeaderCell>
+                    )}
+                    <TableHeaderCell>هاتف ولي الأمر</TableHeaderCell>
+                    <TableHeaderCell>المستحق</TableHeaderCell>
+                    <TableHeaderCell>المدفوع</TableHeaderCell>
+                    <TableHeaderCell>المتبقي</TableHeaderCell>
+                    <TableHeaderCell>آخر دفعة</TableHeaderCell>
+                    <TableHeaderCell className="text-center">الحالة</TableHeaderCell>
+                    <TableHeaderCell className="text-center">
+                      الإجراءات
+                    </TableHeaderCell>
+                  </TableRow>
+                </TableHead>
 
-                          <td className="p-4 text-slate-600" dir="ltr">
-                            {row.parentPhoneNumber || "-"}
-                          </td>
+                <TableBody>
+                  {rows.map((row) => (
+                    <TableRow key={row.studentId}>
+                      <TableCell className="max-w-[16rem] break-words font-medium">
+                        {row.studentName}
+                      </TableCell>
 
-                          <td className="p-4 text-slate-700">
-                            {formatCurrency(row.totalAmount)}
-                          </td>
+                      <TableCell className="max-w-[12rem] truncate text-text-muted">
+                        {row.groupName || "-"}
+                      </TableCell>
 
-                          <td className="p-4 text-green-600 font-semibold">
-                            {formatCurrency(row.paidAmount)}
-                          </td>
+                      {showTeacherColumn && (
+                        <TableCell className="max-w-[12rem] truncate text-text-muted">
+                          {row.teacherName || "-"}
+                        </TableCell>
+                      )}
 
-                          <td className="p-4 text-red-600 font-bold">
-                            {formatCurrency(row.remainingAmount)}
-                          </td>
+                      <TableCell className="num text-text-muted" dir="ltr">
+                        {row.parentPhoneNumber || "-"}
+                      </TableCell>
 
-                          <td className="p-4 text-[var(--color-text-muted)]">
-                            {row.lastPaymentDate
-                              ? new Date(row.lastPaymentDate).toLocaleDateString(
-                                  "ar-EG",
-                                )
-                              : "-"}
-                          </td>
+                      <TableCell>{money(row.totalAmount)}</TableCell>
+                      <TableCell className="text-status-success">
+                        {money(row.paidAmount)}
+                      </TableCell>
+                      <TableCell className="font-bold text-status-danger">
+                        {money(row.remainingAmount)}
+                      </TableCell>
 
-                          <td className="p-4 text-center">
-                            <span
-                              className={`px-3 py-1 rounded-full text-xs font-bold border inline-block ${status.className}`}
-                            >
-                              {status.text}
-                            </span>
-                          </td>
+                      <TableCell className="num text-text-muted">
+                        {row.lastPaymentDate
+                          ? new Date(row.lastPaymentDate).toLocaleDateString(
+                              "ar-EG",
+                            )
+                          : "-"}
+                      </TableCell>
 
-                          <td className="p-4">
-                            <div className="flex items-center justify-center gap-2">
-                              <button
-                                onClick={() => handleAddPayment(row)}
-                                title="إضافة دفعة"
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)] transition-all cursor-pointer"
-                              >
-                                <Plus className="w-3.5 h-3.5" />
-                                إضافة دفعة
-                              </button>
+                      <TableCell className="text-center">
+                        <StatusPill tone={statusTone(row.status)}>
+                          {statusText(row.status)}
+                        </StatusPill>
+                      </TableCell>
 
-      <ModuleOnly moduleKey="whatsapp">
-      <button
-        onClick={() => handleRemind(row)}
-        disabled={!hasPhone}
-        title={
-          hasPhone
-            ? "تذكير عبر واتساب لولي الأمر"
-            : "لا يوجد رقم ولي أمر صحيح"
-        }
-        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
-          hasPhone
-            ? "text-green-700 border-green-200 bg-green-50 hover:bg-green-100 cursor-pointer"
-            : "text-slate-300 border-slate-200 bg-slate-50 cursor-not-allowed"
-        }`}
-      >
-        <WhatsappLogo className="w-3.5 h-3.5" />
-        تذكير واتساب
-      </button>
-      </ModuleOnly>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
+                      <TableCell>{renderActions(row)}</TableCell>
+                    </TableRow>
+                  ))}
+
+                  {rows.length === 0 && (
+                    <TableEmpty colSpan={showTeacherColumn ? 10 : 9}>
+                      لا يوجد طلاب متأخرون مطابقون للفلترة الحالية 🎉
+                    </TableEmpty>
                   )}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
 
-            {/* =============================================
-                Pagination
-            ============================================== */}
             {totalCount > 0 && totalPages > 1 && (
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4 p-4 border-t border-[var(--color-surface-border)]">
-                <div className="flex items-center gap-3 text-sm text-[var(--color-text-muted)]">
-                  <span>
-                    عرض{" "}
-                    <b className="text-[var(--color-text-main)]">{from}</b> إلى{" "}
-                    <b className="text-[var(--color-text-main)]">{to}</b> من{" "}
-                    <b className="text-[var(--color-text-main)]">{totalCount}</b>
-                  </span>
-
-                  <select
-                    value={pageSize}
-                    onChange={(e) => setPageSize(Number(e.target.value))}
-                    className="p-2 rounded-lg border border-[var(--color-surface-border)] bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                  >
-                    <option value={10}>10 / صفحة</option>
-                    <option value={20}>20 / صفحة</option>
-                    <option value={50}>50 / صفحة</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-2" dir="ltr">
-                  <button
-                    onClick={() => handlePageChange(pageNumber - 1)}
-                    disabled={pageNumber === 1}
-                    className="w-9 h-9 rounded-lg border flex items-center justify-center transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed border-slate-200 bg-white hover:bg-slate-50"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-
-                  <span className="text-sm font-bold px-2">
-                    {pageNumber} / {totalPages}
-                  </span>
-
-                  <button
-                    onClick={() => handlePageChange(pageNumber + 1)}
-                    disabled={pageNumber === totalPages}
-                    className="w-9 h-9 rounded-lg border flex items-center justify-center transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed border-slate-200 bg-white hover:bg-slate-50"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
+              <Pagination
+                currentPage={pageNumber}
+                totalPages={totalPages}
+                totalItems={totalCount}
+                pageSize={pageSize}
+                name="طالب"
+                testId="overdue-pagination"
+                onPageChange={handlePageChange}
+              />
             )}
           </>
         )}
@@ -592,26 +651,6 @@ export default function OverduePage() {
         onSuccess={handlePaymentSaved}
         prefill={prefill}
       />
-    </div>
-  );
-}
-
-function SummaryCard({ title, value, tone }) {
-  const tones = {
-    slate: "text-slate-700",
-    blue: "text-blue-600",
-    green: "text-green-600",
-    red: "text-red-600",
-  };
-
-  return (
-    <div className="bg-[var(--color-surface-card)] rounded-xl border border-[var(--color-surface-border)] shadow-sm p-4">
-      <p className="text-xs font-bold text-[var(--color-text-muted)] mb-1">
-        {title}
-      </p>
-      <p className={`text-xl font-bold ${tones[tone] || tones.slate}`}>
-        {value}
-      </p>
     </div>
   );
 }

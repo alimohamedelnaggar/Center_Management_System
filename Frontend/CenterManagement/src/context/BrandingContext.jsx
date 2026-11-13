@@ -80,9 +80,11 @@ function relativeLuminance(hex) {
   );
 }
 
-// Pick white or dark text for the best contrast on a given background.
+// Pick the text colour (white or near-black) that contrasts best on `hex`.
 function readableTextOn(hex) {
-  return relativeLuminance(hex) > 0.5 ? "#0f172a" : "#ffffff";
+  return contrastRatio(hex, "#0f172a") >= contrastRatio(hex, "#ffffff")
+    ? "#0f172a"
+    : "#ffffff";
 }
 
 function applyThemeColor(color) {
@@ -97,11 +99,55 @@ function applyThemeColor(color) {
     return;
   }
 
-  root.style.setProperty("--color-primary-val", color);
-  root.style.setProperty("--color-primary-hover-val", shade(color, 0.22));
-  root.style.setProperty("--color-primary-light-val", shade(color, -0.18));
-  root.style.setProperty("--color-primary-subtle-val", tint(color, 0.9));
-  root.style.setProperty("--color-primary-contrast-val", readableTextOn(color));
+  // The center brand colour is authored for light surfaces. On the dark canvas
+  // that exact hex can drop to ~3:1 (e.g. #4F46E5 on #080B18), so derive a
+  // lightened variant that keeps at least 4.5:1 for body-size text while still
+  // reading as the same hue.
+  const isDark = root.classList.contains("dark");
+  // Worst-case dark surface for primary-coloured *text* is the muted card /
+  // active nav row, not the page background.
+  const darkTextSurface = "#1b2340";
+
+  if (!isDark) {
+    root.style.setProperty("--color-primary-val", color);
+    root.style.setProperty("--color-primary-hover-val", shade(color, 0.22));
+    root.style.setProperty("--color-primary-light-val", shade(color, -0.18));
+    root.style.setProperty("--color-primary-subtle-val", tint(color, 0.9));
+    root.style.setProperty("--color-primary-contrast-val", readableTextOn(color));
+    return;
+  }
+
+  const primary = ensureContrast(color, darkTextSurface, 4.5);
+  root.style.setProperty("--color-primary-val", primary);
+  root.style.setProperty("--color-primary-hover-val", tint(primary, 0.18));
+  root.style.setProperty("--color-primary-light-val", tint(primary, 0.32));
+  root.style.setProperty("--color-primary-subtle-val", mix(primary, "#080b18", 0.82));
+  root.style.setProperty("--color-primary-contrast-val", readableTextOn(primary));
+}
+
+function mix(a, b, ratio) {
+  const ca = hexToRgb(a);
+  const cb = hexToRgb(b);
+  if (!ca || !cb) return a;
+  const at = (x, y) => x + (y - x) * ratio;
+  return toHex({ r: at(ca.r, cb.r), g: at(ca.g, cb.g), b: at(ca.b, cb.b) });
+}
+
+// Ratio between a color and a background, per WCAG 2.x.
+function contrastRatio(a, b) {
+  const la = relativeLuminance(a);
+  const lb = relativeLuminance(b);
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+
+// Step the color toward white until it clears `min` against `background`.
+function ensureContrast(color, background, min) {
+  let candidate = color;
+  for (let step = 1; step <= 14; step += 1) {
+    if (contrastRatio(candidate, background) >= min) return candidate;
+    candidate = tint(color, step * 0.06);
+  }
+  return "#ffffff";
 }
 
 export function BrandingProvider({ children }) {
@@ -141,6 +187,16 @@ export function BrandingProvider({ children }) {
     }
 
     applyThemeColor(center?.themeColor);
+
+    // ThemeContext toggles `.dark` on <html> after this effect has run, and the
+    // derived palette is contrast-dependent, so re-apply whenever the mode
+    // changes (including the initial mount toggle).
+    const root = document.documentElement;
+    const observer = new MutationObserver(() => {
+      applyThemeColor(center?.themeColor);
+    });
+    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
   }, [center]);
 
   const value = useMemo(

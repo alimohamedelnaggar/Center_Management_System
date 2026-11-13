@@ -174,7 +174,7 @@ export default function QuestionModal({
       onClick={saving ? null : onClose}
     >
       <div
-        className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-2xl bg-surface-card shadow-xl"
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-xl overflow-y-auto rounded-2xl bg-surface-card shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-surface-border px-5 py-4">
@@ -185,7 +185,7 @@ export default function QuestionModal({
             type="button"
             onClick={onClose}
             aria-label="إغلاق"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
           >
             <X className="h-4 w-4" />
           </button>
@@ -201,7 +201,7 @@ export default function QuestionModal({
               <button
                 type="button"
                 onClick={() => setType(Q_TYPE.TRUE_FALSE)}
-                className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
+                className={`rounded-lg border px-3 min-h-11 py-2.5 text-sm font-medium transition-colors ${
                   type === Q_TYPE.TRUE_FALSE
                     ? "border-primary bg-primary-subtle text-primary"
                     : "border-surface-border bg-surface-card text-text-muted hover:bg-surface-muted"
@@ -212,7 +212,7 @@ export default function QuestionModal({
               <button
                 type="button"
                 onClick={() => setType(Q_TYPE.MULTIPLE)}
-                className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
+                className={`rounded-lg border px-3 min-h-11 py-2.5 text-sm font-medium transition-colors ${
                   type === Q_TYPE.MULTIPLE
                     ? "border-primary bg-primary-subtle text-primary"
                     : "border-surface-border bg-surface-card text-text-muted hover:bg-surface-muted"
@@ -223,7 +223,7 @@ export default function QuestionModal({
               <button
                 type="button"
                 onClick={() => setType(Q_TYPE.ESSAY)}
-                className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
+                className={`rounded-lg border px-3 min-h-11 py-2.5 text-sm font-medium transition-colors ${
                   type === Q_TYPE.ESSAY
                     ? "border-primary bg-primary-subtle text-primary"
                     : "border-surface-border bg-surface-card text-text-muted hover:bg-surface-muted"
@@ -245,7 +245,7 @@ export default function QuestionModal({
               step="0.5"
               value={mark}
               onChange={(e) => setMark(e.target.value)}
-              className="w-full rounded-lg border border-surface-border bg-surface-card px-3 py-2.5 text-sm text-text-main focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
+              className="w-full rounded-lg border border-surface-border bg-surface-card px-3 min-h-11 py-2.5 text-sm text-text-main focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
             />
           </div>
 
@@ -259,7 +259,7 @@ export default function QuestionModal({
               onChange={(e) => setText(e.target.value)}
               rows={3}
               placeholder="اكتب نص السؤال هنا..."
-              className="w-full rounded-lg border border-surface-border bg-surface-card px-3 py-2.5 text-sm text-text-main placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
+              className="w-full rounded-lg border border-surface-border bg-surface-card px-3 min-h-11 py-2.5 text-sm text-text-main placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
             />
           </div>
 
@@ -279,7 +279,7 @@ export default function QuestionModal({
                 <button
                   type="button"
                   onClick={handleRemoveImage}
-                  className="absolute left-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-lg bg-status-danger text-white shadow-sm transition-opacity hover:opacity-90"
+                  className="absolute left-2 top-2 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-status-danger text-text-inverse shadow-sm transition-opacity hover:opacity-90"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -313,9 +313,9 @@ export default function QuestionModal({
                       type="button"
                       aria-label="علامة الإجابة الصحيحة"
                       onClick={() => setOptionCorrect(idx)}
-                      className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors ${
+                      className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border transition-colors ${
                         opt.isCorrect
-                          ? "border-status-success bg-status-success text-white"
+                          ? "border-status-success bg-status-success text-text-inverse"
                           : "border-surface-border bg-surface-card text-text-muted hover:bg-surface-muted"
                       }`}
                     >
@@ -326,7 +326,7 @@ export default function QuestionModal({
                       value={opt.text}
                       onChange={(e) => setOptionText(idx, e.target.value)}
                       placeholder={`الاختيار ${idx + 1}`}
-                      className="w-full rounded-lg border border-surface-border bg-surface-card px-3 py-2.5 text-sm text-text-main placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
+                      className="w-full rounded-lg border border-surface-border bg-surface-card px-3 min-h-11 py-2.5 text-sm text-text-main placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
                     />
                   </div>
                 ))}
@@ -344,7 +344,7 @@ export default function QuestionModal({
                 <button
                   type="button"
                   onClick={() => setTfAnswer(true)}
-                  className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
+                  className={`rounded-lg border px-3 min-h-11 py-2.5 text-sm font-medium transition-colors ${
                     tfAnswer
                       ? "border-status-success bg-status-success-bg text-status-success"
                       : "border-surface-border bg-surface-card text-text-muted hover:bg-surface-muted"
@@ -355,7 +355,7 @@ export default function QuestionModal({
                 <button
                   type="button"
                   onClick={() => setTfAnswer(false)}
-                  className={`rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors ${
+                  className={`rounded-lg border px-3 min-h-11 py-2.5 text-sm font-medium transition-colors ${
                     !tfAnswer
                       ? "border-status-danger bg-status-danger-bg text-status-danger"
                       : "border-surface-border bg-surface-card text-text-muted hover:bg-surface-muted"
@@ -373,7 +373,7 @@ export default function QuestionModal({
             type="button"
             onClick={onClose}
             disabled={saving}
-            className="flex-1 rounded-lg border border-surface-border bg-surface-card py-2.5 text-sm font-medium text-text-main transition-colors hover:bg-surface-muted"
+            className="flex-1 rounded-lg border border-surface-border bg-surface-card min-h-11 py-2.5 text-sm font-medium text-text-main transition-colors hover:bg-surface-muted"
           >
             إلغاء
           </button>
@@ -381,7 +381,7 @@ export default function QuestionModal({
             type="button"
             onClick={handleSave}
             disabled={saving || uploading}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-sm font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover disabled:opacity-60"
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-primary min-h-11 py-2.5 text-sm font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover disabled:opacity-60"
           >
             {saving || uploading ? (
               <Loader2 className="h-4 w-4 animate-spin" />

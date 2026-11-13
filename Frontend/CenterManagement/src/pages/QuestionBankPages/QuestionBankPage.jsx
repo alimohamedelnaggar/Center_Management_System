@@ -144,10 +144,10 @@ export default function QuestionBankPage() {
   };
 
   const inputClass =
-    "w-full rounded-lg border border-surface-border bg-surface-card px-3 py-2.5 text-sm text-text-main placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle";
+    "w-full min-h-11 rounded-lg border border-surface-border bg-surface-card px-3 py-2.5 text-sm text-text-main placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle";
 
   return (
-    <div className="p-4 md:p-6 font-sans">
+    <div data-testid="question-bank-page" className="p-4 md:p-6 font-sans">
       {/* Header */}
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -159,7 +159,7 @@ export default function QuestionBankPage() {
         <button
           type="button"
           onClick={() => setShowYearsModal(true)}
-          className="inline-flex items-center gap-2 rounded-lg border border-surface-border bg-surface-card px-4 py-2.5 text-sm font-medium text-text-main transition-colors hover:bg-surface-muted"
+          className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-surface-border bg-surface-card px-4 py-2.5 text-sm font-medium text-text-main transition-colors hover:bg-surface-muted"
         >
           <Settings2 className="h-4 w-4" />
           إدارة السنوات الدراسية
@@ -175,12 +175,14 @@ export default function QuestionBankPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="ابحث باسم البنك..."
+            aria-label="بحث باسم البنك"
             className={`${inputClass} pr-10`}
           />
         </div>
         <select
           value={academicYearId}
           onChange={(e) => setAcademicYearId(e.target.value)}
+          aria-label="السنة الدراسية"
           className={inputClass}
         >
           <option value="">كل السنوات الدراسية</option>
@@ -193,122 +195,207 @@ export default function QuestionBankPage() {
         <button
           type="button"
           onClick={openAddBank}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover"
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover"
         >
           <Plus className="h-4 w-4" />
           إضافة بنك جديد
         </button>
       </div>
 
-      {/* Banks card */}
-      <div className="overflow-hidden rounded-xl border border-surface-border bg-surface-card shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-right">
-            <thead>
-              <tr className="border-b border-surface-border bg-surface-muted text-xs font-semibold text-text-muted">
-                <th className="w-12 px-4 py-3">#</th>
-                <th className="px-4 py-3">اسم البنك</th>
-                <th className="px-4 py-3">السنة الدراسية</th>
-                <th className="px-4 py-3">عدد الأسئلة</th>
-                <th className="px-4 py-3">الإجراءات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {!loading &&
-                banks.map((bank, idx) => (
-                  <tr
-                    key={bank.id}
-                    className="border-b border-surface-border last:border-0 hover:bg-surface-muted/60"
+      {/* Banks: cards on phones, table from md */}
+      <div className="space-y-3">
+        <ul data-testid="question-bank-cards" className="space-y-3 md:hidden">
+          {loading && (
+            <li className="rounded-card border border-surface-border bg-surface-card p-8 text-center text-sm text-text-muted">
+              جاري التحميل...
+            </li>
+          )}
+
+          {!loading && banks.length === 0 && (
+            <li className="flex flex-col items-center gap-3 rounded-card border border-surface-border bg-surface-card p-8 text-center">
+              <LibraryBig className="h-10 w-10 text-text-muted" />
+              <p className="text-sm text-text-muted">
+                لا توجد بنوك أسئلة بعد، اضغط "إضافة بنك جديد".
+              </p>
+            </li>
+          )}
+
+          {!loading &&
+            banks.map((bank) => (
+              <li
+                key={bank.id}
+                className="rounded-card border border-surface-border bg-surface-card p-4 shadow-soft"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setActiveBank(bank)}
+                    className="min-w-0 text-right"
                   >
-                    <td className="px-4 py-3 text-sm text-text-muted">
-                      {(currentPage - 1) * pageSize + idx + 1}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex items-center gap-1.5 text-sm font-medium text-text-main">
-                        <BookOpenCheck className="h-4 w-4 text-text-muted" />
-                        <button
-                          type="button"
-                          onClick={() => setActiveBank(bank)}
-                          className="transition-colors hover:text-primary"
-                        >
-                          {bank.name}
-                        </button>
+                    <span className="flex items-center gap-1.5">
+                      <BookOpenCheck className="h-4 w-4 shrink-0 text-text-muted" />
+                      <span className="break-words text-sm font-bold text-text-main">
+                        {bank.name}
                       </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex rounded-full bg-primary-subtle px-2.5 py-1 text-xs font-medium text-primary">
-                        {bank.academicYearName}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-text-main">
-                      {bank.questionsCount}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setActiveBank(bank)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary-subtle text-primary transition-colors hover:bg-primary hover:text-text-inverse"
-                          title="عرض الأسئلة"
-                        >
-                          <List className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openEditBank(bank)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary-subtle text-primary transition-colors hover:bg-primary hover:text-text-inverse"
-                          title="تعديل"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedBank(bank);
-                            setIsDeleteOpen(true);
-                          }}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-status-danger-bg text-status-danger transition-colors hover:bg-status-danger hover:text-text-inverse"
-                          title="حذف"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                    </span>
+                    <span className="mt-1 inline-flex rounded-full bg-primary-subtle px-2.5 py-1 text-xs font-medium text-primary">
+                      {bank.academicYearName}
+                    </span>
+                  </button>
+
+                  <span className="num shrink-0 rounded-full bg-surface-muted px-2.5 py-1 text-xs font-semibold text-text-muted">
+                    {bank.questionsCount} سؤال
+                  </span>
+                </div>
+
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setActiveBank(bank)}
+                    aria-label={`عرض أسئلة ${bank.name}`}
+                    className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-primary-subtle px-2 text-xs font-medium text-primary transition-colors hover:bg-primary hover:text-text-inverse"
+                  >
+                    <List className="h-4 w-4" />
+                    الأسئلة
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openEditBank(bank)}
+                    aria-label={`تعديل ${bank.name}`}
+                    className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-surface-muted px-2 text-xs font-medium text-text-main transition-colors hover:bg-surface-border"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    تعديل
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedBank(bank);
+                      setIsDeleteOpen(true);
+                    }}
+                    aria-label={`حذف ${bank.name}`}
+                    className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg bg-status-danger-bg px-2 text-xs font-medium text-status-danger transition-colors hover:bg-status-danger hover:text-text-inverse"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    حذف
+                  </button>
+                </div>
+              </li>
+            ))}
+        </ul>
+
+        <div className="hidden overflow-hidden rounded-xl border border-surface-border bg-surface-card shadow-sm md:block">
+          <div className="overflow-x-auto">
+            <table className="w-full text-right">
+              <thead>
+                <tr className="border-b border-surface-border bg-surface-muted text-sm font-semibold text-text-muted">
+                  <th className="w-12 px-4 py-3">#</th>
+                  <th className="px-4 py-3">اسم البنك</th>
+                  <th className="px-4 py-3">السنة الدراسية</th>
+                  <th className="px-4 py-3">عدد الأسئلة</th>
+                  <th className="px-4 py-3">الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {!loading &&
+                  banks.map((bank, idx) => (
+                    <tr
+                      key={bank.id}
+                      className="border-b border-surface-border last:border-0 hover:bg-surface-muted/60"
+                    >
+                      <td className="px-4 py-3 text-sm text-text-muted">
+                        {(currentPage - 1) * pageSize + idx + 1}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-center gap-1.5 text-sm font-medium text-text-main">
+                          <BookOpenCheck className="h-4 w-4 text-text-muted" />
+                          <button
+                            type="button"
+                            onClick={() => setActiveBank(bank)}
+                            className="inline-flex min-h-11 items-center transition-colors hover:text-primary"
+                          >
+                            {bank.name}
+                          </button>
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex rounded-full bg-primary-subtle px-2.5 py-1 text-xs font-medium text-primary">
+                          {bank.academicYearName}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-text-main">
+                        {bank.questionsCount}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setActiveBank(bank)}
+                            className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-primary-subtle text-primary transition-colors hover:bg-primary hover:text-text-inverse"
+                            title="عرض الأسئلة"
+                            aria-label={`عرض أسئلة ${bank.name}`}
+                          >
+                            <List className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openEditBank(bank)}
+                            className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-primary-subtle text-primary transition-colors hover:bg-primary hover:text-text-inverse"
+                            title="تعديل"
+                            aria-label={`تعديل ${bank.name}`}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedBank(bank);
+                              setIsDeleteOpen(true);
+                            }}
+                            className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-status-danger-bg text-status-danger transition-colors hover:bg-status-danger hover:text-text-inverse"
+                            title="حذف"
+                            aria-label={`حذف ${bank.name}`}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+
+                {!loading && banks.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-12 text-center">
+                      <div className="flex flex-col items-center justify-center gap-3">
+                        <LibraryBig className="h-10 w-10 text-text-muted" />
+                        <p className="text-sm text-text-muted">
+                          لا توجد بنوك أسئلة بعد، اضغط "إضافة بنك جديد".
+                        </p>
                       </div>
                     </td>
                   </tr>
-                ))}
+                )}
 
-              {!loading && banks.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center">
-                    <div className="flex flex-col items-center justify-center gap-3">
-                      <LibraryBig className="h-10 w-10 text-text-muted" />
-                      <p className="text-sm text-text-muted">
-                        لا توجد بنوك أسئلة بعد، اضغط "إضافة بنك جديد".
-                      </p>
-                    </div>
-                  </td>
-                </tr>
-              )}
-
-              {loading && (
-                <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-sm text-text-muted">
-                    جاري التحميل...
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalItems={totalItems}
-            pageSize={pageSize}
-            name="بنك"
-            onPageChange={setCurrentPage}
-          />
+                {loading && (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-12 text-center text-sm text-text-muted">
+                      جاري التحميل...
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          name="بنك"
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       <AcademicYearsManageModal

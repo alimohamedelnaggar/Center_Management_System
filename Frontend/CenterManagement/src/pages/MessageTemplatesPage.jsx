@@ -205,8 +205,11 @@ export default function MessageTemplatesPage() {
   if (!canEdit) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center p-6">
-        <div className="w-full max-w-md rounded-2xl border border-surface-border bg-surface-card p-8 text-center shadow-sm">
-          <AlertTriangle className="mx-auto mb-3 h-10 w-10 text-status-warning" />
+        <div className="w-full max-w-md rounded-card border border-surface-border bg-surface-card p-8 text-center shadow-sm">
+          <AlertTriangle
+            className="mx-auto mb-3 h-10 w-10 text-status-warning"
+            aria-hidden="true"
+          />
           <h2 className="mb-2 text-xl font-bold text-text-main">
             لا تملك صلاحية تعديل القوالب
           </h2>
@@ -231,14 +234,14 @@ export default function MessageTemplatesPage() {
       <div className="p-6">
         <div
           role="alert"
-          className="mx-auto flex max-w-xl flex-col items-center gap-4 rounded-2xl border border-red-200 bg-red-50 p-8 text-center"
+          className="mx-auto flex max-w-xl flex-col items-center gap-4 rounded-card border border-status-danger/30 bg-status-danger-bg p-8 text-center"
         >
-          <AlertTriangle className="h-10 w-10 text-red-500" />
-          <p className="font-bold text-red-700">{loadError}</p>
+          <AlertTriangle className="h-10 w-10 text-status-danger" aria-hidden="true" />
+          <p className="font-bold text-status-danger">{loadError}</p>
           <button
             type="button"
             onClick={reload}
-            className="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white transition hover:opacity-90"
+            className="inline-flex min-h-11 items-center rounded-action bg-primary px-5 text-sm font-bold text-primary-contrast transition hover:bg-primary-hover"
           >
             إعادة المحاولة
           </button>
@@ -252,14 +255,18 @@ export default function MessageTemplatesPage() {
   const placeholders = selected?.placeholders ?? [];
 
   return (
-    <div className="min-h-screen space-y-6 bg-[var(--color-surface-bg)] p-6 text-[var(--color-text-main)]">
+    <div
+      data-testid="message-templates-page"
+      dir="rtl"
+      className="mx-auto min-h-screen w-full max-w-7xl space-y-6 bg-surface-bg p-4 text-text-main md:p-6"
+    >
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-bold text-[var(--color-primary)]">
-            <WhatsappLogo className="h-6 w-6" />
+          <h1 className="page-title flex items-center gap-2 font-bold text-text-main">
+            <WhatsappLogo className="h-6 w-6 text-primary" aria-hidden="true" />
             قوالب الرسائل
           </h1>
-          <p className="mt-1 max-w-2xl text-sm text-[var(--color-text-muted)]">
+          <p className="mt-1 max-w-2xl text-sm text-text-muted">
             عدّل نص رسائل واتساب التي تُفتح يدوياً من صفحات الغياب والامتحانات
             والمتأخرات. لا يتم إرسال أي رسالة تلقائياً؛ يفتح الرابط واتساب بنص
             جاهز ويبقى الإرسال بيدك.
@@ -282,19 +289,19 @@ export default function MessageTemplatesPage() {
               role="tab"
               aria-selected={active}
               onClick={() => selectTemplate(template.key)}
-              className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-bold transition ${
+              className={`inline-flex min-h-11 items-center gap-2 rounded-action border px-4 text-sm font-bold transition ${
                 active
-                  ? "border-primary bg-primary text-white"
-                  : "border-[var(--color-surface-border)] bg-[var(--color-surface-card)] text-[var(--color-text-main)] hover:bg-[var(--color-surface-muted)]"
+                  ? "border-primary bg-primary text-primary-contrast"
+                  : "border-surface-border bg-surface-card text-text-main hover:bg-surface-muted"
               }`}
             >
               {MESSAGE_TEMPLATE_LABELS[template.key] || template.key}
               {template.isCustomized && (
                 <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] ${
+                  className={`rounded-full px-2 py-0.5 text-xs ${
                     active
-                      ? "bg-white/20 text-white"
-                      : "bg-amber-100 text-amber-700"
+                      ? "bg-primary-contrast/20 text-primary-contrast"
+                      : "bg-status-warning-bg text-status-warning"
                   }`}
                 >
                   مخصص
@@ -308,19 +315,19 @@ export default function MessageTemplatesPage() {
       {actionError && (
         <div
           role="alert"
-          className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-700"
+          className="flex items-start gap-2 rounded-control border border-status-danger/30 bg-status-danger-bg p-3 text-sm font-semibold text-status-danger"
         >
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           {actionError}
         </div>
       )}
 
       {selected && (
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-          <section className="space-y-4 rounded-2xl border border-[var(--color-surface-border)] bg-[var(--color-surface-card)] p-5 shadow-sm">
+          <section className="space-y-4 rounded-card border border-surface-border bg-surface-card p-5 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-bold text-text-main">نص الرسالة</h2>
-              <span className="text-xs font-bold text-[var(--color-text-muted)]">
+              <span className="text-xs font-bold text-text-muted">
                 {selected.isCustomized ? "قالب مخصص" : "القالب الافتراضي"}
               </span>
             </div>
@@ -338,25 +345,25 @@ export default function MessageTemplatesPage() {
                 rows={9}
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
-                className="w-full resize-y rounded-xl border border-[var(--color-surface-border)] bg-[var(--color-surface-muted)] p-3 text-sm leading-7 text-text-main focus:border-primary focus:outline-none"
+                className="min-h-11 w-full resize-y rounded-control border border-surface-border bg-surface-muted p-3 text-sm leading-7 text-text-main focus:border-primary focus:outline-none"
               />
               <div className="mt-2 flex items-center justify-between text-xs">
-                <span className="text-[var(--color-text-muted)]">
+                <span className="text-text-muted">
                   يستخدم المتغيرات بين الأقواس، مثل {"{student}"}.
                 </span>
                 <span
                   aria-live="polite"
                   className={
                     overLimit
-                      ? "font-bold text-red-600"
-                      : "font-bold text-[var(--color-text-muted)]"
+                      ? "font-bold text-status-danger"
+                      : "font-bold text-text-muted"
                   }
                 >
                   {draft.length} / {maxLength} حرف
                 </span>
               </div>
               {overLimit && (
-                <p role="alert" className="mt-1 text-xs font-bold text-red-600">
+                <p role="alert" className="mt-1 text-xs font-bold text-status-danger">
                   نص الرسالة يجب ألا يزيد عن {maxLength} حرف
                 </p>
               )}
@@ -373,10 +380,10 @@ export default function MessageTemplatesPage() {
                     type="button"
                     onClick={() => insertPlaceholder(placeholder.key)}
                     title={placeholder.label}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--color-surface-border)] bg-[var(--color-surface-muted)] px-3 py-1.5 text-xs font-bold text-[var(--color-text-main)] transition hover:border-primary hover:text-primary"
+                    className="inline-flex min-h-11 items-center gap-1.5 rounded-control border border-surface-border bg-surface-muted px-3 text-xs font-bold text-text-main transition hover:border-primary hover:text-primary"
                   >
                     <code dir="ltr">{`{${placeholder.key}}`}</code>
-                    <span className="font-normal text-[var(--color-text-muted)]">
+                    <span className="font-normal text-text-muted">
                       {placeholder.label}
                     </span>
                   </button>
@@ -384,17 +391,17 @@ export default function MessageTemplatesPage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 border-t border-[var(--color-surface-border)] pt-4">
+            <div className="flex flex-wrap items-center gap-3 border-t border-surface-border pt-4">
               <button
                 type="button"
                 onClick={handleSave}
                 disabled={saving || resetting || draft.trim() === ""}
-                className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex min-h-11 items-center gap-2 rounded-action bg-primary px-5 text-sm font-bold text-primary-contrast transition hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {saving ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 ) : (
-                  <Save className="h-4 w-4" />
+                  <Save className="h-4 w-4" aria-hidden="true" />
                 )}
                 {saving ? "جارٍ الحفظ..." : "حفظ القالب"}
               </button>
@@ -403,23 +410,23 @@ export default function MessageTemplatesPage() {
                 type="button"
                 onClick={handleReset}
                 disabled={saving || resetting}
-                className="inline-flex items-center gap-2 rounded-xl border border-[var(--color-surface-border)] px-5 py-2.5 text-sm font-bold text-text-main transition hover:bg-[var(--color-surface-muted)] disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex min-h-11 items-center gap-2 rounded-action border border-surface-border px-5 text-sm font-bold text-text-main transition hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {resetting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 ) : (
-                  <RotateCcw className="h-4 w-4" />
+                  <RotateCcw className="h-4 w-4" aria-hidden="true" />
                 )}
                 {resetting ? "جارٍ الاستعادة..." : "استعادة الافتراضي"}
               </button>
             </div>
           </section>
 
-          <section className="space-y-3 rounded-2xl border border-[var(--color-surface-border)] bg-[var(--color-surface-card)] p-5 shadow-sm">
+          <section className="space-y-3 rounded-card border border-surface-border bg-surface-card p-5 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-bold text-text-main">معاينة حيّة</h2>
               {previewLoading && (
-                <span className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
+                <span className="flex items-center gap-1.5 text-xs text-text-muted">
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   جارٍ التحديث...
                 </span>
@@ -429,20 +436,20 @@ export default function MessageTemplatesPage() {
             {previewError ? (
               <div
                 role="alert"
-                className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700"
+                className="rounded-control border border-status-danger/30 bg-status-danger-bg p-4 text-sm font-semibold text-status-danger"
               >
                 {previewError}
               </div>
             ) : (
-              <div className="rounded-2xl bg-[#e5ddd5] p-4" dir="rtl">
-                <div className="ml-auto max-w-[90%] whitespace-pre-wrap rounded-2xl rounded-tl-sm bg-[#dcf8c6] p-3 text-sm leading-7 text-slate-800 shadow-sm">
+              <div className="rounded-2xl border border-surface-border bg-surface-muted p-4" dir="rtl">
+                <div className="ml-auto max-w-[90%] whitespace-pre-wrap rounded-2xl rounded-tl-sm border border-status-success/20 bg-status-success-bg p-3 text-sm leading-7 text-text-main shadow-sm">
                   {preview || "اكتب النص أو أدرج متغيراً لعرض المعاينة."}
                 </div>
               </div>
             )}
 
-            <p className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)]">
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <p className="flex items-center gap-1.5 text-xs text-text-muted">
+              <CheckCircle2 className="h-4 w-4 text-status-success" aria-hidden="true" />
               المعاينة تستخدم قيماً تجريبية من الخادم وتُحدَّث أثناء الكتابة.
             </p>
           </section>

@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { X } from "@/components/icons";
+import { CalendarClock } from "@/components/icons";
+
+import AdminModal from "../ui/AdminModal";
+import Button from "../ui/Button";
+import { fieldBaseClass } from "../ui/Input";
 import { RENEWABLE_PLAN_TYPES } from "../../constants/planTypes";
 import { subscriptionService } from "../../services/subscriptionService";
 
 const planTypes = RENEWABLE_PLAN_TYPES;
 
-const inputClass =
-  "w-full rounded-xl border border-surface-border bg-surface-muted p-2.5 text-text-main focus:border-primary focus:outline-none";
-const labelClass = "mb-1 block text-sm font-medium text-text-main";
+const inputClass = fieldBaseClass;
+const labelClass = "mb-1.5 block text-sm font-medium text-text-main";
 
 export default function RenewSubscriptionModal({ isOpen, center, onClose, onRenewed }) {
   const [type, setType] = useState(4);
@@ -60,28 +63,34 @@ export default function RenewSubscriptionModal({ isOpen, center, onClose, onRene
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-lg rounded-2xl border border-surface-border bg-surface-card p-6 shadow-2xl">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-extrabold text-text-main">
-            تجديد الاشتراك — {center.name}
-          </h2>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1 text-text-muted hover:bg-surface-muted"
-          >
-            <X size={20} />
-          </button>
+    <AdminModal
+      open={isOpen}
+      onClose={onClose}
+      busy={saving}
+      title={`تجديد الاشتراك — ${center.name}`}
+      icon={CalendarClock}
+      testId="renew-subscription-modal"
+      formProps={{ onSubmit: handleSubmit }}
+      footer={
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
+            إلغاء
+          </Button>
+          <Button type="submit" loading={saving}>
+            {saving ? "جارٍ التجديد..." : "تجديد"}
+          </Button>
         </div>
-
+      }
+    >
+      <div className="space-y-4">
         {inGraceOrLapsed && (
-          <p className="mb-4 rounded-xl bg-status-warning-bg p-3 text-xs text-status-warning">
+          <p className="rounded-control border border-status-warning/30 bg-status-warning-bg p-3 text-sm text-status-warning">
             هذا المركز في فترة سماح/منتهٍ. سيبدأ التجديد من تاريخ الانتهاء الأصلي
             حتى لا يفقد الأيام المتبقية.
           </p>
         )}
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <label className={labelClass}>نوع الاشتراك</label>
             <select
@@ -135,26 +144,8 @@ export default function RenewSubscriptionModal({ isOpen, center, onClose, onRene
               onChange={(e) => setNotes(e.target.value)}
             />
           </div>
-
-          <div className="flex justify-end gap-3 md:col-span-2">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={saving}
-              className="rounded-xl border border-surface-border px-4 py-2 text-text-muted hover:bg-surface-muted disabled:opacity-60"
-            >
-              إلغاء
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="rounded-xl bg-primary px-5 py-2 font-bold text-white hover:bg-primary-hover disabled:opacity-60"
-            >
-              {saving ? "جارٍ التجديد..." : "تجديد"}
-            </button>
-          </div>
-        </form>
+        </div>
       </div>
-    </div>
+    </AdminModal>
   );
 }

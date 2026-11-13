@@ -292,6 +292,38 @@ describe("QrScannerModal scanner tab", () => {
     expect(document.activeElement).toBe(input);
   });
 
+  it("keeps the focus when a hidden drawer sits in the tree", async () => {
+    // Regression: a closed mobile drawer stays mounted as role="dialog",
+    // which used to look like "another modal is open" and blocked the restore.
+    const drawer = document.createElement("div");
+
+    drawer.id = "mobile-nav-drawer";
+    drawer.setAttribute("role", "dialog");
+    drawer.setAttribute("inert", "");
+    drawer.innerHTML = "<button type=\"button\">القائمة الرئيسية</button>";
+    document.body.appendChild(drawer);
+
+    try {
+      await renderModal();
+
+      const input = openScannerTab();
+
+      expect(document.activeElement).toBe(input);
+
+      act(() => {
+        input.blur();
+      });
+
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 150));
+      });
+
+      expect(document.activeElement).toBe(input);
+    } finally {
+      drawer.remove();
+    }
+  });
+
   it("restores the focus after a scan", async () => {
     const onDetect = vi.fn(async () => ({ ok: true, status: "present" }));
 

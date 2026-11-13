@@ -1,6 +1,10 @@
-import { useState, useEffect, useMemo } from "react";
-import { Users, DollarSign, Calendar, Loader2, Save } from "@/components/icons";
+import { useState, useEffect } from "react";
+import { Users, DollarSign, Calendar, Save } from "@/components/icons";
 import { z } from "zod";
+import Button from "@/components/ui/Button";
+import FormField from "@/components/ui/FormField";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
 import { teacherService } from "../../services/teacherService";
 import { useAuth } from "../../context/useAuth";
 import toast from "react-hot-toast";
@@ -160,140 +164,170 @@ export default function GroupForm({
     }
   };
 
-  const fieldClass = (hasError) =>
-    `w-full px-3.5 py-2.5 rounded-xl border bg-surface-card text-text-main text-xs font-bold focus:outline-none focus:border-primary transition-colors ${
-      hasError ? "border-status-danger" : "border-surface-border"
-    }`;
-
-  const Err = ({ k }) =>
-    errors[k] ? (
-      <span className="text-xs text-status-danger font-semibold mt-1 block">{errors[k]}</span>
-    ) : null;
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-      <div className="bg-surface-muted/60 border border-surface-border p-4 sm:p-5 rounded-2xl space-y-4">
-        {/* Name + Teacher */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="text-xs font-bold text-text-main mb-1.5 flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5 text-primary" />
-              اسم المجموعة
-            </label>
-            <input
-              type="text"
-              placeholder="اسم المجموعة"
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                clearError("name");
-              }}
-              className={fieldClass(errors.name)}
-            />
-            <Err k="name" />
-          </div>
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-5"
+      noValidate
+      data-testid="group-form"
+    >
+      <div className="space-y-4 rounded-card border border-surface-border bg-surface-muted/50 p-4 sm:p-5">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <FormField
+            label="اسم المجموعة"
+            htmlFor="group-name"
+            error={errors.name}
+            required
+          >
+            <div className="relative">
+              <Users
+                className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary"
+                aria-hidden="true"
+              />
+              <Input
+                id="group-name"
+                type="text"
+                placeholder="اسم المجموعة"
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  clearError("name");
+                }}
+                className="pe-10"
+              />
+            </div>
+          </FormField>
 
           {showTeacherField && (
-            <div>
-              <label className="text-xs font-bold text-text-main mb-1.5 flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-primary" />
-                المدرس
-              </label>
-              <select
-                value={teacherId}
-                onChange={(e) => {
-                  setTeacherId(e.target.value);
-                  clearError("teacherId");
-                }}
-                className={fieldClass(errors.teacherId)}
-              >
-                <option value="">
-                  {loadingTeachers ? "جاري التحميل..." : "-- اختر المدرس --"}
-                </option>
-                {teachers.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {teacherLabel(t)}
+            <FormField
+              label="المدرس"
+              htmlFor="group-teacher"
+              error={errors.teacherId}
+              required
+              helper={
+                !loadingTeachers && teachers.length === 0
+                  ? "لا يوجد مدرسون. أضف مدرسًا أولًا من صفحة إدارة المدرسين."
+                  : undefined
+              }
+            >
+              <div className="relative">
+                <Users
+                  className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary"
+                  aria-hidden="true"
+                />
+                <Select
+                  id="group-teacher"
+                  value={teacherId}
+                  onChange={(e) => {
+                    setTeacherId(e.target.value);
+                    clearError("teacherId");
+                  }}
+                  className="pe-10"
+                >
+                  <option value="">
+                    {loadingTeachers ? "جارٍ التحميل..." : "-- اختر المدرس --"}
                   </option>
-                ))}
-              </select>
-              {!loadingTeachers && teachers.length === 0 && (
-                <span className="text-xs text-status-warning font-semibold mt-1 block">
-                  لا يوجد مدرسين، أضف مدرسًا أولًا من صفحة إدارة المدرسين
-                </span>
-              )}
-              <Err k="teacherId" />
-            </div>
+                  {teachers.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {teacherLabel(t)}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            </FormField>
           )}
         </div>
 
-        {/* Prices + sessions count */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <label className="text-xs font-bold text-text-main mb-1.5 flex items-center gap-1.5">
-              <DollarSign className="w-3.5 h-3.5 text-primary" />
-              سعر الشهر
-            </label>
-            <input
-              type="number"
-              min="0"
-              placeholder="300"
-              value={monthlyPrice}
-              onChange={(e) => {
-                setMonthlyPrice(e.target.value);
-                clearError("monthlyPrice");
-              }}
-              className={fieldClass(errors.monthlyPrice)}
-            />
-            <Err k="monthlyPrice" />
-          </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          <FormField
+            label="سعر الشهر"
+            htmlFor="group-monthly-price"
+            error={errors.monthlyPrice}
+            required
+            helper="بالجنيه المصري"
+          >
+            <div className="relative">
+              <DollarSign
+                className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary"
+                aria-hidden="true"
+              />
+              <Input
+                id="group-monthly-price"
+                type="number"
+                min="0"
+                placeholder="300"
+                value={monthlyPrice}
+                onChange={(e) => {
+                  setMonthlyPrice(e.target.value);
+                  clearError("monthlyPrice");
+                }}
+                className="pe-10"
+              />
+            </div>
+          </FormField>
 
-          <div>
-            <label className="text-xs font-bold text-text-main mb-1.5 flex items-center gap-1.5">
-              <DollarSign className="w-3.5 h-3.5 text-primary" />
-              سعر الحصة
-            </label>
-            <input
-              type="number"
-              min="0"
-              placeholder="40"
-              value={perSessionPrice}
-              onChange={(e) => {
-                setPerSessionPrice(e.target.value);
-                clearError("perSessionPrice");
-              }}
-              className={fieldClass(errors.perSessionPrice)}
-            />
-            <Err k="perSessionPrice" />
-          </div>
+          <FormField
+            label="سعر الحصة"
+            htmlFor="group-session-price"
+            error={errors.perSessionPrice}
+            required
+            helper="بالجنيه المصري"
+          >
+            <div className="relative">
+              <DollarSign
+                className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary"
+                aria-hidden="true"
+              />
+              <Input
+                id="group-session-price"
+                type="number"
+                min="0"
+                placeholder="40"
+                value={perSessionPrice}
+                onChange={(e) => {
+                  setPerSessionPrice(e.target.value);
+                  clearError("perSessionPrice");
+                }}
+                className="pe-10"
+              />
+            </div>
+          </FormField>
 
-          <div>
-            <label className="text-xs font-bold text-text-main mb-1.5 flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-primary" />
-              عدد الحصص في الشهر
-            </label>
-            <input
-              type="number"
-              min="1"
-              value={sessionsOverride === "" ? autoSessions || "" : sessionsOverride}
-              onChange={(e) => {
-                setSessionsOverride(e.target.value);
-                clearError("sessionsPerMonth");
-              }}
-              className={fieldClass(errors.sessionsPerMonth)}
-            />
-            <span className="text-[11px] text-text-muted mt-1 block">
-              يُحسب تلقائيًا (عدد الأيام × 4) ويمكنك تعديله
-            </span>
-            <Err k="sessionsPerMonth" />
-          </div>
+          <FormField
+            label="عدد الحصص في الشهر"
+            htmlFor="group-sessions-per-month"
+            error={errors.sessionsPerMonth}
+            required
+            helper="يُحسب تلقائيًا (عدد الأيام × 4) ويمكنك تعديله"
+          >
+            <div className="relative">
+              <Calendar
+                className="pointer-events-none absolute end-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary"
+                aria-hidden="true"
+              />
+              <Input
+                id="group-sessions-per-month"
+                type="number"
+                min="1"
+                value={sessionsOverride === "" ? autoSessions || "" : sessionsOverride}
+                onChange={(e) => {
+                  setSessionsOverride(e.target.value);
+                  clearError("sessionsPerMonth");
+                }}
+                className="pe-10"
+              />
+            </div>
+          </FormField>
         </div>
 
-        {/* Weekdays */}
         <div>
-          <label className="text-xs font-bold text-text-main mb-2 flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-primary" />
+          <p className="mb-2 flex items-center gap-1.5 text-sm font-medium text-text-main">
+            <Calendar className="h-4 w-4 text-primary" aria-hidden="true" />
             أيام الحصص
-          </label>
+            <span className="text-status-danger" aria-hidden="true">
+              *
+            </span>
+          </p>
 
           <div className="flex flex-wrap gap-2">
             {DAYS_AR.map((label, dayIndex) => {
@@ -302,14 +336,15 @@ export default function GroupForm({
                 <button
                   key={dayIndex}
                   type="button"
+                  aria-pressed={active}
                   onClick={() => {
                     toggleDay(dayIndex);
                     clearError("schedule");
                   }}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                  className={`min-h-11 cursor-pointer rounded-control border px-4 py-2 text-xs font-bold transition-all ${
                     active
-                      ? "bg-primary text-text-inverse border-primary shadow-sm"
-                      : "bg-surface-card text-text-muted border-surface-border hover:border-primary"
+                      ? "border-primary bg-primary text-text-inverse shadow-soft"
+                      : "border-surface-border bg-surface-card text-text-muted hover:border-primary hover:text-text-main"
                   }`}
                 >
                   {label}
@@ -323,55 +358,64 @@ export default function GroupForm({
               {schedule.map((s) => (
                 <div
                   key={s.dayIndex}
-                  className="flex flex-wrap items-center gap-3 bg-surface-card border border-surface-border rounded-xl px-3 py-2"
+                  className="flex flex-wrap items-center gap-3 rounded-control border border-surface-border bg-surface-card px-3 py-2"
                 >
-                  <span className="text-xs font-bold text-text-main w-20">
+                  <span className="w-20 text-sm font-bold text-text-main">
                     {DAYS_AR[s.dayIndex]}
                   </span>
-                  <label className="text-xs text-text-muted flex items-center gap-1.5">
+                  <label
+                    htmlFor={`group-day-${s.dayIndex}-start`}
+                    className="flex items-center gap-1.5 text-xs text-text-muted"
+                  >
                     من
-                    <input
+                    <Input
+                      id={`group-day-${s.dayIndex}-start`}
                       type="time"
                       value={s.startTime}
                       onChange={(e) => setTime(s.dayIndex, "startTime", e.target.value)}
-                      className="px-2 py-1 rounded-lg border border-surface-border text-xs"
+                      className="w-32"
                     />
                   </label>
-                  <label className="text-xs text-text-muted flex items-center gap-1.5">
+                  <label
+                    htmlFor={`group-day-${s.dayIndex}-end`}
+                    className="flex items-center gap-1.5 text-xs text-text-muted"
+                  >
                     إلى
-                    <input
+                    <Input
+                      id={`group-day-${s.dayIndex}-end`}
                       type="time"
                       value={s.endTime}
                       onChange={(e) => setTime(s.dayIndex, "endTime", e.target.value)}
-                      className="px-2 py-1 rounded-lg border border-surface-border text-xs"
+                      className="w-32"
                     />
                   </label>
                 </div>
               ))}
             </div>
           )}
-          <Err k="schedule" />
+
+          {errors.schedule && (
+            <p role="alert" className="mt-1 text-sm font-medium text-status-danger">
+              {errors.schedule}
+            </p>
+          )}
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-2 pt-1">
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex-1 sm:flex-none bg-primary hover:bg-primary-hover text-text-inverse px-8 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-sm active:scale-95 disabled:opacity-60 cursor-pointer"
-          >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <SubmitIcon className="w-4 h-4" />}
-            <span>{loading ? "جاري الحفظ..." : submitLabel}</span>
-          </button>
+        <div className="flex flex-wrap items-center gap-2 border-t border-surface-border pt-4">
+          <Button type="submit" loading={loading} data-testid="group-form-submit">
+            {!loading && <SubmitIcon className="h-4 w-4" aria-hidden="true" />}
+            {loading ? "جارٍ الحفظ..." : submitLabel}
+          </Button>
 
           {onCancel && (
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={onCancel}
-              className="px-5 py-2.5 border border-surface-border rounded-xl text-xs font-bold text-text-muted hover:bg-surface-muted transition-colors cursor-pointer"
+              data-testid="group-form-cancel"
             >
               إلغاء
-            </button>
+            </Button>
           )}
         </div>
       </div>

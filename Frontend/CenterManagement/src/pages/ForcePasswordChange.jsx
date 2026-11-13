@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { Key, Lock, LogOut } from "@/components/icons";
 import apiClient from "../api/axios";
+import Button from "../components/ui/Button";
+import { fieldBaseClass } from "../components/ui/Input";
 import { useAuth } from "../context/useAuth";
 import { homeFor } from "../utils/homeRoute";
 import { getPhone } from "../utils/jwt";
@@ -81,23 +83,24 @@ export default function ForcePasswordChange() {
     navigate("/login", { replace: true });
   };
 
-  const inputClass =
-    "w-full rounded-xl border border-surface-border bg-surface-muted p-2.5 text-text-main focus:border-primary focus:outline-none";
+  const inputClass = fieldBaseClass;
+  const labelClass = "mb-1.5 block text-sm font-medium text-text-main";
 
   return (
     <div
+      data-testid="force-password-page"
       dir="rtl"
       className="flex min-h-screen items-center justify-center bg-surface-bg p-4"
     >
-      <div className="w-full max-w-md rounded-2xl border border-surface-border bg-surface-card p-8 shadow-lg">
+      <div className="w-full max-w-md rounded-card border border-surface-border bg-surface-card p-6 shadow-lg sm:p-8">
         <div className="mb-6 flex flex-col items-center gap-3 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-subtle">
-            <Lock className="h-7 w-7 text-primary" />
+          <div className="flex h-14 w-14 items-center justify-center rounded-control bg-primary-subtle">
+            <Lock className="h-7 w-7 text-primary" aria-hidden="true" />
           </div>
           <h1 className="text-xl font-extrabold text-text-main">
             تغيير كلمة المرور
           </h1>
-          <p className="text-sm text-text-muted">
+          <p className="text-sm leading-relaxed text-text-muted">
             تستخدم هذا الحساب كلمة مرور مؤقتة (رقم الهاتف). يجب اختيار كلمة مرور
             جديدة قبل المتابعة.
           </p>
@@ -105,10 +108,14 @@ export default function ForcePasswordChange() {
 
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
           <div>
-            <label className="mb-1 block text-sm font-medium text-text-main">
+            <label
+              htmlFor="force-current-password"
+              className={labelClass}
+            >
               كلمة المرور المؤقتة
             </label>
             <input
+              id="force-current-password"
               type="password"
               dir="ltr"
               autoComplete="current-password"
@@ -118,10 +125,14 @@ export default function ForcePasswordChange() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-text-main">
+            <label
+              htmlFor="force-new-password"
+              className={labelClass}
+            >
               كلمة المرور الجديدة
             </label>
             <input
+              id="force-new-password"
               type="password"
               dir="ltr"
               autoComplete="new-password"
@@ -129,15 +140,19 @@ export default function ForcePasswordChange() {
               value={form.newPassword}
               onChange={setField("newPassword")}
             />
-            <p className="mt-1 text-xs text-text-muted">
+            <p className="mt-1 text-xs leading-5 text-text-muted">
               8 أحرف على الأقل، ويجب ألا تكون رقم الهاتف أو كلمة المرور الحالية.
             </p>
           </div>
           <div>
-            <label className="mb-1 block text-sm font-medium text-text-main">
+            <label
+              htmlFor="force-confirm-password"
+              className={labelClass}
+            >
               تأكيد كلمة المرور
             </label>
             <input
+              id="force-confirm-password"
               type="password"
               dir="ltr"
               autoComplete="new-password"
@@ -147,24 +162,21 @@ export default function ForcePasswordChange() {
             />
           </div>
 
-          <button
-            type="submit"
-            disabled={saving}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-2.5 font-bold text-white transition hover:bg-primary-hover disabled:opacity-60"
-          >
-            <Key className="h-5 w-5" />
+          <Button type="submit" block loading={saving} disabled={saving}>
+            {!saving && <Key className="h-5 w-5" aria-hidden="true" />}
             {saving ? "جارٍ الحفظ..." : "حفظ كلمة المرور"}
-          </button>
+          </Button>
 
-          <button
+          <Button
             type="button"
+            variant="outline"
+            block
             onClick={handleLogout}
             disabled={saving}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-surface-border py-2.5 font-bold text-text-main transition hover:bg-surface-muted disabled:opacity-60"
           >
-            <LogOut className="h-5 w-5" />
+            <LogOut className="h-5 w-5" aria-hidden="true" />
             تسجيل الخروج
-          </button>
+          </Button>
         </form>
       </div>
     </div>

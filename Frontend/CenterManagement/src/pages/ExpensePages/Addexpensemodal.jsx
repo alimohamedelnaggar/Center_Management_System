@@ -83,7 +83,7 @@ export default function AddExpenseModal({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
           >
             <X className="h-4 w-4" />
           </button>
@@ -105,7 +105,7 @@ export default function AddExpenseModal({
               value={form.name}
               onChange={(e) => handleChange("name", e.target.value)}
               placeholder="مثال: فاتورة كهرباء"
-              className="w-full rounded-lg border border-surface-border bg-surface-card px-3 py-2.5 text-sm text-text-main placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
+              className="w-full rounded-lg border border-surface-border bg-surface-card px-3 min-h-11 py-2.5 text-sm text-text-main placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
             />
           </div>
 
@@ -119,7 +119,7 @@ export default function AddExpenseModal({
               <select
                 value={form.categoryId}
                 onChange={(e) => handleChange("categoryId", e.target.value)}
-                className="w-full appearance-none rounded-lg border border-surface-border bg-surface-card px-3 py-2.5 pe-9 text-sm text-text-main focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
+                className="w-full appearance-none rounded-lg border border-surface-border bg-surface-card px-3 min-h-11 py-2.5 pe-9 text-sm text-text-main focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
               >
                 <option value="">-- اختر الفئة --</option>
 
@@ -152,7 +152,7 @@ export default function AddExpenseModal({
                 value={form.amount}
                 onChange={(e) => handleChange("amount", e.target.value)}
                 placeholder="0.00"
-                className="w-full border-0 bg-surface-card px-3 py-2.5 text-sm text-text-main placeholder:text-text-muted focus:outline-none"
+                className="w-full border-0 bg-surface-card px-3 min-h-11 py-2.5 text-sm text-text-main placeholder:text-text-muted focus:outline-none"
               />
             </div>
           </div>
@@ -163,7 +163,7 @@ export default function AddExpenseModal({
               التاريخ
             </label>
 
-            <div className="flex items-center gap-2 rounded-lg border border-surface-border px-3 py-2.5 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary-subtle">
+            <div className="flex items-center gap-2 rounded-lg border border-surface-border px-3 min-h-11 py-2.5 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary-subtle">
               <Calendar className="h-4 w-4 shrink-0 text-text-muted" />
 
               <input
@@ -187,7 +187,7 @@ export default function AddExpenseModal({
               value={form.notes}
               onChange={(e) => handleChange("notes", e.target.value)}
               placeholder="اكتب ملاحظات..."
-              className="w-full resize-y rounded-lg border border-surface-border bg-surface-card px-3 py-2.5 text-sm text-text-main placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
+              className="w-full resize-y rounded-lg border border-surface-border bg-surface-card px-3 min-h-11 py-2.5 text-sm text-text-main placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
             />
           </div>
         </div>
@@ -200,7 +200,7 @@ export default function AddExpenseModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-lg border border-surface-border bg-surface-card py-2.5 text-sm font-medium text-text-main transition-colors hover:bg-surface-muted"
+            className="flex-1 rounded-lg border border-surface-border bg-surface-card min-h-11 py-2.5 text-sm font-medium text-text-main transition-colors hover:bg-surface-muted"
           >
             إلغاء
           </button>
@@ -208,7 +208,7 @@ export default function AddExpenseModal({
           <button
             type="button"
             onClick={handleSave}
-            className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-medium text-text-inverse transition-colors hover:bg-primary-hover"
+            className="flex-1 rounded-lg bg-primary min-h-11 py-2.5 text-sm font-medium text-text-inverse transition-colors hover:bg-primary-hover"
           >
             {expense ? "حفظ التعديلات" : "حفظ"}
           </button>

@@ -9,6 +9,12 @@ import {
   UserRound,
 } from "@/components/icons";
 import toast from "react-hot-toast";
+import PageHeader from "../../components/ui/PageHeader";
+import {
+  PortalEmpty,
+  PortalLoading,
+  PortalStatus,
+} from "../../components/portal/PortalUI";
 import { studentPortalService } from "../../services/studentPortalService";
 
 function formatDate(value) {
@@ -22,6 +28,25 @@ function formatDate(value) {
   } catch {
     return "-";
   }
+}
+
+function InfoItem({ icon: Icon, label, value, ltr = false }) {
+  return (
+    <div className="flex min-w-0 items-start gap-3 rounded-control bg-surface-muted/60 px-3 py-3">
+      <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-surface-card text-text-muted">
+        <Icon className="h-4 w-4" aria-hidden="true" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-medium text-text-muted">{label}</p>
+        <p
+          className="mt-0.5 break-words text-base font-bold text-text-main"
+          dir={ltr ? "ltr" : undefined}
+        >
+          {value || "-"}
+        </p>
+      </div>
+    </div>
+  );
 }
 
 export default function StudentProfilePage() {
@@ -50,137 +75,110 @@ export default function StudentProfilePage() {
   }, []);
 
   return (
-    <div className="p-4 md:p-6 font-sans">
-      <div className="mb-5">
-        <h1 className="text-xl font-bold text-text-main">الملف الشخصي</h1>
-        <p className="mt-0.5 text-sm text-text-muted">بياناتك واشتراكاتك</p>
-      </div>
+    <div data-testid="student-profile-page" className="p-4 font-sans md:p-6">
+      <PageHeader
+        className="mb-5"
+        title="الملف الشخصي"
+        subtitle="بياناتك واشتراكاتك"
+      />
 
-      {loading && (
-        <div className="flex items-center justify-center gap-2 rounded-xl border border-surface-border bg-surface-card py-16 text-sm text-text-muted">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          جاري التحميل...
-        </div>
-      )}
+      {loading && <PortalLoading icon={Loader2} />}
 
       {!loading && profile && (
         <div className="space-y-5">
-          <div className="rounded-xl border border-surface-border bg-surface-card p-6 shadow-sm">
+          <section className="rounded-card border border-surface-border bg-surface-card p-5 shadow-soft sm:p-6">
             <div className="mb-5 flex items-center gap-4">
-              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary-subtle text-primary">
-                <UserRound className="h-7 w-7" />
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-primary-subtle text-primary">
+                <UserRound className="h-8 w-8" aria-hidden="true" />
               </div>
-              <div>
-                <p className="text-lg font-bold text-text-main">
+              <div className="min-w-0">
+                <h2 className="break-words text-xl font-extrabold text-text-main">
                   {profile.fullName}
-                </p>
-                <div className="mt-1 flex flex-wrap items-center gap-2">
-                  <span
-                    className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-                      profile.isActive
-                        ? "bg-status-success-bg text-status-success"
-                        : "bg-status-danger-bg text-status-danger"
-                    }`}
-                  >
+                </h2>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <PortalStatus tone={profile.isActive ? "success" : "danger"}>
                     {profile.isActive ? "نشط" : "غير نشط"}
-                  </span>
-                  <span
-                    className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-                      profile.isPaid
-                        ? "bg-status-success-bg text-status-success"
-                        : "bg-status-warning-bg text-status-warning"
-                    }`}
-                  >
+                  </PortalStatus>
+                  <PortalStatus tone={profile.isPaid ? "success" : "warning"}>
                     {profile.isPaid ? "مدفوع" : "غير مدفوع"}
-                  </span>
+                  </PortalStatus>
                 </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-text-muted" />
-                <span dir="ltr" className="text-text-main">
-                  {profile.phone || "-"}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-text-muted" />
-                <span dir="ltr" className="text-text-main">
-                  {profile.parentPhoneNumber || "-"}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <BadgeDollarSign className="h-4 w-4 text-text-muted" />
-                <span className="text-text-main">
-                  {profile.subscriptionTypeName || "-"}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <School className="h-4 w-4 text-text-muted" />
-                <span className="text-text-main">{profile.school || "-"}</span>
-              </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <InfoItem
+                icon={Phone}
+                label="الهاتف"
+                value={profile.phone}
+                ltr
+              />
+              <InfoItem
+                icon={Phone}
+                label="هاتف ولي الأمر"
+                value={profile.parentPhoneNumber}
+                ltr
+              />
+              <InfoItem
+                icon={BadgeDollarSign}
+                label="الاشتراك"
+                value={profile.subscriptionTypeName}
+              />
+              <InfoItem icon={School} label="المدرسة" value={profile.school} />
             </div>
-          </div>
+          </section>
 
           <div>
-            <h2 className="mb-3 flex items-center gap-2 text-base font-bold text-text-main">
-              <GraduationCap className="h-5 w-5 text-primary" />
+            <h2 className="mb-3 flex items-center gap-2 text-lg font-extrabold text-text-main">
+              <GraduationCap className="h-5 w-5 text-primary" aria-hidden="true" />
               اشتراكاتي
             </h2>
 
             {profile.subscriptions?.length ? (
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 {profile.subscriptions.map((sub) => (
-                  <div
+                  <article
                     key={sub.groupId}
-                    className="rounded-xl border border-surface-border bg-surface-card p-4 shadow-sm"
+                    data-testid="student-subscription-card"
+                    className="rounded-card border border-surface-border bg-surface-card p-4 shadow-soft"
                   >
                     <div className="mb-3 flex items-start justify-between gap-3">
-                      <p className="text-sm font-bold text-text-main">
+                      <p className="min-w-0 break-words text-base font-bold text-text-main">
                         {sub.groupName}
                       </p>
-                      <span
-                        className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${
-                          sub.isActive
-                            ? "bg-status-success-bg text-status-success"
-                            : "bg-surface-muted text-text-muted"
-                        }`}
-                      >
+                      <PortalStatus tone={sub.isActive ? "success" : "neutral"}>
                         {sub.isActive ? "نشط" : "منتهي"}
-                      </span>
+                      </PortalStatus>
                     </div>
 
-                    <div className="space-y-1.5 text-xs text-text-muted">
-                      <div className="flex items-center justify-between">
-                        <span>الرسوم الشهرية</span>
-                        <span className="font-semibold text-text-main">
+                    <dl className="space-y-2 text-sm">
+                      <div className="flex items-center justify-between gap-2">
+                        <dt className="text-text-muted">الرسوم الشهرية</dt>
+                        <dd className="font-bold tabular-nums text-text-main">
                           {Number(sub.monthlyPrice ?? 0).toLocaleString("ar-EG")} ج.م
-                        </span>
+                        </dd>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span>عدد الحصص شهرياً</span>
-                        <span className="font-semibold text-text-main">
+                      <div className="flex items-center justify-between gap-2">
+                        <dt className="text-text-muted">عدد الحصص شهرياً</dt>
+                        <dd className="font-bold tabular-nums text-text-main">
                           {sub.sessionsPerMonth}
-                        </span>
+                        </dd>
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="inline-flex items-center gap-1">
-                          <CalendarCheck className="h-3.5 w-3.5" />
+                      <div className="flex items-center justify-between gap-2">
+                        <dt className="inline-flex items-center gap-1 text-text-muted">
+                          <CalendarCheck className="h-3.5 w-3.5" aria-hidden="true" />
                           تاريخ الانضمام
-                        </span>
-                        <span className="font-semibold text-text-main">
+                        </dt>
+                        <dd className="font-bold text-text-main">
                           {formatDate(sub.joinDate)}
-                        </span>
+                        </dd>
                       </div>
-                    </div>
-                  </div>
+                    </dl>
+                  </article>
                 ))}
               </div>
             ) : (
-              <div className="rounded-xl border border-surface-border bg-surface-card p-6 text-center text-sm text-text-muted">
-                لا توجد اشتراكات.
-              </div>
+              <PortalEmpty icon={GraduationCap} title="لا توجد اشتراكات." />
             )}
           </div>
         </div>

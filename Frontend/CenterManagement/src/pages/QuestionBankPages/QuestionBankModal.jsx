@@ -26,12 +26,13 @@ export default function QuestionBankModal({
 
   return (
     <div
+      data-testid="question-bank-modal"
       dir="rtl"
       className="fixed inset-0 z-50 flex items-center justify-center bg-text-main/40 px-4 font-sans"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-sm rounded-2xl bg-surface-card shadow-xl"
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-sm overflow-y-auto rounded-2xl bg-surface-card shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-surface-border px-5 py-4">
@@ -42,7 +43,7 @@ export default function QuestionBankModal({
             type="button"
             onClick={onClose}
             aria-label="إغلاق"
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
           >
             <X className="h-4 w-4" />
           </button>
@@ -59,7 +60,7 @@ export default function QuestionBankModal({
               onChange={(e) => setName(e.target.value)}
               placeholder="مثال: بنك النحو"
               autoFocus
-              className="w-full rounded-lg border border-surface-border bg-surface-card px-3 py-2.5 text-sm text-text-main placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
+              className="w-full rounded-lg border border-surface-border bg-surface-card px-3 min-h-11 py-2.5 text-sm text-text-main placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
             />
           </div>
           <div>
@@ -69,7 +70,7 @@ export default function QuestionBankModal({
             <select
               value={academicYearId}
               onChange={(e) => setAcademicYearId(e.target.value)}
-              className="w-full rounded-lg border border-surface-border bg-surface-card px-3 py-2.5 text-sm text-text-main focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
+              className="w-full rounded-lg border border-surface-border bg-surface-card px-3 min-h-11 py-2.5 text-sm text-text-main focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle"
             >
               <option value="">اختر السنة الدراسية</option>
               {academicYears.map((year) => (
@@ -85,14 +86,14 @@ export default function QuestionBankModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-lg border border-surface-border bg-surface-card py-2.5 text-sm font-medium text-text-main transition-colors hover:bg-surface-muted"
+            className="flex-1 rounded-lg border border-surface-border bg-surface-card min-h-11 py-2.5 text-sm font-medium text-text-main transition-colors hover:bg-surface-muted"
           >
             إلغاء
           </button>
           <button
             type="button"
             onClick={handleSave}
-            className="flex-1 rounded-lg bg-primary py-2.5 text-sm font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover"
+            className="flex-1 rounded-lg bg-primary min-h-11 py-2.5 text-sm font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover"
           >
             حفظ
           </button>

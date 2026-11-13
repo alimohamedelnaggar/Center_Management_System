@@ -159,7 +159,7 @@ export default function IncomeCategoriesTab() {
         <button
           type="button"
           onClick={openAddModal}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover"
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 min-h-11 py-2.5 text-sm font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover"
         >
           <Plus className="h-4 w-4" />
           إضافة فئة جديدة
@@ -199,7 +199,7 @@ export default function IncomeCategoriesTab() {
                           type="button"
                           aria-label="تعديل"
                           onClick={() => openEditModal(category)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary-subtle text-primary transition-colors hover:bg-primary hover:text-text-inverse"
+                          className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-primary-subtle text-primary transition-colors hover:bg-primary hover:text-text-inverse"
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
@@ -207,7 +207,7 @@ export default function IncomeCategoriesTab() {
                           type="button"
                           aria-label="حذف"
                           onClick={() => handleDelete(category)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-status-danger-bg text-status-danger transition-colors hover:bg-status-danger hover:text-text-inverse"
+                          className="inline-flex h-11 w-11 items-center justify-center rounded-lg bg-status-danger-bg text-status-danger transition-colors hover:bg-status-danger hover:text-text-inverse"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

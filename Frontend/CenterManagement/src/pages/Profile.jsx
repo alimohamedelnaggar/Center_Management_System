@@ -14,6 +14,9 @@ import {
   BookOpen,
 } from "@/components/icons";
 import { useAuth } from "../context/useAuth";
+import PageHeader from "../components/ui/PageHeader";
+import Button from "../components/ui/Button";
+import { fieldBaseClass, fieldStateClass } from "../components/ui/Input";
 import {
   STAFF_EMAIL_HELPER_TEXT,
   validateStaffEmail,
@@ -405,7 +408,11 @@ export default function Profile() {
   if (authLoading || loadingProfile) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600" />
+        <div
+          className="h-10 w-10 animate-spin rounded-full border-4 border-surface-border border-t-primary"
+          role="status"
+          aria-label="جارٍ تحميل الملف الشخصي"
+        />
       </div>
     );
   }
@@ -416,418 +423,371 @@ export default function Profile() {
 
   return (
     <div
+      data-testid="profile-page"
       dir="rtl"
-      className="min-h-screen bg-slate-50 p-4 pb-24 md:p-6 md:pb-28 lg:p-8"
+      className="mx-auto w-full max-w-6xl space-y-6 p-4 pb-24 text-text-main md:p-6 md:pb-28"
     >
-      <div className="mx-auto max-w-6xl">
+      <PageHeader
+        title="الملف الشخصي"
+        subtitle="إدارة بيانات حسابك وكلمة المرور."
+      />
 
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-slate-800 md:text-3xl">
-            الملف الشخصي
-          </h1>
-
-          <p className="mt-2 text-sm text-slate-500">
-            إدارة بيانات حسابك وكلمة المرور
-          </p>
-        </div>
-
-        {/* Messages */}
-        {message.text && (
-          <div
-            className={`mb-6 flex items-center gap-3 rounded-xl border p-4 ${
-              message.type === "success"
-                ? "border-green-200 bg-green-50 text-green-700"
-                : "border-red-200 bg-red-50 text-red-700"
-            }`}
-          >
-            {message.type === "success" ? (
-              <CheckCircle2 size={22} />
-            ) : (
-              <AlertCircle size={22} />
-            )}
-
-            <span>{message.text}</span>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-
-          {/* ========================= */}
-          {/* Account Information */}
-          {/* ========================= */}
-
-          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm lg:col-span-2">
-
-            {/* Header */}
-            <div className="border-b border-slate-100 p-6">
-              <div className="flex items-center gap-4">
-
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
-                  <User size={28} />
-                </div>
-
-                <div>
-                  <h2 className="text-xl font-bold text-slate-800">
-                    بيانات الحساب
-                  </h2>
-
-                  <p className="text-sm text-slate-500">
-                    معلومات حسابك الشخصية
-                  </p>
-                </div>
-
-              </div>
-            </div>
-
-            {/* Information */}
-            <div className="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
-
-              <InfoItem
-                icon={<User size={19} />}
-                label="الاسم بالكامل"
-                value={profile?.fullName}
-              />
-
-              {!hideEmail && (
-                <InfoItem
-                  icon={<Mail size={19} />}
-                  label="البريد الإلكتروني"
-                  value={profile?.email}
-                />
-              )}
-
-              <InfoItem
-                icon={<Phone size={19} />}
-                label="رقم الهاتف"
-                value={profile?.phoneNumber}
-              />
-
-              <InfoItem
-                icon={<User size={19} />}
-                label="اسم المستخدم"
-                value={profile?.userName}
-              />
-
-              <InfoItem
-                icon={<MapPin size={19} />}
-                label="العنوان"
-                value={profile?.address}
-              />
-
-              <InfoItem
-                icon={<Calendar size={19} />}
-                label="تاريخ إنشاء الحساب"
-                value={
-                  profile?.createdAt
-                    ? new Date(
-                        profile.createdAt
-                      ).toLocaleDateString("ar-EG")
-                    : "-"
-                }
-              />
-
-            </div>
-          </div>
-
-          {/* ========================= */}
-          {/* Email (staff only) */}
-          {/* ========================= */}
-
-          {!hideEmail && (
-            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm lg:col-span-3">
-              <div className="border-b border-slate-100 p-6">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600">
-                    <Mail size={27} />
-                  </div>
-
-                  <div>
-                    <h2 className="text-xl font-bold text-slate-800">
-                      البريد الإلكتروني
-                    </h2>
-
-                    <p className="text-sm text-slate-500">
-                      يُستخدم لاستعادة كلمة المرور الخاصة بحسابك
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4 p-6">
-                {!profile?.email && (
-                  <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-700">
-                    <AlertCircle size={22} className="shrink-0" />
-                    <span>أضف بريدك لتتمكن من استعادة كلمة المرور.</span>
-                  </div>
-                )}
-
-                <div className="rounded-xl border border-slate-100 bg-slate-50 p-4 text-sm">
-                  <p className="text-slate-500">البريد الحالي</p>
-                  <p className="mt-1 font-semibold text-slate-800" dir="ltr">
-                    {profile?.email || "غير متوفر"}
-                  </p>
-
-                  {profile?.pendingEmail && (
-                    <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50 p-3 text-blue-700">
-                      <p>
-                        بانتظار التأكيد:{" "}
-                        <span className="font-semibold" dir="ltr">
-                          {profile.pendingEmail}
-                        </span>
-                      </p>
-                      <p className="mt-1 text-xs">
-                        سيبقى بريدك الحالي فعالاً حتى تأكيد البريد الجديد.
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {emailNotice && (
-                  <div
-                    role={emailNotice.type === "error" ? "alert" : "status"}
-                    className={`flex items-center gap-3 rounded-xl border p-4 text-sm ${
-                      emailNotice.type === "error"
-                        ? "border-red-200 bg-red-50 text-red-700"
-                        : "border-green-200 bg-green-50 text-green-700"
-                    }`}
-                  >
-                    {emailNotice.type === "error" ? (
-                      <AlertCircle size={20} className="shrink-0" />
-                    ) : (
-                      <CheckCircle2 size={20} className="shrink-0" />
-                    )}
-                    <span>{emailNotice.text}</span>
-                  </div>
-                )}
-
-                <form
-                  onSubmit={handleEmailChangeRequest}
-                  className="space-y-3"
-                  noValidate
-                >
-                  <div>
-                    <label
-                      htmlFor="profile-email"
-                      className="mb-2 block text-sm font-semibold text-slate-700"
-                    >
-                      البريد الإلكتروني الجديد
-                    </label>
-
-                    <input
-                      id="profile-email"
-                      name="email"
-                      type="email"
-                      dir="ltr"
-                      autoComplete="email"
-                      value={emailValue}
-                      onChange={(e) => {
-                        setEmailValue(e.target.value);
-                        setEmailError("");
-                      }}
-                      placeholder="name@example.com"
-                      className={`w-full rounded-xl border bg-white px-4 py-3 text-left outline-none transition ${
-                        emailError
-                          ? "border-red-400 focus:ring-2 focus:ring-red-100"
-                          : "border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                      }`}
-                    />
-
-                    <p className="mt-1.5 text-xs leading-5 text-slate-500">
-                      {STAFF_EMAIL_HELPER_TEXT}
-                    </p>
-
-                    {emailError && (
-                      <p className="mt-1 text-xs text-red-500">{emailError}</p>
-                    )}
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={savingEmail || !accessToken}
-                    className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {savingEmail ? (
-                      <>
-                        <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                        جاري الإرسال...
-                      </>
-                    ) : (
-                      <>
-                        <Mail size={19} />
-                        إرسال رابط التأكيد
-                      </>
-                    )}
-                  </button>
-                </form>
-              </div>
-            </div>
+      {/* Messages */}
+      {message.text && (
+        <div
+          role={message.type === "success" ? "status" : "alert"}
+          className={`flex items-start gap-3 rounded-card border p-4 text-sm font-semibold ${
+            message.type === "success"
+              ? "border-status-success/30 bg-status-success-bg text-status-success"
+              : "border-status-danger/30 bg-status-danger-bg text-status-danger"
+          }`}
+        >
+          {message.type === "success" ? (
+            <CheckCircle2 size={22} className="shrink-0" aria-hidden="true" />
+          ) : (
+            <AlertCircle size={22} className="shrink-0" aria-hidden="true" />
           )}
 
-          {/* ========================= */}
-          {/* Subject (teachers only) */}
-          {/* ========================= */}
+          <span>{message.text}</span>
+        </div>
+      )}
 
-          {isTeacher && (
-            <div className="rounded-2xl border border-slate-200 bg-white shadow-sm lg:col-span-3">
-              <div className="border-b border-slate-100 p-6">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600">
-                    <BookOpen size={28} />
-                  </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
 
-                  <div>
-                    <h2 className="text-xl font-bold text-slate-800">
-                      المادة الدراسية
-                    </h2>
+        {/* ========================= */}
+        {/* Account Information */}
+        {/* ========================= */}
 
-                    <p className="text-sm text-slate-500">
-                      المادة التي تدرّسها داخل السنتر
-                    </p>
-                  </div>
-                </div>
+        <section className="rounded-card border border-surface-border bg-surface-card shadow-sm lg:col-span-2">
+
+          {/* Header */}
+          <div className="flex items-center gap-4 border-b border-surface-border p-5">
+
+            <div className="flex h-14 w-14 items-center justify-center rounded-control bg-primary-subtle text-primary">
+              <User size={28} aria-hidden="true" />
+            </div>
+
+            <div>
+              <h2 className="text-xl font-bold text-text-main">
+                بيانات الحساب
+              </h2>
+
+              <p className="text-sm text-text-muted">
+                معلومات حسابك الشخصية
+              </p>
+            </div>
+
+          </div>
+
+          {/* Information */}
+          <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2">
+
+            <InfoItem
+              icon={<User size={19} />}
+              label="الاسم بالكامل"
+              value={profile?.fullName}
+            />
+
+            {!hideEmail && (
+              <InfoItem
+                icon={<Mail size={19} />}
+                label="البريد الإلكتروني"
+                value={profile?.email}
+              />
+            )}
+
+            <InfoItem
+              icon={<Phone size={19} />}
+              label="رقم الهاتف"
+              value={profile?.phoneNumber}
+            />
+
+            <InfoItem
+              icon={<User size={19} />}
+              label="اسم المستخدم"
+              value={profile?.userName}
+            />
+
+            <InfoItem
+              icon={<MapPin size={19} />}
+              label="العنوان"
+              value={profile?.address}
+            />
+
+            <InfoItem
+              icon={<Calendar size={19} />}
+              label="تاريخ إنشاء الحساب"
+              value={
+                profile?.createdAt
+                  ? new Date(
+                      profile.createdAt
+                    ).toLocaleDateString("ar-EG")
+                  : "-"
+              }
+            />
+
+          </div>
+        </section>
+
+        {/* ========================= */}
+        {/* Email (staff only) */}
+        {/* ========================= */}
+
+        {!hideEmail && (
+          <section className="rounded-card border border-surface-border bg-surface-card shadow-sm lg:col-span-3">
+            <div className="flex items-center gap-4 border-b border-surface-border p-5">
+              <div className="flex h-14 w-14 items-center justify-center rounded-control bg-status-success-bg text-status-success">
+                <Mail size={27} aria-hidden="true" />
               </div>
 
-              {/* Prompt when the subject is still missing */}
-              {!profile?.subject?.trim() && (
-                <div className="mx-6 mt-6 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-700">
-                  <AlertCircle size={22} />
-                  <span>
-                    لم يتم تحديد المادة الدراسية بعد. يرجى إضافتها لتظهر
-                    بشكل صحيح في التقارير.
-                  </span>
+              <div>
+                <h2 className="text-xl font-bold text-text-main">
+                  البريد الإلكتروني
+                </h2>
+
+                <p className="text-sm text-text-muted">
+                  يُستخدم لاستعادة كلمة المرور الخاصة بحسابك
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-4 p-5">
+              {!profile?.email && (
+                <div className="flex items-center gap-3 rounded-control border border-status-warning/30 bg-status-warning-bg p-4 text-status-warning">
+                  <AlertCircle size={22} className="shrink-0" aria-hidden="true" />
+                  <span>أضف بريدك لتتمكن من استعادة كلمة المرور.</span>
+                </div>
+              )}
+
+              <div className="rounded-control border border-surface-border bg-surface-muted p-4 text-sm">
+                <p className="text-text-muted">البريد الحالي</p>
+                <p className="mt-1 break-words font-semibold text-text-main" dir="ltr">
+                  {profile?.email || "غير متوفر"}
+                </p>
+
+                {profile?.pendingEmail && (
+                  <div className="mt-3 rounded-control border border-status-info/30 bg-status-info-bg p-3 text-status-info">
+                    <p>
+                      بانتظار التأكيد:{" "}
+                      <span className="font-semibold" dir="ltr">
+                        {profile.pendingEmail}
+                      </span>
+                    </p>
+                    <p className="mt-1 text-xs">
+                      سيبقى بريدك الحالي فعالاً حتى تأكيد البريد الجديد.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {emailNotice && (
+                <div
+                  role={emailNotice.type === "error" ? "alert" : "status"}
+                  className={`flex items-center gap-3 rounded-control border p-4 text-sm ${
+                    emailNotice.type === "error"
+                      ? "border-status-danger/30 bg-status-danger-bg text-status-danger"
+                      : "border-status-success/30 bg-status-success-bg text-status-success"
+                  }`}
+                >
+                  {emailNotice.type === "error" ? (
+                    <AlertCircle size={20} className="shrink-0" aria-hidden="true" />
+                  ) : (
+                    <CheckCircle2 size={20} className="shrink-0" aria-hidden="true" />
+                  )}
+                  <span>{emailNotice.text}</span>
                 </div>
               )}
 
               <form
-                onSubmit={handleSaveSubject}
-                className="space-y-5 p-6"
+                onSubmit={handleEmailChangeRequest}
+                className="space-y-3"
+                noValidate
               >
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">
-                    المادة الدراسية
+                  <label
+                    htmlFor="profile-email"
+                    className="mb-2 block text-sm font-semibold text-text-main"
+                  >
+                    البريد الإلكتروني الجديد
                   </label>
 
                   <input
-                    type="text"
-                    value={subjectValue}
-                    onChange={(e) => setSubjectValue(e.target.value)}
-                    placeholder="مثال: الرياضيات"
-                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-right outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    id="profile-email"
+                    name="email"
+                    type="email"
+                    dir="ltr"
+                    autoComplete="email"
+                    value={emailValue}
+                    onChange={(e) => {
+                      setEmailValue(e.target.value);
+                      setEmailError("");
+                    }}
+                    placeholder="name@example.com"
+                    className={`${fieldBaseClass} ${fieldStateClass(emailError)} text-left`}
                   />
+
+                  <p className="mt-1.5 text-xs leading-5 text-text-muted">
+                    {STAFF_EMAIL_HELPER_TEXT}
+                  </p>
+
+                  {emailError && (
+                    <p className="mt-1 text-xs font-semibold text-status-danger">
+                      {emailError}
+                    </p>
+                  )}
                 </div>
 
-                <button
+                <Button
                   type="submit"
-                  disabled={savingSubject || !accessToken}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  loading={savingEmail}
+                  disabled={savingEmail || !accessToken}
                 >
-                  {savingSubject ? (
-                    <>
-                      <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                      جاري الحفظ...
-                    </>
-                  ) : (
-                    <>
-                      <Save size={19} />
-                      حفظ المادة
-                    </>
-                  )}
-                </button>
+                  {!savingEmail && <Mail size={19} aria-hidden="true" />}
+                  {savingEmail ? "جاري الإرسال..." : "إرسال رابط التأكيد"}
+                </Button>
               </form>
             </div>
-          )}
+          </section>
+        )}
 
-          {/* ========================= */}
-          {/* Change Password */}
-          {/* ========================= */}
+        {/* ========================= */}
+        {/* Subject (teachers only) */}
+        {/* ========================= */}
 
-          <div className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        {isTeacher && (
+          <section className="rounded-card border border-surface-border bg-surface-card shadow-sm lg:col-span-3">
+            <div className="flex items-center gap-4 border-b border-surface-border p-5">
+              <div className="flex h-14 w-14 items-center justify-center rounded-control bg-primary-subtle text-primary">
+                <BookOpen size={28} aria-hidden="true" />
+              </div>
 
-            {/* Header */}
-            <div className="border-b border-slate-100 p-6">
-              <div className="flex items-center gap-4">
+              <div>
+                <h2 className="text-xl font-bold text-text-main">
+                  المادة الدراسية
+                </h2>
 
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-600">
-                  <Lock size={27} />
-                </div>
-
-                <div>
-                  <h2 className="text-xl font-bold text-slate-800">
-                    تغيير كلمة المرور
-                  </h2>
-
-                  <p className="text-sm text-slate-500">
-                    قم بتحديث كلمة المرور الخاصة بك
-                  </p>
-                </div>
-
+                <p className="text-sm text-text-muted">
+                  المادة التي تدرّسها داخل السنتر
+                </p>
               </div>
             </div>
 
-            {/* Form */}
-            <form
-              onSubmit={handleSubmit}
-              className="space-y-5 p-6"
-            >
+            {/* Prompt when the subject is still missing */}
+            {!profile?.subject?.trim() && (
+              <div className="mx-5 mt-5 flex items-center gap-3 rounded-control border border-status-warning/30 bg-status-warning-bg p-4 text-status-warning">
+                <AlertCircle size={22} aria-hidden="true" />
+                <span>
+                  لم يتم تحديد المادة الدراسية بعد. يرجى إضافتها لتظهر بشكل صحيح
+                  في التقارير.
+                </span>
+              </div>
+            )}
 
-              <PasswordInput
-                label="كلمة المرور الحالية"
-                name="currentPassword"
-                value={form.currentPassword}
-                onChange={handleChange}
-                show={showCurrent}
-                setShow={setShowCurrent}
-                error={errors.currentPassword}
-              />
+            <form onSubmit={handleSaveSubject} className="space-y-5 p-5">
+              <div>
+                <label
+                  htmlFor="profile-subject"
+                  className="mb-2 block text-sm font-semibold text-text-main"
+                >
+                  المادة الدراسية
+                </label>
 
-              <PasswordInput
-                label="كلمة المرور الجديدة"
-                name="newPassword"
-                value={form.newPassword}
-                onChange={handleChange}
-                show={showNew}
-                setShow={setShowNew}
-                error={errors.newPassword}
-              />
-
-              <PasswordInput
-                label="تأكيد كلمة المرور"
-                name="confirmPassword"
-                value={form.confirmPassword}
-                onChange={handleChange}
-                show={showConfirm}
-                setShow={setShowConfirm}
-                error={errors.confirmPassword}
-              />
-
-              <div className="rounded-xl bg-blue-50 p-4 text-sm text-blue-700">
-                كلمة المرور يجب أن تحتوي على 8 أحرف على الأقل.
+                <input
+                  id="profile-subject"
+                  type="text"
+                  value={subjectValue}
+                  onChange={(e) => setSubjectValue(e.target.value)}
+                  placeholder="مثال: الرياضيات"
+                  className={fieldBaseClass}
+                />
               </div>
 
-              <button
+              <Button
                 type="submit"
-                disabled={
-                  changingPassword || !accessToken
-                }
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                loading={savingSubject}
+                disabled={savingSubject || !accessToken}
               >
-                {changingPassword ? (
-                  <>
-                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    جاري الحفظ...
-                  </>
-                ) : (
-                  <>
-                    <Save size={19} />
-                    تغيير كلمة المرور
-                  </>
-                )}
-              </button>
-
+                {!savingSubject && <Save size={19} aria-hidden="true" />}
+                {savingSubject ? "جاري الحفظ..." : "حفظ المادة"}
+              </Button>
             </form>
+          </section>
+        )}
+
+        {/* ========================= */}
+        {/* Change Password */}
+        {/* ========================= */}
+
+        <section className="rounded-card border border-surface-border bg-surface-card shadow-sm">
+
+          {/* Header */}
+          <div className="flex items-center gap-4 border-b border-surface-border p-5">
+
+            <div className="flex h-14 w-14 items-center justify-center rounded-control bg-status-warning-bg text-status-warning">
+              <Lock size={27} aria-hidden="true" />
+            </div>
+
+            <div>
+              <h2 className="text-xl font-bold text-text-main">
+                تغيير كلمة المرور
+              </h2>
+
+              <p className="text-sm text-text-muted">
+                قم بتحديث كلمة المرور الخاصة بك
+              </p>
+            </div>
+
           </div>
-        </div>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-5 p-5">
+
+            <PasswordInput
+              label="كلمة المرور الحالية"
+              name="currentPassword"
+              value={form.currentPassword}
+              onChange={handleChange}
+              show={showCurrent}
+              setShow={setShowCurrent}
+              error={errors.currentPassword}
+            />
+
+            <PasswordInput
+              label="كلمة المرور الجديدة"
+              name="newPassword"
+              value={form.newPassword}
+              onChange={handleChange}
+              show={showNew}
+              setShow={setShowNew}
+              error={errors.newPassword}
+            />
+
+            <PasswordInput
+              label="تأكيد كلمة المرور"
+              name="confirmPassword"
+              value={form.confirmPassword}
+              onChange={handleChange}
+              show={showConfirm}
+              setShow={setShowConfirm}
+              error={errors.confirmPassword}
+            />
+
+            <p className="rounded-control bg-primary-subtle p-4 text-sm text-primary">
+              كلمة المرور يجب أن تحتوي على 8 أحرف على الأقل.
+            </p>
+
+            <Button
+              type="submit"
+              block
+              loading={changingPassword}
+              disabled={changingPassword || !accessToken}
+            >
+              {!changingPassword && <Save size={19} aria-hidden="true" />}
+              {changingPassword ? "جاري الحفظ..." : "تغيير كلمة المرور"}
+            </Button>
+
+          </form>
+        </section>
       </div>
     </div>
   );
@@ -839,18 +799,14 @@ export default function Profile() {
 
 function InfoItem({ icon, label, value }) {
   return (
-    <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
-      <div className="mb-2 flex items-center gap-2 text-slate-500">
-        <span className="text-blue-600">
-          {icon}
-        </span>
+    <div className="rounded-control border border-surface-border bg-surface-muted p-4">
+      <div className="mb-2 flex items-center gap-2 text-text-muted">
+        <span className="text-primary">{icon}</span>
 
-        <span className="text-sm">
-          {label}
-        </span>
+        <span className="text-sm">{label}</span>
       </div>
 
-      <p className="font-semibold text-slate-800">
+      <p className="break-words font-semibold text-text-main">
         {value || "غير متوفر"}
       </p>
     </div>
@@ -861,53 +817,47 @@ function InfoItem({ icon, label, value }) {
 // Password Input
 // =========================
 
-function PasswordInput({
-  label,
-  name,
-  value,
-  onChange,
-  show,
-  setShow,
-  error,
-}) {
+function PasswordInput({ label, name, value, onChange, show, setShow, error }) {
   return (
     <div>
-      <label className="mb-2 block text-sm font-semibold text-slate-700">
+      <label
+        htmlFor={`profile-${name}`}
+        className="mb-2 block text-sm font-semibold text-text-main"
+      >
         {label}
       </label>
 
       <div className="relative">
 
         <input
+          id={`profile-${name}`}
           type={show ? "text" : "password"}
           name={name}
           value={value}
           onChange={onChange}
-          className={`w-full rounded-xl border bg-white px-4 py-3 pl-12 text-left outline-none transition ${
-            error
-              ? "border-red-400 focus:ring-2 focus:ring-red-100"
-              : "border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-          }`}
+          autoComplete={
+            name === "currentPassword" ? "current-password" : "new-password"
+          }
+          className={`${fieldBaseClass} ${fieldStateClass(error)} pe-12 text-left`}
         />
 
         <button
           type="button"
           onClick={() => setShow(!show)}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+          aria-label={show ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
+          className="focus-ring absolute end-0 top-1/2 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-control text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
         >
           {show ? (
-            <EyeOff size={20} />
+            <EyeOff size={20} aria-hidden="true" />
           ) : (
-            <Eye size={20} />
+            <Eye size={20} aria-hidden="true" />
           )}
         </button>
 
       </div>
 
       {error && (
-        <p className="mt-1 text-xs text-red-500">
-          {error}
-        </p>
+        <p className="mt-1 text-xs font-semibold text-status-danger">{error}</p>
       )}
     </div>
   );

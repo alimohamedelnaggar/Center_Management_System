@@ -7,11 +7,18 @@ import {
   CheckCircle2,
   Keyboard,
   Loader2,
+  RefreshCw,
   ScanLine,
   SpeakerHigh,
   SpeakerSlash,
   TriangleAlert,
+  X,
 } from "@/components/icons";
+import Button from "@/components/ui/Button";
+import FormField from "@/components/ui/FormField";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import StatusPill from "@/components/ui/StatusPill";
 import { normalizeCode, normalizeScanCode } from "../../utils/qrCode";
 import {
   SCAN_OUTCOME_LABELS,
@@ -34,6 +41,57 @@ const TONE_CARD_CLASSES = {
   success: "border-status-success/30 bg-status-success-bg",
   warning: "border-status-warning/30 bg-status-warning-bg",
   danger: "border-status-danger/30 bg-status-danger-bg",
+};
+
+const TABS = [
+  { key: "camera", label: "كاميرا", icon: Camera },
+  { key: "manual", label: "إدخال الكود", icon: Keyboard },
+  { key: "scanner", label: "سكانر", icon: Barcode },
+];
+
+const CAMERA_STATES = {
+  idle: { tone: "neutral", label: "الكاميرا متوقفة" },
+  loading: { tone: "info", label: "جارٍ تشغيل الكاميرا" },
+  ready: { tone: "success", label: "الكاميرا تعمل" },
+  unsupported: { tone: "warning", label: "الكاميرا غير مدعومة" },
+  error: { tone: "danger", label: "تعذر تشغيل الكاميرا" },
+};
+
+/**
+ * A dialog that stays mounted but is hidden (closed drawer, off-screen panel)
+ * must not block the focus restore - otherwise the wedge scanner loses the
+ * focus after every scan as soon as a navigation drawer exists in the tree.
+ */
+const isDialogOnScreen = (dialog) => {
+  if (!dialog) return false;
+  if (dialog.getAttribute("aria-hidden") === "true") return false;
+  if (typeof dialog.closest === "function" && dialog.closest("[inert]")) {
+    return false;
+  }
+  if (typeof window === "undefined" || !window.getComputedStyle) return true;
+
+  const style = window.getComputedStyle(dialog);
+
+  if (style.display === "none" || style.visibility === "hidden") return false;
+
+  const rect = dialog.getBoundingClientRect?.();
+
+  if (!rect || !rect.width || !rect.height) return true;
+
+  const viewportWidth = window.innerWidth || 0;
+  const viewportHeight = window.innerHeight || 0;
+
+  if (!viewportWidth || !viewportHeight) return true;
+
+  const centerX = rect.left + rect.width / 2;
+  const centerY = rect.top + rect.height / 2;
+
+  return (
+    centerX >= 0 &&
+    centerX < viewportWidth &&
+    centerY >= 0 &&
+    centerY < viewportHeight
+  );
 };
 
 const getOutcomeTone = (outcome) => {
@@ -133,7 +191,7 @@ export default function QrScannerModal({
     async (preferredDeviceId) => {
       if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
         setCameraState("unsupported");
-        setCameraError("المتصفح ده مش بيدعم الكاميرا.");
+        setCameraError("هذا المتصفح لا يدعم الكاميرا.");
         return;
       }
 
@@ -170,8 +228,8 @@ export default function QrScannerModal({
           error?.name === "NotAllowedError"
             ? "إذن الكاميرا مرفوض. اسمح بالكاميرا من إعدادات المتصفح أو استخدم الإدخال اليدوي."
             : error?.name === "NotFoundError"
-              ? "مفيش كاميرا متاحة على الجهاز ده."
-              : "مش قادرين نشغل الكاميرا دلوقتي.";
+              ? "لا توجد كاميرا متاحة على هذا الجهاز."
+              : "تعذر تشغيل الكاميرا الآن. أعد المحاولة أو استخدم الإدخال اليدوي.";
 
         setCameraState("error");
         setCameraError(message);
@@ -235,7 +293,10 @@ export default function QrScannerModal({
       '[role="dialog"], [aria-modal="true"], dialog[open]',
     );
 
-    return [...dialogs].some((dialog) => !overlayRef.current.contains(dialog));
+    return [...dialogs].some(
+      (dialog) =>
+        !overlayRef.current.contains(dialog) && isDialogOnScreen(dialog),
+    );
   }, []);
 
   const focusScannerInput = useCallback(() => {
@@ -378,7 +439,13 @@ export default function QrScannerModal({
         setScannerResult(null);
       }, SCANNER_RESULT_MS);
 
-      focusScannerInput();
+      // The input is disabled while the scan is in flight, so focusing it right
+      // away is a no-op. Wait for the enabled input to commit, then take the
+      // focus back so the hardware wedge keeps working for the next student.
+      window.clearTimeout(focusTimerRef.current);
+      focusTimerRef.current = window.setTimeout(() => {
+        focusScannerInput();
+      }, 0);
     },
     [focusScannerInput, playScanSound],
   );
@@ -434,171 +501,200 @@ export default function QrScannerModal({
     startCamera(deviceId);
   };
 
-  const tabClass = (active) =>
-    `flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition-all ${
-      active
-        ? "bg-primary text-text-inverse shadow-sm"
-        : "bg-surface-muted text-text-muted hover:text-text-main"
-    }`;
-
   const resultTone = getOutcomeTone(scannerResult);
   const scannerBusyState = isBusy || scannerBusy;
+  const cameraStatus = CAMERA_STATES[cameraState] ?? CAMERA_STATES.idle;
 
   return (
     <div
       ref={overlayRef}
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm"
+      data-testid="qr-scanner-overlay"
+      className="fixed inset-0 z-[9999] flex items-stretch justify-center bg-black/60 backdrop-blur-sm sm:items-center sm:p-4"
       dir="rtl"
     >
       <div
         role="dialog"
         aria-modal="true"
-        className="flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-surface-border bg-surface-card shadow-2xl"
+        aria-label="مسح كارت الطالب"
+        data-testid="qr-scanner-dialog"
+        className="flex h-[100dvh] w-full max-w-lg flex-col overflow-hidden border border-surface-border bg-surface-card shadow-2xl sm:h-auto sm:max-h-[92vh] sm:rounded-card"
       >
-        <div className="flex items-center justify-between border-b border-surface-border px-5 py-4">
-          <div className="flex items-center gap-2">
-            <ScanLine className="h-5 w-5 text-primary" />
-            <h3 className="text-base font-bold text-text-main">مسح كارت الطالب</h3>
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-surface-border px-4 py-3 sm:px-5 sm:py-4">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-primary-subtle text-primary">
+              <ScanLine className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <div className="min-w-0">
+              <h3 className="truncate text-base font-bold text-text-main">
+                مسح كارت الطالب
+              </h3>
+              <p className="truncate text-xs text-text-muted">
+                كاميرا · إدخال يدوي · سكانر
+              </p>
+            </div>
           </div>
+
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg px-2 py-1 text-sm text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
+            aria-label="إغلاق نافذة المسح"
+            className="focus-ring inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
           >
-            إغلاق
+            <X className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
 
         {disabled && (
-          <div className="flex items-center gap-2 border-b border-amber-200 bg-amber-50 px-5 py-3 text-xs font-semibold text-amber-700">
-            <TriangleAlert className="h-4 w-4 shrink-0" />
+          <div className="flex items-start gap-2 border-b border-status-warning/30 bg-status-warning-bg px-4 py-3 text-xs font-semibold leading-relaxed text-status-warning sm:px-5">
+            <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
             <span>{disabledReason}</span>
           </div>
         )}
 
-        <div className="flex gap-2 border-b border-surface-border px-5 py-3">
-          <button
-            type="button"
-            onClick={() => setMode("camera")}
-            className={tabClass(mode === "camera")}
+        <div className="shrink-0 border-b border-surface-border px-4 py-3 sm:px-5">
+          <div
+            role="tablist"
+            aria-label="طريقة المسح"
+            className="flex gap-1 rounded-control border border-surface-border bg-surface-muted p-1"
           >
-            <Camera className="h-4 w-4" />
-            كاميرا
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("manual")}
-            className={tabClass(mode === "manual")}
-          >
-            <Keyboard className="h-4 w-4" />
-            إدخال الكود
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("scanner")}
-            className={tabClass(mode === "scanner")}
-          >
-            <Barcode className="h-4 w-4" />
-            سكانر
-          </button>
+            {TABS.map((tab) => {
+              const Icon = tab.icon;
+              const isActive = mode === tab.key;
+
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={isActive}
+                  onClick={() => setMode(tab.key)}
+                  className={`flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-control px-2 text-xs font-bold transition-all ${
+                    isActive
+                      ? "bg-surface-card text-primary shadow-soft"
+                      : "text-text-muted hover:text-text-main"
+                  }`}
+                >
+                  <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        <div className="overflow-y-auto px-5 py-4">
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4 sm:px-5">
           {mode === "camera" ? (
-            <>
-              <div className="relative aspect-square w-full overflow-hidden rounded-2xl bg-slate-900">
-                <video
-                  ref={videoRef}
-                  className="h-full w-full object-cover"
-                  muted
-                  playsInline
-                />
+            <div className="space-y-3">
+              <div className="-mx-4 w-[calc(100%+2rem)] sm:mx-0 sm:w-full">
+                <div className="relative aspect-square w-full overflow-hidden bg-slate-950 sm:aspect-video sm:rounded-card">
+                  <video
+                    ref={videoRef}
+                    className="h-full w-full object-cover"
+                    muted
+                    playsInline
+                  />
 
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                  <div className="relative h-48 w-48 rounded-2xl border-2 border-white/80 shadow-[0_0_0_9999px_rgba(15,23,42,0.35)]">
-                    <span className="absolute -right-0.5 -top-0.5 h-7 w-7 rounded-tl-2xl border-r-2 border-t-2 border-primary" />
-                    <span className="absolute -bottom-0.5 -left-0.5 h-7 w-7 rounded-tr-2xl border-b-2 border-l-2 border-primary" />
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                    <div className="relative h-48 w-48 rounded-2xl border-2 border-white/80 shadow-[0_0_0_9999px_rgba(15,23,42,0.35)] sm:h-56 sm:w-56">
+                      <span className="absolute -right-0.5 -top-0.5 h-7 w-7 rounded-tl-2xl border-r-2 border-t-2 border-primary" />
+                      <span className="absolute -bottom-0.5 -left-0.5 h-7 w-7 rounded-tr-2xl border-b-2 border-l-2 border-primary" />
+                    </div>
                   </div>
+
+                  {cameraState === "loading" && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-slate-950/70 text-white">
+                      <Loader2 className="h-6 w-6 animate-spin" aria-hidden="true" />
+                      <span className="text-xs font-bold">
+                        جارٍ تشغيل الكاميرا...
+                      </span>
+                    </div>
+                  )}
+
+                  {cameraState === "error" && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-slate-950/60">
+                      <CameraOff
+                        className="h-10 w-10 text-white/70"
+                        aria-hidden="true"
+                      />
+                    </div>
+                  )}
                 </div>
+              </div>
 
-                {cameraState === "loading" && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-slate-900/70 text-xs font-semibold text-white">
-                    <Loader2 className="ms-2 h-4 w-4 animate-spin" />
-                    جاري تشغيل الكاميرا...
-                  </div>
-                )}
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <StatusPill tone={cameraStatus.tone}>{cameraStatus.label}</StatusPill>
 
-                {cameraState === "error" && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-slate-900/60">
-                    <CameraOff className="h-8 w-8 text-white/70" />
-                  </div>
-                )}
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => startCamera(deviceIdRef.current)}
+                  loading={cameraState === "loading"}
+                >
+                  <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                  إعادة المحاولة
+                </Button>
               </div>
 
               {cameraState === "error" && cameraError && (
-                <div className="mt-3 flex items-start gap-2 rounded-xl border border-status-danger/30 bg-status-danger-bg px-3 py-2.5 text-xs font-semibold leading-relaxed text-status-danger">
-                  <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+                <div className="flex items-start gap-2 rounded-control border border-status-danger/30 bg-status-danger-bg px-3 py-2.5 text-xs font-semibold leading-relaxed text-status-danger">
+                  <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                   <span>{cameraError}</span>
                 </div>
               )}
 
               {devices.length > 1 && (
-                <div className="mt-3">
-                  <label className="mb-1 block text-[11px] font-semibold text-text-muted">
-                    الكاميرا
-                  </label>
-                  <select
+                <FormField label="الكاميرا" htmlFor="scanner-camera-device">
+                  <Select
+                    id="scanner-camera-device"
                     value={deviceIdRef.current}
                     onChange={(event) => switchCamera(event.target.value)}
-                    className="w-full rounded-xl border border-surface-border bg-surface-card px-3 py-2 text-xs text-text-main outline-none focus:border-primary"
                   >
                     {devices.map((device, index) => (
                       <option key={device.deviceId} value={device.deviceId}>
                         {device.label || `كاميرا ${index + 1}`}
                       </option>
                     ))}
-                  </select>
-                </div>
+                  </Select>
+                </FormField>
               )}
 
-              <p className="mt-3 text-center text-[11px] leading-relaxed text-text-muted">
-                وصّل كارت الطالب أمام الكاميرا. الحضور بيتسجل أوتوماتيك.
+              <p className="text-center text-xs leading-relaxed text-text-muted">
+                قرّب كارت الطالب من الكاميرا؛ يُسجَّل الحضور تلقائيًا.
               </p>
-            </>
+            </div>
           ) : mode === "manual" ? (
             <form onSubmit={submitManualCode} className="space-y-3">
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-text-muted">
-                  كود الطالب
-                </label>
-                <input
+              <FormField
+                label="كود الطالب"
+                htmlFor="manual-code-input"
+                helper="استخدمه إذا تعذر تشغيل الكاميرا أو تلف الكارت."
+              >
+                <Input
+                  id="manual-code-input"
                   type="text"
                   value={manualCode}
                   onChange={(event) => setManualCode(event.target.value)}
                   placeholder="STU00000001"
                   autoComplete="off"
                   dir="ltr"
-                  className="w-full rounded-xl border border-surface-border bg-surface-card px-3 py-2.5 text-center font-mono text-base tracking-widest text-text-main outline-none focus:border-primary"
+                  className="text-center font-mono text-base tracking-widest"
                 />
-              </div>
+              </FormField>
 
-              <button
+              <Button
                 type="submit"
-                disabled={!manualCode.trim() || isBusy}
-                className="w-full rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-text-inverse transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+                block
+                loading={isBusy}
+                disabled={!manualCode.trim()}
               >
-                {isBusy ? "جاري التسجيل..." : "تسجيل الحضور"}
-              </button>
-
-              <p className="text-center text-[11px] leading-relaxed text-text-muted">
-                استخدم الكود ده لو الكاميرا مش شغالة أو الكارت اتلف.
-              </p>
+                تسجيل الحضور
+              </Button>
             </form>
           ) : (
             <div className="space-y-3">
               {scanDisabled && (
-                <div className="flex items-start gap-2 rounded-xl border border-status-warning/30 bg-status-warning-bg px-3 py-2.5 text-xs font-semibold leading-relaxed text-status-warning">
-                  <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" />
+                <div className="flex items-start gap-2 rounded-control border border-status-warning/30 bg-status-warning-bg px-3 py-2.5 text-xs font-semibold leading-relaxed text-status-warning">
+                  <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                   <span>
                     {scanDisabledReason || "اختر المجموعة والحصة قبل المسح."}
                   </span>
@@ -606,44 +702,44 @@ export default function QrScannerModal({
               )}
 
               <form onSubmit={handleScannerSubmit}>
-                <label
+                <FormField
+                  label="كود الطالب (سكانر)"
                   htmlFor="scanner-code-input"
-                  className="mb-1 block text-xs font-semibold text-text-muted"
+                  helper="الماسح يكتب الكود ثم يضغط Enter تلقائيًا."
                 >
-                  كود الطالب (سكانر)
-                </label>
-                <input
-                  id="scanner-code-input"
-                  ref={scannerInputRef}
-                  type="text"
-                  value={scannerCode}
-                  onChange={handleScannerChange}
-                  onKeyDown={handleScannerKeyDown}
-                  onFocus={() => setScannerFocused(true)}
-                  onBlur={handleScannerBlur}
-                  placeholder="STU00000001"
-                  autoComplete="off"
-                  spellCheck={false}
-                  dir="ltr"
-                  disabled={scanDisabled || scannerBusyState}
-                  className="w-full rounded-xl border border-surface-border bg-surface-card px-3 py-3 text-center font-mono text-base tracking-widest text-text-main outline-none focus:border-primary disabled:cursor-not-allowed disabled:opacity-60"
-                />
+                  <Input
+                    id="scanner-code-input"
+                    ref={scannerInputRef}
+                    type="text"
+                    value={scannerCode}
+                    onChange={handleScannerChange}
+                    onKeyDown={handleScannerKeyDown}
+                    onFocus={() => setScannerFocused(true)}
+                    onBlur={handleScannerBlur}
+                    placeholder="STU00000001"
+                    autoComplete="off"
+                    spellCheck={false}
+                    dir="ltr"
+                    disabled={scanDisabled || scannerBusyState}
+                    className="text-center font-mono text-base tracking-widest"
+                  />
+                </FormField>
               </form>
 
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={focusScannerInput}
-                  className={`flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition-colors ${
+                  className={`flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-2 rounded-control border px-3 py-2 text-xs font-bold transition-colors ${
                     scannerFocused
                       ? "border-status-success/30 bg-status-success-bg text-status-success"
                       : "border-status-warning/30 bg-status-warning-bg text-status-warning"
                   }`}
                 >
                   {scannerFocused ? (
-                    <CheckCircle2 className="h-4 w-4 shrink-0" />
+                    <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
                   ) : (
-                    <TriangleAlert className="h-4 w-4 shrink-0" />
+                    <TriangleAlert className="h-4 w-4 shrink-0" aria-hidden="true" />
                   )}
                   {scannerFocused ? "الماسح جاهز" : "اضغط للتركيز"}
                 </button>
@@ -653,19 +749,20 @@ export default function QrScannerModal({
                   onClick={handleToggleSound}
                   aria-pressed={soundEnabled}
                   aria-label={soundEnabled ? "كتم صوت المسح" : "تشغيل صوت المسح"}
-                  className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-surface-border bg-surface-muted text-text-muted transition-colors hover:text-text-main"
+                  className="inline-flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-control border border-surface-border bg-surface-muted text-text-muted transition-colors hover:text-text-main"
                 >
                   {soundEnabled ? (
-                    <SpeakerHigh className="h-5 w-5" />
+                    <SpeakerHigh className="h-5 w-5" aria-hidden="true" />
                   ) : (
-                    <SpeakerSlash className="h-5 w-5" />
+                    <SpeakerSlash className="h-5 w-5" aria-hidden="true" />
                   )}
                 </button>
               </div>
 
               {scannerResult && (
                 <div
-                  className={`rounded-2xl border p-4 ${TONE_CARD_CLASSES[resultTone]}`}
+                  data-testid="scanner-result"
+                  className={`rounded-card border p-4 ${TONE_CARD_CLASSES[resultTone]}`}
                 >
                   <div className="flex items-center gap-3">
                     <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-surface-card">
@@ -699,24 +796,22 @@ export default function QrScannerModal({
               )}
 
               <div>
-                <div className="mb-1.5 flex items-center justify-between">
-                  <p className="text-xs font-semibold text-text-muted">
-                    آخر العمليات
-                  </p>
+                <div className="mb-1.5 flex items-center justify-between gap-2">
+                  <p className="text-xs font-bold text-text-muted">آخر العمليات</p>
                   {scannerHistory.length > 0 && (
                     <button
                       type="button"
                       onClick={() => setScannerHistory([])}
-                      className="text-[11px] font-semibold text-text-muted transition-colors hover:text-text-main"
+                      className="min-h-11 cursor-pointer px-1 text-xs font-semibold text-text-muted transition-colors hover:text-text-main"
                     >
-                      مسح
+                      مسح السجل
                     </button>
                   )}
                 </div>
 
                 {scannerHistory.length === 0 ? (
-                  <p className="rounded-xl border border-dashed border-surface-border px-3 py-4 text-center text-[11px] text-text-muted">
-                    لسه مفيش عمليات مسح.
+                  <p className="rounded-control border border-dashed border-surface-border px-3 py-4 text-center text-xs text-text-muted">
+                    لا توجد عمليات مسح بعد.
                   </p>
                 ) : (
                   <ul className="max-h-44 space-y-1.5 overflow-y-auto">
@@ -726,7 +821,7 @@ export default function QrScannerModal({
                       return (
                         <li
                           key={item.id}
-                          className="flex items-center justify-between gap-2 rounded-xl border border-surface-border bg-surface-muted px-3 py-2"
+                          className="flex items-center justify-between gap-2 rounded-control border border-surface-border bg-surface-muted px-3 py-2"
                         >
                           <div className="min-w-0">
                             <p className="truncate text-xs font-bold text-text-main">
@@ -759,9 +854,9 @@ export default function QrScannerModal({
                 )}
               </div>
 
-              <p className="text-center text-[11px] leading-relaxed text-text-muted">
-                السكانر بيكتب الكود وبيضغط Enter — سيب الماسح في-focus طول ما
-                المسح شغال.
+              <p className="text-center text-xs leading-relaxed text-text-muted">
+                يكتب الماسح الكود ثم يضغط Enter تلقائيًا؛ أبقِ الماسح في التركيز
+                طوال فترة المسح.
               </p>
             </div>
           )}

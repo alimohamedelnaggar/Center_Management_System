@@ -97,12 +97,15 @@ export default function StudyNoteModal({ isOpen, onClose, onSave, groups, saving
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+    <div
+      data-testid="study-note-modal"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+    >
       <div className="fixed inset-0" onClick={saving ? null : onClose} />
 
       <form
         onSubmit={handleSubmit}
-        className="relative z-10 max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-surface-border bg-surface-card p-6 shadow-xl"
+        className="relative z-10 max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto rounded-2xl border border-surface-border bg-surface-card p-6 shadow-xl"
       >
         <div className="mb-5 flex items-center justify-between">
           <h3 className="text-lg font-bold text-text-main">إضافة مذكرة</h3>
@@ -110,7 +113,8 @@ export default function StudyNoteModal({ isOpen, onClose, onSave, groups, saving
             type="button"
             onClick={onClose}
             disabled={saving}
-            className="rounded-lg p-1 text-text-muted transition hover:text-text-main"
+            aria-label="إغلاق"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
           >
             <X className="h-5 w-5" />
           </button>
@@ -126,7 +130,7 @@ export default function StudyNoteModal({ isOpen, onClose, onSave, groups, saving
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="مثال: مذكرة الدرس الأول"
-              className="w-full rounded-xl border border-surface-border bg-surface-muted px-3.5 py-2.5 text-sm text-text-main outline-none focus:border-primary"
+              className="w-full rounded-xl border border-surface-border bg-surface-muted px-3.5 min-h-11 py-2.5 text-sm text-text-main outline-none focus:border-primary"
             />
           </div>
 
@@ -139,7 +143,7 @@ export default function StudyNoteModal({ isOpen, onClose, onSave, groups, saving
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
               placeholder="وصف مختصر للمذكرة..."
-              className="w-full resize-none rounded-xl border border-surface-border bg-surface-muted px-3.5 py-2.5 text-sm text-text-main outline-none focus:border-primary"
+              className="w-full resize-none rounded-xl border border-surface-border bg-surface-muted px-3.5 min-h-11 py-2.5 text-sm text-text-main outline-none focus:border-primary"
             />
           </div>
 
@@ -158,7 +162,7 @@ export default function StudyNoteModal({ isOpen, onClose, onSave, groups, saving
                       type="button"
                       key={group.id}
                       onClick={() => toggleGroup(group.id)}
-                      className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-right text-xs font-medium transition ${
+                      className={`flex items-center gap-2 rounded-lg border px-3 min-h-11 py-2 text-right text-xs font-medium transition ${
                         checked
                           ? "border-primary bg-primary-subtle text-primary"
                           : "border-surface-border bg-surface-card text-text-main hover:bg-surface-muted"
@@ -167,7 +171,7 @@ export default function StudyNoteModal({ isOpen, onClose, onSave, groups, saving
                       <span
                         className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
                           checked
-                            ? "border-primary bg-primary text-white"
+                            ? "border-primary bg-primary text-primary-contrast"
                             : "border-surface-border"
                         }`}
                       >
@@ -215,7 +219,7 @@ export default function StudyNoteModal({ isOpen, onClose, onSave, groups, saving
           </div>
 
           {error && (
-            <p className="rounded-lg bg-status-danger-bg px-3 py-2 text-xs font-medium text-status-danger">
+            <p className="rounded-lg bg-status-danger-bg px-3 min-h-11 py-2 text-xs font-medium text-status-danger">
               {error}
             </p>
           )}
@@ -226,14 +230,14 @@ export default function StudyNoteModal({ isOpen, onClose, onSave, groups, saving
             type="button"
             onClick={onClose}
             disabled={saving}
-            className="rounded-xl px-4 py-2.5 text-xs font-bold text-text-muted transition hover:bg-surface-muted"
+            className="rounded-xl px-4 min-h-11 py-2.5 text-xs font-bold text-text-muted transition hover:bg-surface-muted"
           >
             إلغاء
           </button>
           <button
             type="submit"
             disabled={saving}
-            className="flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-xs font-bold text-white shadow-sm transition hover:opacity-90 disabled:opacity-50"
+            className="flex items-center gap-2 rounded-xl bg-primary px-5 min-h-11 py-2.5 text-xs font-bold text-primary-contrast shadow-sm transition hover:opacity-90 disabled:opacity-50"
           >
             {saving && <Loader2 className="h-4 w-4 animate-spin" />}
             حفظ وإرسال

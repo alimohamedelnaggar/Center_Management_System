@@ -51,20 +51,20 @@ export default function AssistantSalaryCard({ item, onPay, onOpenLog }) {
   const lastPayment = formatShortDate(item.lastPaymentDate);
 
   return (
-    <article className="flex flex-col rounded-2xl border border-surface-border bg-surface-card shadow-sm transition-shadow hover:shadow-md">
+    <article className="flex flex-col rounded-card border border-surface-border bg-surface-card shadow-sm transition-shadow hover:shadow-md">
       {/* Header */}
       <div className="flex items-center gap-3 border-b border-surface-border p-4">
-        <div className="p-2.5 rounded-xl bg-primary-subtle text-primary shrink-0">
-          <UserRound className="w-5 h-5" />
+        <div className="shrink-0 rounded-control bg-primary-subtle p-2.5 text-primary">
+          <UserRound className="h-5 w-5" aria-hidden="true" />
         </div>
 
         <div className="min-w-0">
-          <h3 className="text-sm font-bold text-text-main truncate">
+          <h3 className="truncate text-sm font-bold text-text-main">
             {item.fullName}
           </h3>
 
-          <p className="text-xs text-text-muted dir-ltr text-right truncate flex items-center gap-1">
-            <Phone className="w-3 h-3" />
+          <p className="flex items-center gap-1 truncate text-xs text-text-muted" dir="ltr">
+            <Phone className="h-3 w-3" aria-hidden="true" />
 
             {item.phoneNumber || "-"}
           </p>
@@ -74,19 +74,19 @@ export default function AssistantSalaryCard({ item, onPay, onOpenLog }) {
       {/* Body */}
       <div className="flex-1 space-y-3 p-4">
         <div className="grid grid-cols-2 gap-2">
-          <div className="p-2.5 rounded-xl bg-surface-muted border border-surface-border">
-            <p className="text-[11px] text-text-muted">المرتب الأساسي</p>
+          <div className="rounded-control border border-surface-border bg-surface-muted p-2.5">
+            <p className="text-xs text-text-muted">المرتب الأساسي</p>
 
-            <p className="text-sm font-bold text-text-main mt-0.5">
+            <p className="mt-0.5 text-sm font-bold text-text-main">
               {formatCurrency(salary)}
             </p>
           </div>
 
-          <div className="p-2.5 rounded-xl bg-surface-muted border border-surface-border">
-            <p className="text-[11px] text-text-muted">المتبقي</p>
+          <div className="rounded-control border border-surface-border bg-surface-muted p-2.5">
+            <p className="text-xs text-text-muted">المتبقي</p>
 
             <p
-              className={`text-sm font-bold mt-0.5 ${
+              className={`mt-0.5 text-sm font-bold ${
                 remaining > 0 ? "text-status-danger" : "text-status-success"
               }`}
             >
@@ -97,7 +97,7 @@ export default function AssistantSalaryCard({ item, onPay, onOpenLog }) {
 
         {/* Paid progress */}
         <div>
-          <div className="flex items-center justify-between text-[11px] text-text-muted mb-1">
+          <div className="mb-1 flex items-center justify-between text-xs text-text-muted">
             <span>المدفوع</span>
 
             <span className="font-bold text-text-main">
@@ -105,7 +105,7 @@ export default function AssistantSalaryCard({ item, onPay, onOpenLog }) {
             </span>
           </div>
 
-          <div className="h-1.5 w-full rounded-full bg-surface-muted overflow-hidden">
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-muted">
             <div
               className={`h-full rounded-full transition-all ${style.bar}`}
               style={{ width: `${percent}%` }}
@@ -115,8 +115,8 @@ export default function AssistantSalaryCard({ item, onPay, onOpenLog }) {
 
         <div className="space-y-1.5 pt-1">
           <div className={ROW_CLASS}>
-            <span className="text-text-muted flex items-center gap-1">
-              <CalendarDays className="w-3.5 h-3.5 text-primary" />
+            <span className="flex items-center gap-1 text-text-muted">
+              <CalendarDays className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
               الشهر
             </span>
 
@@ -144,30 +144,30 @@ export default function AssistantSalaryCard({ item, onPay, onOpenLog }) {
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between gap-2 border-t border-surface-border p-3">
+      <div className="space-y-2 border-t border-surface-border p-3">
         <span
-          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border text-xs font-bold ${style.badge}`}
+          className={`inline-flex min-h-7 items-center gap-1 rounded-full border px-2.5 text-xs font-bold ${style.badge}`}
         >
-          <StatusIcon className="w-3.5 h-3.5" />
+          <StatusIcon className="h-3.5 w-3.5" aria-hidden="true" />
 
           {getSalaryStatus(statusKey).label}
         </span>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
           <button
             type="button"
             title="السجل"
             onClick={() => onOpenLog(item)}
-            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-surface-border text-xs font-bold text-text-muted hover:bg-surface-muted hover:text-primary transition-colors"
+            className="focus-ring inline-flex min-h-11 flex-1 items-center justify-center gap-1 rounded-control border border-surface-border px-2.5 text-xs font-bold text-text-muted transition-colors hover:bg-surface-muted hover:text-primary"
           >
-            <FileText className="w-3.5 h-3.5" />
+            <FileText className="h-3.5 w-3.5" aria-hidden="true" />
 
             السجل
           </button>
 
           {isFullyPaid ? (
-            <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-surface-muted text-xs font-bold text-text-muted cursor-not-allowed">
-              <CircleCheck className="w-3.5 h-3.5" />
+            <span className="inline-flex min-h-11 flex-1 cursor-not-allowed items-center justify-center gap-1 rounded-control bg-surface-muted px-2.5 text-xs font-bold text-text-muted">
+              <CircleCheck className="h-3.5 w-3.5" aria-hidden="true" />
 
               تم الصرف بالكامل
             </span>
@@ -175,7 +175,7 @@ export default function AssistantSalaryCard({ item, onPay, onOpenLog }) {
             <button
               type="button"
               onClick={() => onPay(item)}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-status-success text-white text-xs font-bold hover:opacity-90 transition-all shadow-sm"
+              className="focus-ring inline-flex min-h-11 flex-1 items-center justify-center gap-1 rounded-control bg-status-success px-2.5 text-xs font-bold text-text-inverse shadow-sm transition-all hover:opacity-90"
             >
               {statusKey === SALARY_STATUS.PARTIAL
                 ? `صرف ${formatCurrency(remaining, false)} ج.م`

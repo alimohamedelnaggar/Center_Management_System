@@ -14,25 +14,29 @@ export default function ConfirmModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+    <div
+      data-testid="confirm-modal"
+      className="fixed inset-0 z-[10000] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
+    >
       <div className="fixed inset-0" onClick={loading ? null : onClose} />
 
-      <div className="relative bg-surface-card border border-surface-border w-full max-w-md rounded-2xl p-6 shadow-xl z-10 space-y-4">
+      <div className="relative z-10 max-h-[calc(100dvh-2rem)] w-full max-w-md space-y-4 overflow-y-auto rounded-2xl border border-surface-border bg-surface-card p-6 shadow-xl">
         <button
           onClick={onClose}
           disabled={loading}
-          className="absolute top-4 left-4 text-text-muted hover:text-text-main p-1 rounded-lg transition-colors"
+          aria-label="إغلاق"
+          className="absolute top-2 left-2 inline-flex h-11 w-11 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-muted hover:text-text-main"
         >
-          <X className="w-5 h-5" />
+          <X className="h-5 w-5" />
         </button>
 
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-3 pe-8">
           <div className="p-3 bg-status-danger-bg text-status-danger rounded-xl">
             <AlertTriangle className="w-6 h-6" />
           </div>
           <div>
             <h3 className="text-base font-bold text-text-main">{title}</h3>
-            <p className="text-xs text-text-muted mt-0.5">{message}</p>
+            <p className="mt-0.5 text-sm text-text-muted">{message}</p>
           </div>
         </div>
 
@@ -41,7 +45,7 @@ export default function ConfirmModal({
             {details.map((detail) => (
               <div
                 key={detail.label}
-                className="flex items-center justify-between gap-2 text-xs"
+                className="flex items-center justify-between gap-2 text-sm"
               >
                 <span className="text-text-muted">{detail.label}</span>
                 <span className="font-bold text-text-main">
@@ -57,7 +61,7 @@ export default function ConfirmModal({
             type="button"
             onClick={onClose}
             disabled={loading}
-            className="px-4 py-2.5 rounded-xl text-xs font-bold text-text-muted hover:bg-surface-muted transition-colors"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl px-4 text-sm font-bold text-text-muted transition-colors hover:bg-surface-muted"
           >
             {cancelText}
           </button>
@@ -66,7 +70,7 @@ export default function ConfirmModal({
             type="button"
             onClick={onConfirm}
             disabled={loading}
-            className="px-4 py-2.5 rounded-xl text-xs font-bold bg-status-danger text-white hover:opacity-90 flex items-center gap-2 transition-all shadow-sm disabled:opacity-50"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-status-danger px-4 text-sm font-bold text-text-inverse shadow-sm transition-all hover:opacity-90 disabled:opacity-50"
           >
             {loading && <Loader2 className="w-4 h-4 animate-spin" />}
             <span>{confirmText}</span>

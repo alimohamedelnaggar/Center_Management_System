@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
-import { X } from "@/components/icons";
+import { Building2 } from "@/components/icons";
+
+import AdminModal from "../ui/AdminModal";
+import Button from "../ui/Button";
+import { fieldBaseClass } from "../ui/Input";
 import {
   STAFF_EMAIL_HELPER_TEXT,
   validateStaffEmail,
@@ -26,9 +30,8 @@ const toDateInput = (value) => {
   return date.toISOString().slice(0, 10);
 };
 
-const inputClass =
-  "w-full rounded-xl border border-surface-border bg-surface-muted p-2.5 text-text-main focus:border-primary focus:outline-none";
-const labelClass = "mb-1 block text-sm font-medium text-text-main";
+const inputClass = fieldBaseClass;
+const labelClass = "mb-1.5 block text-sm font-medium text-text-main";
 
 export default function CenterEditModal({ isOpen, center, onClose, onSubmit }) {
   const [form, setForm] = useState(emptyForm);
@@ -108,115 +111,104 @@ export default function CenterEditModal({ isOpen, center, onClose, onSubmit }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-surface-border bg-surface-card p-6 shadow-2xl">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-extrabold text-text-main">
-            تعديل المركز والاشتراك
-          </h2>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1 text-text-muted hover:bg-surface-muted"
-          >
-            <X size={20} />
-          </button>
+    <AdminModal
+      open={isOpen}
+      onClose={onClose}
+      title="تعديل المركز والاشتراك"
+      subtitle={center.name}
+      icon={Building2}
+      size="max-w-2xl"
+      testId="center-edit-modal"
+      formProps={{ onSubmit: handleSubmit, noValidate: true }}
+      footer={
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+          <Button type="button" variant="outline" onClick={onClose}>
+            إلغاء
+          </Button>
+          <Button type="submit">حفظ التغييرات</Button>
+        </div>
+      }
+    >
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <div className="md:col-span-2">
+          <label className={labelClass}>اسم المركز</label>
+          <input className={inputClass} value={form.name} onChange={setField("name")} />
         </div>
 
-        <form onSubmit={handleSubmit} noValidate className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="md:col-span-2">
-            <label className={labelClass}>اسم المركز</label>
-            <input className={inputClass} value={form.name} onChange={setField("name")} />
-          </div>
+        <div>
+          <label className={labelClass}>الهاتف</label>
+          <input
+            type="text"
+            dir="ltr"
+            className={inputClass}
+            value={form.phone}
+            onChange={setField("phone")}
+          />
+        </div>
 
-          <div>
-            <label className={labelClass}>الهاتف</label>
-            <input dir="ltr" className={inputClass} value={form.phone} onChange={setField("phone")} />
-          </div>
+        <div>
+          <label className={labelClass}>البريد الإلكتروني للمالك (اختياري)</label>
+          <input
+            type="email"
+            dir="ltr"
+            placeholder="name@example.com"
+            className={inputClass}
+            value={form.ownerEmail}
+            onChange={setField("ownerEmail")}
+          />
+          <p className="mt-1 text-sm text-text-muted">{STAFF_EMAIL_HELPER_TEXT}</p>
+        </div>
 
-          <div>
-            <label className={labelClass}>البريد الإلكتروني للمالك (اختياري)</label>
-            <input
-              type="email"
-              dir="ltr"
-              placeholder="name@example.com"
-              className={inputClass}
-              value={form.ownerEmail}
-              onChange={setField("ownerEmail")}
-            />
-            <p className="mt-1 text-xs text-text-muted">
-              {STAFF_EMAIL_HELPER_TEXT}
-            </p>
-          </div>
+        <div>
+          <label className={labelClass}>النوع</label>
+          <select className={inputClass} value={form.type} onChange={setField("type")}>
+            <option value="MultiTeacher">مركز (متعدد المدرسين)</option>
+            <option value="SoloTeacher">مدرس فردي</option>
+          </select>
+        </div>
 
-          <div>
-            <label className={labelClass}>النوع</label>
-            <select className={inputClass} value={form.type} onChange={setField("type")}>
-              <option value="MultiTeacher">مركز (متعدد المدرسين)</option>
-              <option value="SoloTeacher">مدرس فردي</option>
-            </select>
-          </div>
+        <div>
+          <label className={labelClass}>الخطة</label>
+          <input className={inputClass} value={form.plan} onChange={setField("plan")} />
+        </div>
 
-          <div className="md:col-span-2">
-            <label className={labelClass}>العنوان</label>
-            <input className={inputClass} value={form.address} onChange={setField("address")} />
-          </div>
+        <div className="md:col-span-2">
+          <label className={labelClass}>العنوان</label>
+          <input className={inputClass} value={form.address} onChange={setField("address")} />
+        </div>
 
-          <div className="md:col-span-2">
-            <label className={labelClass}>الوصف</label>
-            <input className={inputClass} value={form.description} onChange={setField("description")} />
-          </div>
+        <div className="md:col-span-2">
+          <label className={labelClass}>الوصف</label>
+          <input className={inputClass} value={form.description} onChange={setField("description")} />
+        </div>
 
-          <div className="md:col-span-2">
-            <label className={labelClass}>ملاحظات داخلية</label>
-            <input className={inputClass} value={form.notes} onChange={setField("notes")} />
-          </div>
+        <div className="md:col-span-2">
+          <label className={labelClass}>ملاحظات داخلية</label>
+          <input className={inputClass} value={form.notes} onChange={setField("notes")} />
+        </div>
 
-          <div>
-            <label className={labelClass}>الخطة</label>
-            <input className={inputClass} value={form.plan} onChange={setField("plan")} />
-          </div>
+        <div>
+          <label className={labelClass}>بداية الاشتراك</label>
+          <input
+            type="date"
+            dir="ltr"
+            className={inputClass}
+            value={form.subscriptionStart}
+            onChange={setField("subscriptionStart")}
+          />
+        </div>
 
-          <div />
-
-          <div>
-            <label className={labelClass}>بداية الاشتراك</label>
-            <input
-              type="date"
-              dir="ltr"
-              className={inputClass}
-              value={form.subscriptionStart}
-              onChange={setField("subscriptionStart")}
-            />
-          </div>
-
-          <div>
-            <label className={labelClass}>نهاية الاشتراك</label>
-            <input
-              type="date"
-              dir="ltr"
-              className={inputClass}
-              value={form.subscriptionEnd}
-              onChange={setField("subscriptionEnd")}
-            />
-          </div>
-
-          <div className="flex justify-end gap-3 md:col-span-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-xl border border-surface-border px-4 py-2 text-text-muted hover:bg-surface-muted"
-            >
-              إلغاء
-            </button>
-            <button
-              type="submit"
-              className="rounded-xl bg-primary px-5 py-2 font-bold text-white hover:bg-primary-hover"
-            >
-              حفظ التغييرات
-            </button>
-          </div>
-        </form>
+        <div>
+          <label className={labelClass}>نهاية الاشتراك</label>
+          <input
+            type="date"
+            dir="ltr"
+            className={inputClass}
+            value={form.subscriptionEnd}
+            onChange={setField("subscriptionEnd")}
+          />
+        </div>
       </div>
-    </div>
+    </AdminModal>
   );
 }

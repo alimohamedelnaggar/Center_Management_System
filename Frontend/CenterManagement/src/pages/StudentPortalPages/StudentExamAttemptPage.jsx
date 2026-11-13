@@ -6,16 +6,23 @@ import {
   Clock,
   Loader2,
   Maximize,
+  Save,
   Send,
   ShieldAlert,
   ShieldCheck,
+  X,
 } from "@/components/icons";
 import toast from "react-hot-toast";
 import ConfirmModal from "../../components/common/ConfirmModal";
+import AppModal from "../../components/ui/AppModal";
+import Button from "../../components/ui/Button";
 import { questionImageUrl } from "../../services/questionBankService";
 import { studentPortalService } from "../../services/studentPortalService";
 
 const TYPE = { ESSAY: 3 };
+
+const OFFLINE_SUBMIT_MESSAGE =
+  "لا يوجد اتصال. لم يُسلَّم الامتحان بعد، وإجاباتك محفوظة على هذا الجهاز — أعد المحاولة بعد عودة الاتصال.";
 
 const VIOLATION_LABELS = {
   "tab-switch": "مغادرة نافذة الامتحان",
@@ -45,6 +52,18 @@ function formatClock(seconds) {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
+function formatViolationTime(value) {
+  try {
+    return new Date(value).toLocaleTimeString("ar-EG", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  } catch {
+    return "";
+  }
+}
+
 export default function StudentExamAttemptPage() {
   const { attemptId } = useParams();
   const navigate = useNavigate();
@@ -61,6 +80,22 @@ export default function StudentExamAttemptPage() {
   const [focused, setFocused] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [violations, setViolations] = useState(0);
+  const [violationLog, setViolationLog] = useState([]);
+  const [showViolations, setShowViolations] = useState(false);
+
+  // Local answer draft: answers survive a dropped connection or a reload.
+  const [online, setOnline] = useState(() =>
+    typeof navigator === "undefined" ? true : navigator.onLine,
+  );
+  const [draftState, setDraftState] = useState("idle");
+
+  // Short viewport = phone landscape, or a portrait phone with the keyboard
+  // open. The sticky chrome has to stay under 20% of the visible height there,
+  // so it collapses to one row.
+  const [compactHeader, setCompactHeader] = useState(false);
+  const [fsWarningCollapsed, setFsWarningCollapsed] = useState(false);
+
+  const draftKey = useMemo(() => `exam-draft:${attemptId}`, [attemptId]);
 
   const deadlineRef = useRef(null);
   const autoSubmittedRef = useRef(false);
@@ -97,6 +132,10 @@ export default function StudentExamAttemptPage() {
       const label = VIOLATION_LABELS[type] ?? "مخالفة";
       toast.error(`تم تسجيل مخالفة: ${label}`, { id: `viol-${key}` });
       setViolations((v) => v + 1);
+      setViolationLog((log) => [
+        { type, label, at: new Date().toISOString() },
+        ...log,
+      ].slice(0, 50));
 
       studentPortalService.reportViolation(attemptId, type).catch(() => {});
     },
@@ -123,6 +162,11 @@ export default function StudentExamAttemptPage() {
         const res = await studentPortalService.submitAttempt(attemptId, payload);
 
         if (res?.succeeded) {
+          try {
+            localStorage.removeItem(draftKey);
+          } catch {
+            /* private mode — nothing else to clear */
+          }
           if (document.fullscreenElement) {
             document.exitFullscreen?.().catch(() => {});
           }
@@ -130,17 +174,25 @@ export default function StudentExamAttemptPage() {
           navigate("/student/results", { replace: true });
         } else {
           autoSubmittedRef.current = false;
-          toast.error(res?.message ?? "تعذّر تسليم الامتحان");
+          toast.error(
+            navigator.onLine === false
+              ? OFFLINE_SUBMIT_MESSAGE
+              : res?.message ?? "تعذّر تسليم الامتحان",
+          );
         }
       } catch {
         autoSubmittedRef.current = false;
-        toast.error("تعذّر تسليم الامتحان");
+        toast.error(
+          navigator.onLine === false
+            ? OFFLINE_SUBMIT_MESSAGE
+            : "تعذّر تسليم الامتحان",
+        );
       } finally {
         setSubmitting(false);
         if (auto) setShowConfirm(false);
       }
     },
-    [answers, attemptId, navigate, questions, submitting],
+    [answers, attemptId, draftKey, navigate, questions, submitting],
   );
 
   const loadAttempt = useCallback(async () => {
@@ -154,6 +206,19 @@ export default function StudentExamAttemptPage() {
         setViolations(res.data.violationCount ?? 0);
         deadlineRef.current =
           Date.now() + (res.data.remainingSeconds ?? 0) * 1000;
+
+        try {
+          const raw = localStorage.getItem(draftKey);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (parsed?.answers && typeof parsed.answers === "object") {
+              setAnswers(parsed.answers);
+              setDraftState("saved");
+            }
+          }
+        } catch {
+          /* a corrupt draft must never block the exam */
+        }
       } else {
         toast.error(res?.message ?? "فشل في تحميل الامتحان");
       }
@@ -162,11 +227,64 @@ export default function StudentExamAttemptPage() {
     } finally {
       setLoading(false);
     }
-  }, [attemptId]);
+  }, [attemptId, draftKey]);
 
   useEffect(() => {
     loadAttempt();
   }, [loadAttempt]);
+
+  // Keep the local draft in step with the answers. The draft is UI-only: the
+  // authoritative grade still comes from the submit payload.
+  useEffect(() => {
+    if (!attempt) return undefined;
+    if (Object.keys(answers).length === 0) return undefined;
+
+    const handle = setTimeout(() => {
+      try {
+        localStorage.setItem(
+          draftKey,
+          JSON.stringify({ answers, savedAt: Date.now() }),
+        );
+        setDraftState(online ? "saved" : "offline");
+      } catch {
+        setDraftState("offline");
+      }
+    }, 250);
+
+    return () => clearTimeout(handle);
+  }, [answers, attempt, draftKey, online]);
+
+  useEffect(() => {
+    const goOnline = () => setOnline(true);
+    const goOffline = () => setOnline(false);
+
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
+
+    return () => {
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const vv = window.visualViewport;
+
+    const measure = () => {
+      const height = vv?.height || window.innerHeight || 0;
+      setCompactHeader(height > 0 && height < 520);
+    };
+
+    measure();
+    vv?.addEventListener("resize", measure);
+    window.addEventListener("resize", measure);
+
+    return () => {
+      vv?.removeEventListener("resize", measure);
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
 
   // Countdown + auto submit
   useEffect(() => {
@@ -329,7 +447,10 @@ export default function StudentExamAttemptPage() {
   // ---------- Start screen (also the user gesture that enables fullscreen) ----------
   if (!started) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-surface-bg p-4 font-sans">
+      <div
+        data-testid="student-exam-start"
+        className="flex min-h-screen items-center justify-center bg-surface-bg p-4 font-sans"
+      >
         <div className="w-full max-w-lg rounded-2xl border border-surface-border bg-surface-card p-6 shadow-md">
           <div className="mb-4 flex items-center gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary-subtle text-primary">
@@ -346,21 +467,27 @@ export default function StudentExamAttemptPage() {
           </div>
 
           <ul className="mb-5 space-y-2">
-            {EXAM_RULES.map((rule) => (
-              <li
-                key={rule}
-                className="flex items-start gap-2 text-sm text-text-main"
-              >
-                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-status-warning" />
-                <span>{rule}</span>
-              </li>
-            ))}
+            {EXAM_RULES.map((rule, index) => {
+              const text =
+                !fsSupported && index === 0
+                  ? "متصفح هذا الجهاز لا يدعم ملء الشاشة؛ التزم بالبقاء داخل صفحة الامتحان وعدم مغادرتها."
+                  : rule;
+              return (
+                <li
+                  key={rule}
+                  className="flex items-start gap-2 text-sm text-text-main"
+                >
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-status-warning" />
+                  <span>{text}</span>
+                </li>
+              );
+            })}
           </ul>
 
           <button
             type="button"
             onClick={handleStart}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-text-inverse transition hover:bg-primary-hover"
+            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-text-inverse transition hover:bg-primary-hover"
           >
             <Maximize className="h-4 w-4" />
             بدء الامتحان
@@ -371,7 +498,10 @@ export default function StudentExamAttemptPage() {
   }
 
   return (
-    <div className="exam-lock min-h-screen bg-surface-bg font-sans">
+    <div
+      data-testid="student-exam-attempt"
+      className="exam-lock min-h-screen bg-surface-bg font-sans"
+    >
       <style>{`
         .exam-lock { user-select: none; -webkit-user-select: none; }
         .exam-lock textarea, .exam-lock input { user-select: text; -webkit-user-select: text; }
@@ -393,7 +523,7 @@ export default function StudentExamAttemptPage() {
           <button
             type="button"
             onClick={handleRefocus}
-            className="mt-1 inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-text-inverse transition hover:bg-primary-hover"
+            className="mt-1 inline-flex min-h-12 items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-text-inverse transition hover:bg-primary-hover"
           >
             <Maximize className="h-4 w-4" />
             العودة للامتحان
@@ -401,88 +531,180 @@ export default function StudentExamAttemptPage() {
         </div>
       )}
 
-      {fsSupported && started && !isFullscreen && (
-        <div className="sticky top-0 z-40 flex items-center justify-center gap-2 bg-status-warning-bg px-4 py-2 text-xs font-medium text-status-warning">
-          <AlertTriangle className="h-4 w-4" />
-          أنت خارج وضع ملء الشاشة.
-          <button
-            type="button"
-            onClick={requestFullscreen}
-            className="font-bold underline"
+      <div
+        data-testid="exam-sticky-header"
+        className="sticky top-0 z-40 border-b border-surface-border bg-surface-card shadow-sm"
+      >
+        {fsSupported && !isFullscreen && !fsWarningCollapsed && !compactHeader && (
+          <div
+            data-testid="exam-fullscreen-warning"
+            className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 bg-status-warning-bg px-3 py-1.5 text-xs font-medium text-status-warning"
           >
-            العودة لملء الشاشة
-          </button>
-        </div>
-      )}
-
-      <header className="sticky top-0 z-30 border-b border-surface-border bg-surface-card">
-        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 px-4 py-3 md:px-6">
-          <div className="min-w-0">
-            <h1 className="truncate text-base font-bold text-text-main">
-              {attempt.examName}
-            </h1>
-            <p className="text-xs text-text-muted">
-              أجب عن جميع الأسئلة • الدرجة الكلية {attempt.totalMark}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {violations > 0 && (
-              <div
-                title="عدد المخالفات المسجلة"
-                className="inline-flex items-center gap-2 rounded-lg bg-status-danger-bg px-3 py-2 text-sm font-bold text-status-danger"
-              >
-                <ShieldAlert className="h-4 w-4" />
-                {violations}
-              </div>
-            )}
-            <div
-              className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold ${
-                lowTime
-                  ? "bg-status-danger-bg text-status-danger"
-                  : "bg-primary-subtle text-primary"
-              }`}
-            >
-              <Clock className="h-4 w-4" />
-              {formatClock(remaining)}
-            </div>
+            <AlertTriangle className="h-4 w-4 shrink-0" />
+            <span>أنت خارج وضع ملء الشاشة.</span>
             <button
               type="button"
-              onClick={() => setShowConfirm(true)}
-              disabled={submitting}
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-text-inverse transition hover:bg-primary-hover disabled:opacity-70"
+              onClick={requestFullscreen}
+              className="min-h-11 rounded-lg px-2 text-sm font-bold underline"
             >
-              {submitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-              تسليم
+              ملء الشاشة
+            </button>
+            <button
+              type="button"
+              onClick={() => setFsWarningCollapsed(true)}
+              aria-label="إخفاء تحذير ملء الشاشة"
+              data-testid="exam-fullscreen-dismiss"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-status-warning transition hover:bg-status-warning/10"
+            >
+              <X className="h-4 w-4" />
             </button>
           </div>
-        </div>
+        )}
 
-        <div className="mx-auto max-w-4xl px-4 pb-2 md:px-6">
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface-muted">
+        <header data-testid="exam-header">
+          <div
+            className={`mx-auto max-w-4xl px-3 sm:px-4 md:px-6 ${
+              compactHeader ? "py-1" : "py-2"
+            }`}
+          >
             <div
-              className="h-full rounded-full bg-status-success transition-all"
-              style={{
-                width: `${questions.length ? (answeredCount / questions.length) * 100 : 0}%`,
-              }}
-            />
+              className={
+                compactHeader
+                  ? "flex items-center justify-between gap-2"
+                  : "flex flex-wrap items-center justify-between gap-2"
+              }
+            >
+              <div className="min-w-0 flex-1">
+                <h1 className="truncate text-sm font-bold text-text-main sm:text-base">
+                  {attempt.examName}
+                </h1>
+                <p
+                  className={`truncate text-[11px] text-text-muted ${
+                    compactHeader ? "hidden" : ""
+                  }`}
+                >
+                  أجب عن جميع الأسئلة • الدرجة الكلية {attempt.totalMark}
+                </p>
+              </div>
+
+              <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
+                {fsSupported && !isFullscreen && (compactHeader || fsWarningCollapsed) && (
+                  <button
+                    type="button"
+                    onClick={requestFullscreen}
+                    aria-label="العودة لملء الشاشة"
+                    data-testid="exam-fullscreen-inline"
+                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-status-warning-bg text-status-warning transition hover:bg-status-warning/20"
+                  >
+                    <Maximize className="h-4 w-4" />
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setShowViolations(true)}
+                  aria-label={`سجل المخالفات (${violations})`}
+                  data-testid="exam-violation-count"
+                  className={`inline-flex h-11 min-w-11 items-center justify-center gap-1 rounded-lg px-2 text-sm font-bold transition-colors ${
+                    violations > 0
+                      ? "bg-status-danger-bg text-status-danger hover:bg-status-danger hover:text-text-inverse"
+                      : "bg-surface-muted text-text-muted hover:bg-surface-border"
+                  }`}
+                >
+                  <ShieldAlert className="h-4 w-4" />
+                  <span className="num">{violations}</span>
+                </button>
+
+                <div
+                  role="timer"
+                  aria-label="الوقت المتبقي"
+                  data-testid="exam-timer"
+                  className={`inline-flex h-11 min-w-11 items-center justify-center gap-1 rounded-lg px-2 text-sm font-bold ${
+                    lowTime
+                      ? "bg-status-danger-bg text-status-danger"
+                      : "bg-primary-subtle text-primary"
+                  }`}
+                >
+                  <Clock className="h-4 w-4" />
+                  <span className="num">{formatClock(remaining)}</span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm(true)}
+                  disabled={submitting}
+                  data-testid="exam-submit"
+                  className="inline-flex h-11 items-center justify-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-bold text-text-inverse transition hover:bg-primary-hover disabled:opacity-70 sm:px-4"
+                >
+                  {submitting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                  تسليم
+                </button>
+              </div>
+            </div>
+
+            <div
+              className={
+                compactHeader ? "hidden" : "mt-2 flex items-center gap-2"
+              }
+            >
+              <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-surface-muted">
+                <div
+                  className="h-full rounded-full bg-status-success transition-all"
+                  style={{
+                    width: `${questions.length ? (answeredCount / questions.length) * 100 : 0}%`,
+                  }}
+                />
+              </div>
+              <span
+                data-testid="exam-draft-state"
+                className={`inline-flex shrink-0 items-center gap-1 text-[11px] font-medium ${
+                  draftState === "offline"
+                    ? "text-status-warning"
+                    : "text-text-muted"
+                }`}
+              >
+                {draftState === "offline" ? (
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                ) : (
+                  <Save className="h-3.5 w-3.5" />
+                )}
+                {draftState === "offline"
+                  ? "غير متصل — حفظ محلي"
+                  : draftState === "saved"
+                    ? "حفظ تلقائي"
+                    : "لم تُحفظ إجابة بعد"}
+              </span>
+            </div>
           </div>
-          <p className="mt-1 text-[11px] text-text-muted">
-            تمت الإجابة عن {answeredCount} من {questions.length} سؤال
-          </p>
-        </div>
-      </header>
+        </header>
+      </div>
 
       <main className="mx-auto max-w-4xl space-y-4 px-4 py-5 md:px-6">
+        {!online && (
+          <div
+            data-testid="exam-offline-note"
+            role="status"
+            className="flex items-start gap-2 rounded-xl border border-status-warning/40 bg-status-warning-bg px-3 py-2.5 text-xs font-medium leading-relaxed text-status-warning"
+          >
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>
+              لا يوجد اتصال بالإنترنت. إجاباتك تُحفظ على هذا الجهاز، وتُرسل عند
+              التسليم بعد عودة الاتصال.
+            </span>
+          </div>
+        )}
+
         {questions.map((q, index) => {
           const entry = answers[q.id] ?? {};
           return (
             <div
               key={q.id}
+              data-testid="exam-question"
+              data-question-type={q.type}
               className="rounded-xl border border-surface-border bg-surface-card p-4 shadow-sm md:p-5"
             >
               <div className="mb-3 flex items-start justify-between gap-3">
@@ -510,7 +732,7 @@ export default function StudentExamAttemptPage() {
                     )}
                   </div>
                 </div>
-                <span className="shrink-0 rounded-full bg-accent-light px-2 py-0.5 text-xs font-semibold text-accent">
+                <span className="shrink-0 rounded-full bg-accent-light px-2 py-0.5 text-xs font-semibold text-accent-hover">
                   {q.mark} درجة
                 </span>
               </div>
@@ -532,7 +754,7 @@ export default function StudentExamAttemptPage() {
                     return (
                       <label
                         key={opt.id}
-                        className={`flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 text-sm transition ${
+                        className={`flex min-h-11 cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 text-sm transition ${
                           selected
                             ? "border-primary bg-primary-subtle text-text-main"
                             : "border-surface-border bg-surface-bg text-text-main hover:bg-surface-muted"
@@ -569,7 +791,7 @@ export default function StudentExamAttemptPage() {
             type="button"
             onClick={() => setShowConfirm(true)}
             disabled={submitting}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-text-inverse transition hover:bg-primary-hover disabled:opacity-70"
+            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-text-inverse transition hover:bg-primary-hover disabled:opacity-70"
           >
             {submitting ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -581,13 +803,63 @@ export default function StudentExamAttemptPage() {
         </div>
       </main>
 
+      <AppModal
+        open={showViolations}
+        onClose={() => setShowViolations(false)}
+        title="سجل المخالفات"
+        icon={ShieldAlert}
+        testId="violation-log"
+        size="max-w-md"
+        footer={
+          <Button
+            variant="secondary"
+            block
+            onClick={() => setShowViolations(false)}
+          >
+            إغلاق
+          </Button>
+        }
+      >
+        <p className="mb-3 text-sm text-text-muted">
+          كل مخالفة تُسجَّل وتظهر للمدرس مع نتيجتك. إجمالي المخالفات:{" "}
+          <span className="num font-bold text-text-main">{violations}</span>
+        </p>
+
+        {violationLog.length === 0 ? (
+          <p className="rounded-control border border-dashed border-surface-border bg-surface-bg/60 px-3 py-4 text-center text-sm text-text-muted">
+            لا توجد مخالفات مسجلة خلال هذه الجلسة.
+          </p>
+        ) : (
+          <ul data-testid="violation-log-list" className="space-y-2">
+            {violationLog.map((entry, index) => (
+              <li
+                key={`${entry.type}-${entry.at}-${index}`}
+                className="flex items-start justify-between gap-3 rounded-control border border-surface-border bg-surface-bg/60 px-3 py-2.5"
+              >
+                <span className="flex min-w-0 items-center gap-2 text-sm text-text-main">
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-status-danger" />
+                  <span className="break-words">{entry.label}</span>
+                </span>
+                <span className="num shrink-0 text-xs text-text-muted">
+                  {formatViolationTime(entry.at)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </AppModal>
+
       <ConfirmModal
         isOpen={showConfirm}
         onClose={() => setShowConfirm(false)}
         onConfirm={() => submitExam(false)}
         loading={submitting}
         title="تسليم الامتحان"
-        message={`هل أنت متأكد من تسليم الامتحان؟ تمت الإجابة عن ${answeredCount} من ${questions.length} سؤال.`}
+        message={`هل أنت متأكد من تسليم الامتحان؟ تمت الإجابة عن ${answeredCount} من ${questions.length} سؤال.${
+          online
+            ? ""
+            : " تنبيه: لا يوجد اتصال حاليًا؛ إجاباتك محفوظة على هذا الجهاز، وسيتاح التسليم بعد عودة الاتصال."
+        }`}
         confirmText="تسليم"
         cancelText="إلغاء"
       />

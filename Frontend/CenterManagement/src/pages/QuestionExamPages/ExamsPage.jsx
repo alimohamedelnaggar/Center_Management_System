@@ -160,7 +160,7 @@ export default function ExamsPage() {
   };
 
   const inputClass =
-    "w-full rounded-lg border border-surface-border bg-surface-card px-3 py-2.5 text-sm text-text-main placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle";
+    "w-full min-h-11 rounded-lg border border-surface-border bg-surface-card px-3 py-2.5 text-sm text-text-main placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary-subtle";
 
   const handlePublishedChange = (examId, published) => {
     setExams((prev) =>
@@ -177,8 +177,67 @@ export default function ExamsPage() {
     );
   };
 
+  const renderExamActions = (exam, { compact = false } = {}) => {
+    const buttonClass = compact
+      ? "inline-flex h-11 w-11 items-center justify-center rounded-lg transition-colors"
+      : "inline-flex min-h-11 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-medium transition-colors";
+
+    return (
+      <div className="flex flex-wrap items-center gap-2">
+        {exam.mode === 2 && (
+          <button
+            type="button"
+            onClick={() => {
+              setResultsExam(exam);
+              setIsResultsOpen(true);
+            }}
+            aria-label={`نتائج ${exam.name}`}
+            title="النتائج"
+            className={`${buttonClass} bg-accent-light text-accent-hover hover:bg-accent hover:text-text-inverse`}
+          >
+            <BarChart3 className="h-4 w-4" />
+            {!compact && <span>النتائج</span>}
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={() => navigate(`/exams/${exam.id}/paper`)}
+          aria-label={`طباعة ${exam.name}`}
+          title="طباعة الامتحان"
+          className={`${buttonClass} bg-status-info-bg text-status-info hover:bg-status-info hover:text-text-inverse`}
+        >
+          <Printer className="h-4 w-4" />
+          {!compact && <span>طباعة</span>}
+        </button>
+        <button
+          type="button"
+          onClick={() => openEditExam(exam)}
+          aria-label={`تعديل ${exam.name}`}
+          title="تعديل"
+          className={`${buttonClass} bg-primary-subtle text-primary hover:bg-primary hover:text-text-inverse`}
+        >
+          <Pencil className="h-4 w-4" />
+          {!compact && <span>تعديل</span>}
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setSelectedExam(exam);
+            setIsDeleteOpen(true);
+          }}
+          aria-label={`حذف ${exam.name}`}
+          title="حذف"
+          className={`${buttonClass} bg-status-danger-bg text-status-danger hover:bg-status-danger hover:text-text-inverse`}
+        >
+          <Trash2 className="h-4 w-4" />
+          {!compact && <span>حذف</span>}
+        </button>
+      </div>
+    );
+  };
+
   return (
-    <div className="p-4 md:p-6 font-sans">
+    <div data-testid="exams-page" className="p-4 md:p-6 font-sans">
       {/* Header */}
       <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -190,7 +249,7 @@ export default function ExamsPage() {
         <button
           type="button"
           onClick={openAddExam}
-          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover"
+          className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-text-inverse shadow-sm transition-colors hover:bg-primary-hover"
         >
           <Plus className="h-4 w-4" />
           إنشاء امتحان
@@ -206,12 +265,14 @@ export default function ExamsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="ابحث باسم الامتحان..."
+            aria-label="بحث باسم الامتحان"
             className={`${inputClass} pr-10`}
           />
         </div>
         <select
           value={groupId}
           onChange={(e) => setGroupId(e.target.value)}
+          aria-label="المجموعة"
           className={inputClass}
         >
           <option value="">كل المجموعات</option>
@@ -224,6 +285,7 @@ export default function ExamsPage() {
         <select
           value={academicYearId}
           onChange={(e) => setAcademicYearId(e.target.value)}
+          aria-label="السنة الدراسية"
           className={inputClass}
         >
           <option value="">كل السنوات الدراسية</option>
@@ -236,6 +298,7 @@ export default function ExamsPage() {
         <select
           value={mode}
           onChange={(e) => setMode(e.target.value)}
+          aria-label="نوع الامتحان"
           className={inputClass}
         >
           <option value="">كل الأنواع</option>
@@ -245,6 +308,7 @@ export default function ExamsPage() {
         <select
           value={isPublished}
           onChange={(e) => setIsPublished(e.target.value)}
+          aria-label="حالة النشر"
           className={inputClass}
         >
           <option value="">كل حالات النشر</option>
@@ -260,6 +324,7 @@ export default function ExamsPage() {
               type="date"
               value={from}
               onChange={(e) => setFrom(e.target.value)}
+              aria-label="من تاريخ"
               className={`${inputClass} w-auto`}
             />
             <label className="text-xs font-medium text-text-muted">
@@ -269,6 +334,7 @@ export default function ExamsPage() {
               type="date"
               value={to}
               onChange={(e) => setTo(e.target.value)}
+              aria-label="إلى تاريخ"
               className={`${inputClass} w-auto`}
             />
             {(from || to) && (
@@ -278,7 +344,7 @@ export default function ExamsPage() {
                   setFrom("");
                   setTo("");
                 }}
-                className="rounded-lg border border-surface-border bg-surface-card px-3 py-2 text-xs font-medium text-text-muted transition hover:bg-surface-muted"
+                className="inline-flex min-h-11 items-center rounded-lg border border-surface-border bg-surface-card px-3 text-xs font-medium text-text-muted transition hover:bg-surface-muted"
               >
                 مسح التواريخ
               </button>
@@ -287,72 +353,61 @@ export default function ExamsPage() {
         </div>
       </div>
 
-      {/* Exams card */}
-      <div className="overflow-hidden rounded-xl border border-surface-border bg-surface-card shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-right">
-            <thead>
-              <tr className="border-b border-surface-border bg-surface-muted text-xs font-semibold text-text-muted">
-                <th className="w-12 px-4 py-3">#</th>
-                <th className="px-4 py-3">اسم الامتحان</th>
-                <th className="px-4 py-3">المجموعة</th>
-                <th className="px-4 py-3">السنة</th>
-                <th className="px-4 py-3">النوع</th>
-                <th className="px-4 py-3">التاريخ</th>
-                <th className="px-4 py-3">الأسئلة</th>
-                <th className="px-4 py-3">الدرجة</th>
-                <th className="px-4 py-3">الإجراءات</th>
-              </tr>
-            </thead>
-            <tbody>
-              {!loading &&
-                exams.map((exam, idx) => (
-                  <tr
-                    key={exam.id}
-                    className="border-b border-surface-border last:border-0 hover:bg-surface-muted/60"
-                  >
-                    <td className="px-4 py-3 text-sm text-text-muted">
-                      {(currentPage - 1) * pageSize + idx + 1}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex items-center gap-1.5 text-sm font-medium text-text-main">
-                        <FileText className="h-4 w-4 text-text-muted" />
-                        {exam.name}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-text-main">
+      {/* Exams: cards on phones, table from md */}
+      <div className="space-y-3">
+        <ul data-testid="exams-cards" className="space-y-3 md:hidden">
+          {loading && (
+            <li className="rounded-card border border-surface-border bg-surface-card p-8 text-center text-sm text-text-muted">
+              جاري التحميل...
+            </li>
+          )}
+
+          {!loading && exams.length === 0 && (
+            <li className="flex flex-col items-center gap-3 rounded-card border border-surface-border bg-surface-card p-8 text-center">
+              <FileText className="h-10 w-10 text-text-muted" />
+              <p className="text-sm text-text-muted">
+                لا توجد امتحانات بعد، اضغط "إنشاء امتحان".
+              </p>
+            </li>
+          )}
+
+          {!loading &&
+            exams.map((exam) => (
+              <li
+                key={exam.id}
+                className="rounded-card border border-surface-border bg-surface-card p-4 shadow-soft"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="flex items-center gap-1.5 break-words text-sm font-bold text-text-main">
+                      <FileText className="h-4 w-4 shrink-0 text-text-muted" />
+                      {exam.name}
+                    </p>
+                    <p className="mt-0.5 break-words text-sm text-text-muted">
                       {exam.groupName}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex rounded-full bg-primary-subtle px-2.5 py-1 text-xs font-medium text-primary">
-                        {exam.academicYearName}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
-                          exam.mode === 2
-                            ? "bg-status-info-bg text-status-info"
-                            : "bg-status-warning-bg text-status-warning"
-                        }`}
-                      >
-                        {exam.modeName}
-                      </span>
-                      {exam.mode === 2 && (
-                        <span
-                          className={`mt-1 block w-fit rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
-                            exam.isResultsPublished
-                              ? "bg-status-success-bg text-status-success"
-                              : "bg-surface-muted text-text-muted"
-                          }`}
-                        >
-                          {exam.isResultsPublished
-                            ? "النتائج منشورة"
-                            : "بانتظار النشر"}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-text-main">
+                    </p>
+                  </div>
+                  <span
+                    className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${
+                      exam.mode === 2
+                        ? "bg-status-info-bg text-status-info"
+                        : "bg-status-warning-bg text-status-warning"
+                    }`}
+                  >
+                    {exam.modeName}
+                  </span>
+                </div>
+
+                <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                  <div className="min-w-0">
+                    <dt className="text-text-muted">السنة</dt>
+                    <dd className="break-words text-text-main">
+                      {exam.academicYearName}
+                    </dd>
+                  </div>
+                  <div className="min-w-0">
+                    <dt className="text-text-muted">التاريخ</dt>
+                    <dd className="break-words text-text-main">
                       {new Date(exam.examDate).toLocaleDateString("ar-EG")}
                       {exam.mode === 2 && (
                         <span className="mt-0.5 block text-xs text-text-muted">
@@ -365,92 +420,160 @@ export default function ExamsPage() {
                             : ""}
                         </span>
                       )}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-text-main">
-                      {exam.questionsCount}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-text-main">
-                      {exam.totalMarks}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-text-muted">الأسئلة</dt>
+                    <dd className="num text-text-main">{exam.questionsCount}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-text-muted">الدرجة</dt>
+                    <dd className="num text-text-main">{exam.totalMarks}</dd>
+                  </div>
+                </dl>
+
+                {exam.mode === 2 && (
+                  <span
+                    className={`mt-3 inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
+                      exam.isResultsPublished
+                        ? "bg-status-success-bg text-status-success"
+                        : "bg-surface-muted text-text-muted"
+                    }`}
+                  >
+                    {exam.isResultsPublished
+                      ? "النتائج منشورة"
+                      : "بانتظار النشر"}
+                  </span>
+                )}
+
+                <div className="mt-3">{renderExamActions(exam)}</div>
+              </li>
+            ))}
+        </ul>
+
+        <div className="hidden overflow-hidden rounded-xl border border-surface-border bg-surface-card shadow-sm md:block">
+          <div className="overflow-x-auto">
+            <table className="w-full text-right">
+              <thead>
+                <tr className="border-b border-surface-border bg-surface-muted text-sm font-semibold text-text-muted">
+                  <th className="w-12 px-4 py-3">#</th>
+                  <th className="px-4 py-3">اسم الامتحان</th>
+                  <th className="px-4 py-3">المجموعة</th>
+                  <th className="px-4 py-3">السنة</th>
+                  <th className="px-4 py-3">النوع</th>
+                  <th className="px-4 py-3">التاريخ</th>
+                  <th className="px-4 py-3">الأسئلة</th>
+                  <th className="px-4 py-3">الدرجة</th>
+                  <th className="px-4 py-3">الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody>
+                {!loading &&
+                  exams.map((exam, idx) => (
+                    <tr
+                      key={exam.id}
+                      className="border-b border-surface-border last:border-0 hover:bg-surface-muted/60"
+                    >
+                      <td className="px-4 py-3 text-sm text-text-muted">
+                        {(currentPage - 1) * pageSize + idx + 1}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex items-center gap-1.5 text-sm font-medium text-text-main">
+                          <FileText className="h-4 w-4 text-text-muted" />
+                          {exam.name}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-text-main">
+                        {exam.groupName}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="inline-flex rounded-full bg-primary-subtle px-2.5 py-1 text-xs font-medium text-primary">
+                          {exam.academicYearName}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                            exam.mode === 2
+                              ? "bg-status-info-bg text-status-info"
+                              : "bg-status-warning-bg text-status-warning"
+                          }`}
+                        >
+                          {exam.modeName}
+                        </span>
                         {exam.mode === 2 && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setResultsExam(exam);
-                              setIsResultsOpen(true);
-                            }}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-accent-light text-accent transition-colors hover:bg-accent hover:text-text-inverse"
-                            title="النتائج"
+                          <span
+                            className={`mt-1 block w-fit rounded-full px-2.5 py-0.5 text-[11px] font-medium ${
+                              exam.isResultsPublished
+                                ? "bg-status-success-bg text-status-success"
+                                : "bg-surface-muted text-text-muted"
+                            }`}
                           >
-                            <BarChart3 className="h-4 w-4" />
-                          </button>
+                            {exam.isResultsPublished
+                              ? "النتائج منشورة"
+                              : "بانتظار النشر"}
+                          </span>
                         )}
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/exams/${exam.id}/paper`)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-status-info-bg text-status-info transition-colors hover:bg-status-info hover:text-text-inverse"
-                          title="طباعة الامتحان"
-                        >
-                          <Printer className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => openEditExam(exam)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary-subtle text-primary transition-colors hover:bg-primary hover:text-text-inverse"
-                          title="تعديل"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedExam(exam);
-                            setIsDeleteOpen(true);
-                          }}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-status-danger-bg text-status-danger transition-colors hover:bg-status-danger hover:text-text-inverse"
-                          title="حذف"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                      </td>
+                      <td className="px-4 py-3 text-sm text-text-main">
+                        {new Date(exam.examDate).toLocaleDateString("ar-EG")}
+                        {exam.mode === 2 && (
+                          <span className="mt-0.5 block text-xs text-text-muted">
+                            {new Date(exam.examDate).toLocaleTimeString("ar-EG", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                            {exam.durationMinutes
+                              ? ` — ${exam.durationMinutes} دقيقة`
+                              : ""}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-text-main">
+                        {exam.questionsCount}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-text-main">
+                        {exam.totalMarks}
+                      </td>
+                      <td className="px-4 py-3">
+                        {renderExamActions(exam, { compact: true })}
+                      </td>
+                    </tr>
+                  ))}
+
+                {!loading && exams.length === 0 && (
+                  <tr>
+                    <td colSpan={9} className="px-4 py-12 text-center">
+                      <div className="flex flex-col items-center justify-center gap-3">
+                        <FileText className="h-10 w-10 text-text-muted" />
+                        <p className="text-sm text-text-muted">
+                          لا توجد امتحانات بعد، اضغط "إنشاء امتحان".
+                        </p>
                       </div>
                     </td>
                   </tr>
-                ))}
+                )}
 
-              {!loading && exams.length === 0 && (
-                <tr>
-                  <td colSpan={9} className="px-4 py-12 text-center">
-                    <div className="flex flex-col items-center justify-center gap-3">
-                      <FileText className="h-10 w-10 text-text-muted" />
-                      <p className="text-sm text-text-muted">
-                        لا توجد امتحانات بعد، اضغط "إنشاء امتحان".
-                      </p>
-                    </div>
-                  </td>
-                </tr>
-              )}
-
-              {loading && (
-                <tr>
-                  <td colSpan={9} className="px-4 py-12 text-center text-sm text-text-muted">
-                    جاري التحميل...
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            totalItems={totalItems}
-            pageSize={pageSize}
-            name="امتحان"
-            onPageChange={setCurrentPage}
-          />
+                {loading && (
+                  <tr>
+                    <td colSpan={9} className="px-4 py-12 text-center text-sm text-text-muted">
+                      جاري التحميل...
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
+
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={totalItems}
+          pageSize={pageSize}
+          name="امتحان"
+          onPageChange={setCurrentPage}
+        />
       </div>
 
       <QuestionExamModal

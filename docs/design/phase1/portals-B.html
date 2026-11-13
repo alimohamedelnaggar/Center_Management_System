@@ -1,0 +1,544 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>المرحلة 1 — بوابتا الطالب وولي الأمر B</title>
+<link rel="stylesheet" href="app.css" />
+<link rel="stylesheet" href="compare.css" />
+<style>
+  body.v-after { overflow-x: clip; }
+  .board { max-width: 1320px; margin: 0 auto; padding: 26px 16px 60px; display: grid; gap: 26px; }
+  .board-head { display: grid; gap: 8px; }
+  .kicker { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: .14em; color: var(--text2); font-family: "Manrope", sans-serif; }
+  .kicker i { width: 22px; height: 2px; background: var(--primary); border-radius: 2px; }
+  .board-head h1 { font-size: clamp(24px, 3vw, 34px); letter-spacing: -.03em; }
+  .board-head p { max-width: 800px; color: var(--text2); font-size: 13.5px; }
+  .mode-head { display: flex; align-items: center; gap: 10px; }
+  .mode-head h2 { font-size: 18px; }
+  .mode-head small { font-size: 11.5px; color: var(--text2); }
+  .mode-head .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--primary); }
+  .mode-head .line { flex: 1; height: 1px; background: var(--border); }
+  .frames { display: grid; grid-template-columns: repeat(2, 390px); gap: 24px; justify-content: center; align-items: start; margin-top: 12px; }
+  .frame-wrap { margin: 0; display: grid; gap: 10px; }
+  .phone-title { display: grid; gap: 2px; padding: 0 4px; }
+  .phone-title b { font-size: 14px; }
+  .phone-title span { font-size: 11.5px; color: var(--text2); }
+
+  .phone {
+    width: 390px; height: 844px; padding: 9px; border-radius: 38px;
+    background: #0b102a; box-shadow: 0 30px 70px -34px rgba(11, 16, 42, .7), 0 0 0 1px rgba(11, 16, 42, .9);
+  }
+  .phone-screen {
+    position: relative; height: 100%; border-radius: 30px; overflow: hidden;
+    background: var(--bg); color: var(--text); display: flex; flex-direction: column;
+  }
+  /* every frame is self-contained: light tokens by default, dark tokens on .theme-dark */
+  .phone-screen {
+    --bg: #f4f5fb; --card: #ffffff; --muted: #eceef8; --border: #dde1f0;
+    --text: #101528; --text2: #5a6178;
+    --primary: #4f46e5; --primary-hover: #4338ca; --on-primary: #ffffff;
+    --primary-soft: #eef0fe;
+    --accent: #e11d48; --on-accent: #ffffff;
+    --ok: #067a52; --ok-bg: #ddf7ec; --warn: #9a5b00; --warn-bg: #fff0d6;
+    --err: #c81e3a; --err-bg: #ffe4e8; --info: #0b6fa4; --info-bg: #dff2ff;
+    --r-card: 18px; --r-ctl: 12px; --shadow: 0 1px 2px rgba(16,21,40,.04), 0 16px 34px -28px rgba(79,70,229,.45);
+  }
+  .phone-screen.theme-dark {
+    --bg: #080b18; --card: #121831; --muted: #1b2340; --border: #2a3357;
+    --text: #f2f4ff; --text2: #a8b0ca;
+    --primary: #8b93ff; --primary-hover: #a5abff; --on-primary: #0b102a;
+    --primary-soft: #232a52;
+    --accent: #ff7a93; --on-accent: #2a0810;
+    --ok: #4ce0a5; --ok-bg: #0b2a1f; --warn: #ffc857; --warn-bg: #2b230c;
+    --err: #ff8fa3; --err-bg: #2e0f18; --info: #6ec8ff; --info-bg: #0b2233;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 18px 40px -24px rgba(0,0,0,.8);
+  }
+
+  .pstat {
+    flex: 0 0 28px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 18px; font-size: 11px; font-weight: 700; background: var(--card);
+  }
+  .pstat .notch { width: 88px; height: 18px; border-radius: 999px; background: #0b102a; }
+  .pstat .sig { display: inline-flex; gap: 4px; }
+  .pstat .sig svg { width: 13px; height: 13px; }
+
+  .papp {
+    flex: 0 0 auto; display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; background: var(--card); border-bottom: 1px solid var(--border); min-height: 58px;
+  }
+  .papp h2 { font-size: 16px; letter-spacing: -.01em; }
+  .papp .sub { font-size: 10.5px; color: var(--text2); }
+  .papp .grow { flex: 1; min-width: 0; }
+  .papp .icon-btn { min-width: 44px; min-height: 44px; border-color: transparent; background: transparent; }
+  .papp .avatar { width: 36px; height: 36px; flex: 0 0 36px; background: var(--primary-soft); color: var(--primary); }
+  .pbody { flex: 1; min-height: 0; overflow: auto; padding: 12px; display: grid; gap: 12px; align-content: start; }
+
+  .pcard { background: var(--card); border: 1px solid var(--border); border-radius: var(--r-card); box-shadow: var(--shadow); }
+  .pcard-h { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px 6px; }
+  .pcard-h h3 { font-size: 14px; display: inline-flex; align-items: center; gap: 7px; }
+  .pcard-h h3 svg { width: 16px; height: 16px; color: var(--primary); }
+  .pcard-h a { font-size: 11px; color: var(--primary); min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; justify-content: flex-end; }
+  .pcard-b { padding: 0 14px 14px; }
+
+  .hello { display: flex; align-items: center; gap: 10px; }
+  .hello .avatar { width: 46px; height: 46px; flex: 0 0 46px; font-size: 15px; background: var(--primary-soft); color: var(--primary); border: 0; }
+  .hello b { display: block; font-size: 16px; }
+  .hello small { display: block; font-size: 11.5px; color: var(--text2); }
+
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .tile { padding: 12px; display: grid; gap: 4px; }
+  .tile .ic { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; margin-bottom: 2px; }
+  .tile .ic svg { width: 17px; height: 17px; }
+  .tile b { font-family: "Manrope", sans-serif; font-size: 20px; line-height: 1.2; }
+  .tile small { font-size: 11.5px; color: var(--text2); line-height: 1.35; }
+
+  .upnext { overflow: hidden; }
+  .upnext .band {
+    padding: 12px 14px; display: flex; align-items: center; gap: 10px;
+    background: linear-gradient(118deg, #4f46e5 0%, #6d4aee 52%, #a21caf 100%); color: #fff;
+  }
+  .theme-dark .upnext .band { background: linear-gradient(118deg, #3e36b8 0%, #5b3bc4 52%, #8a166f 100%); }
+  .upnext .band .ic { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; background: rgba(255,255,255,.18); }
+  .upnext .band .ic svg { width: 19px; height: 19px; }
+  .upnext .band b { display: block; font-size: 13.5px; }
+  .upnext .band small { display: block; font-size: 10.5px; opacity: .88; }
+  .upnext .band .pill { margin-inline-start: auto; background: rgba(255,255,255,.2); color: #fff; }
+  .upnext .row { padding: 10px 14px; display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--text2); flex-wrap: wrap; }
+  .upnext .row b { color: var(--text); font-size: 12.5px; }
+  .upnext .row svg { width: 13px; height: 13px; }
+
+  .perf { display: flex; align-items: flex-end; gap: 8px; height: 84px; padding: 4px 0 0; }
+  .perf i { flex: 1; border-radius: 5px 5px 2px 2px; background: var(--primary-soft); position: relative; }
+  .perf i b { position: absolute; bottom: -17px; inset-inline: 0; text-align: center; font-family: "Manrope", sans-serif; font-size: 9px; color: var(--text2); font-weight: 600; }
+  .perf i.on { background: var(--primary); }
+
+  .quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .quick a {
+    display: grid; justify-items: center; gap: 6px; padding: 12px 6px; border-radius: 12px;
+    background: var(--bg); border: 1px solid var(--border); font-size: 11px; color: var(--text2); text-align: center;
+  }
+  .quick a svg { width: 20px; height: 20px; color: var(--primary); }
+
+  .exam-item { display: flex; align-items: flex-start; gap: 10px; padding: 11px 14px; border-top: 1px solid var(--border); }
+  .exam-item:first-child { border-top: 0; }
+  .exam-item .ic { width: 36px; height: 36px; flex: 0 0 36px; border-radius: 11px; display: grid; place-items: center; }
+  .exam-item .ic svg { width: 17px; height: 17px; }
+  .exam-item .t { flex: 1; min-width: 0; }
+  .exam-item b { display: block; font-size: 14px; }
+  .exam-item small { display: block; font-size: 11px; color: var(--text2); }
+  .exam-item .side { display: grid; justify-items: end; gap: 4px; }
+
+  .child-card { padding: 12px 14px; display: grid; gap: 10px; }
+  .child-top { display: flex; align-items: center; gap: 10px; }
+  .child-top .avatar { width: 42px; height: 42px; flex: 0 0 42px; background: var(--primary-soft); color: var(--primary); border: 0; font-size: 14px; }
+  .child-top b { display: block; font-size: 14.5px; }
+  .child-top small { display: block; font-size: 11.5px; color: var(--text2); }
+  .child-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .child-stats span { display: block; padding: 6px; border-radius: 9px; background: var(--bg); text-align: center; }
+  .child-stats b { display: block; font-family: "Manrope", sans-serif; font-size: 13.5px; }
+  .child-stats small { font-size: 9.5px; color: var(--text2); }
+  .child-card .go { min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 6px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); font-size: 12px; font-weight: 700; color: var(--primary); }
+  .child-card .go svg { width: 15px; height: 15px; }
+
+  .notif { display: flex; gap: 9px; padding: 10px 14px; border-top: 1px solid var(--border); font-size: 12px; }
+  .notif:first-child { border-top: 0; }
+  .notif .sq { width: 30px; height: 30px; flex: 0 0 30px; border-radius: 9px; display: grid; place-items: center; }
+  .notif .sq svg { width: 15px; height: 15px; }
+  .notif b { display: block; font-size: 13px; }
+  .notif small { color: var(--text2); font-size: 10.5px; }
+
+  .person-hero { padding: 14px; display: flex; align-items: center; gap: 12px; }
+  .person-hero .avatar { width: 56px; height: 56px; flex: 0 0 56px; font-size: 18px; border: 0; background: var(--primary-soft); color: var(--primary); }
+  .person-hero b { display: block; font-size: 17px; }
+  .person-hero small { display: block; font-size: 11.5px; color: var(--text2); }
+  .summary3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .sum { padding: 10px 8px; text-align: center; }
+  .sum b { display: block; font-family: "Manrope", sans-serif; font-size: 18px; }
+  .sum small { font-size: 10.5px; color: var(--text2); }
+
+  .att-row, .pay-row, .res-row { display: flex; align-items: center; gap: 8px; padding: 9px 14px; border-top: 1px solid var(--border); font-size: 12px; }
+  .att-row:first-child, .pay-row:first-child, .res-row:first-child { border-top: 0; }
+  .att-row .d, .pay-row .d, .res-row .d { flex: 1; min-width: 0; }
+  .att-row small, .pay-row small, .res-row small { color: var(--text2); font-size: 10.5px; display: block; }
+  .att-row b, .pay-row b, .res-row b { font-size: 12.5px; }
+  .money { font-family: "Manrope", sans-serif; font-size: 12.5px; font-weight: 700; }
+
+  .ptabs {
+    flex: 0 0 auto; display: grid; border-top: 1px solid var(--border); background: var(--card);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .ptabs.five { grid-template-columns: repeat(5, 1fr); }
+  .ptabs.four { grid-template-columns: repeat(4, 1fr); }
+  .ptab {
+    position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; min-height: 58px; padding: 5px 2px 6px; font-size: 10.5px; color: var(--text2); font-weight: 600;
+  }
+  .ptab svg { width: 22px; height: 22px; }
+  .ptab[aria-current="page"] { color: var(--primary); font-weight: 800; }
+  .ptab[aria-current="page"]::before {
+    content: ""; position: absolute; top: 0; width: 26px; height: 3px; border-radius: 0 0 4px 4px; background: var(--primary);
+  }
+  .ptab .ndot { position: absolute; top: 7px; inset-inline-end: calc(50% - 17px); width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--card); }
+
+  @media (max-width: 840px) {
+    .frames { grid-template-columns: 390px; }
+  }
+  @media (max-width: 430px) {
+    .board { padding: 0; gap: 0; grid-template-columns: minmax(0, 1fr); }
+    .board > section { min-width: 0; }
+    .board-head { display: none; }
+    .mode-head { padding: 12px 14px 0; }
+    .frames { display: block; margin: 0; min-width: 0; }
+    .frame-wrap { gap: 0; min-width: 0; grid-template-columns: minmax(0, 1fr); }
+    .phone-title { padding: 10px 14px 6px; background: var(--bg); min-width: 0; grid-template-columns: minmax(0, 1fr); }
+    .phone-title b, .phone-title span { overflow-wrap: anywhere; }
+    .phone { width: 100%; height: 844px; padding: 0; border-radius: 0; box-shadow: none; }
+    .phone-screen { border-radius: 0; }
+    .pstat .notch { width: 76px; }
+  }
+</style>
+</head>
+<body class="v-after">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="11" width="3" height="6" rx="1"/><rect x="12.5" y="7" width="3" height="10" rx="1"/><rect x="18" y="13" width="3" height="4" rx="1"/></symbol>
+  <symbol id="i-calendar-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/><path d="m8.5 15 2.2 2.2 4.3-4.4"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5"/><path d="M16 13h.01"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="i-bell" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4.5v15l13-7.5-13-7.5Z"/></symbol>
+  <symbol id="i-check-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></symbol>
+  <symbol id="i-x-circle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6M15 9l-6 6"/></symbol>
+  <symbol id="i-chev-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-chev-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z"/></symbol>
+  <symbol id="i-receipt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22V4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v18l-3-2-3 2-3-2-3 2Z"/><path d="M9 7h6M9 11h6M9 15h3"/></symbol>
+  <symbol id="i-graduation" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="M6 10.5V17c0 1.7 2.7 3 6 3s6-1.3 6-3v-6.5"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3Z"/></symbol>
+  <symbol id="i-wifi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 8.5a15 15 0 0 1 20 0M5.5 12a10 10 0 0 1 13 0M9 15.5a5 5 0 0 1 6 0"/><circle cx="12" cy="19" r="1" fill="currentColor"/></symbol>
+  <symbol id="i-battery" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="7" width="17" height="10" rx="2.5"/><path d="M21 10.5v3" stroke-linecap="round"/><rect x="4.5" y="9.5" width="10" height="5" rx="1" fill="currentColor" stroke="none"/></symbol>
+</svg>
+
+<main class="board">
+  <header class="board-head">
+    <span class="kicker"><i></i> PHASE 1 · PORTALS B</span>
+    <h1>بوابتا الطالب وولي الأمر — شريط سفلي ثابت، وضعان</h1>
+    <p>
+      شريط سفلي ثابت مع نصوص صغيرة ومساحة آمنة (safe-area-inset-bottom)، 5 أيقونات للطالب
+      و4 لولي الأمر. الصفحات نفسها في الوضعين، والألوان تُبدَّل عبر نفس التوكنز.
+    </p>
+  </header>
+
+  <section aria-labelledby="light-title">
+    <div class="mode-head"><span class="dot"></span><h2 id="light-title">الوضع الفاتح</h2><small>#F4F5FB · #FFFFFF</small><span class="line"></span></div>
+    <div class="frames" id="frames-light">
+
+      <!-- 1 · student home -->
+      <figure class="frame-wrap">
+        <figcaption class="phone-title"><b>1 · الطالب — الرئيسية</b><span>5 أيقونات: الرئيسية، الامتحانات، النتائج، الحضور، المدفوعات</span></figcaption>
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="pstat"><span class="num">9:41</span><span class="notch"></span><span class="sig"><svg><use href="#i-wifi"/></svg><svg><use href="#i-battery"/></svg></span></div>
+            <header class="papp">
+              <div class="hello">
+                <div class="avatar">أ</div>
+                <div class="grow"><h2>أهلاً، أحمد محمود</h2><div class="sub">الصف الأول - أ · رياضيات</div></div>
+              </div>
+              <button class="icon-btn" type="button" aria-label="الإشعارات" style="position:relative">
+                <svg class="i"><use href="#i-bell"/></svg>
+                <span style="position:absolute;top:9px;inset-inline-end:9px;width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--card)"></span>
+              </button>
+            </header>
+
+            <div class="pbody">
+              <div class="tiles">
+                <div class="pcard tile"><div class="ic" style="background:var(--ok-bg);color:var(--ok)"><svg><use href="#i-play"/></svg></div><b>2</b><small>امتحانات متاحة الآن</small></div>
+                <div class="pcard tile"><div class="ic" style="background:var(--primary-soft);color:var(--primary)"><svg><use href="#i-chart"/></svg></div><b>86%</b><small>متوسط النتائج المنشورة</small></div>
+                <div class="pcard tile"><div class="ic" style="background:var(--info-bg);color:var(--info)"><svg><use href="#i-calendar-check"/></svg></div><b>92%</b><small>نسبة الحضور</small></div>
+                <div class="pcard tile"><div class="ic" style="background:var(--err-bg);color:var(--err)"><svg><use href="#i-wallet"/></svg></div><b><span class="num">850</span></b><small>المتبقي من الرسوم · ج.م</small></div>
+              </div>
+
+              <div class="pcard upnext">
+                <div class="band">
+                  <div class="ic"><svg><use href="#i-file"/></svg></div>
+                  <div><b>امتحان الوحدة الأولى</b><small>رياضيات · 20 سؤالًا · 30 دقيقة</small></div>
+                  <span class="pill"><i></i> اليوم 5:00 م</span>
+                </div>
+                <div class="row">
+                  <svg><use href="#i-clock"/></svg> <b>يبدأ بعد ساعتين</b>
+                  <button class="btn btn-primary" type="button" style="margin-inline-start:auto;min-height:44px;padding:0 16px">بدء الاختبار</button>
+                </div>
+              </div>
+
+              <div class="pcard">
+                <div class="pcard-h"><h3><svg><use href="#i-chart"/></svg> تطور الأداء عبر الزمن</h3><a href="#!">التفاصيل</a></div>
+                <div class="pcard-b">
+                  <div class="perf" role="img" aria-label="رسم أعمدة لدرجات آخر خمسة امتحانات">
+                    <i style="height:46%"><b>72</b></i>
+                    <i style="height:58%"><b>80</b></i>
+                    <i style="height:52%"><b>76</b></i>
+                    <i style="height:74%"><b>88</b></i>
+                    <i class="on" style="height:84%"><b>92</b></i>
+                  </div>
+                </div>
+              </div>
+
+              <div class="quick">
+                <a href="#!"><svg><use href="#i-book"/></svg> المذكرات</a>
+                <a href="#!"><svg><use href="#i-bell"/></svg> الإشعارات</a>
+                <a href="#!"><svg><use href="#i-user"/></svg> بياناتي</a>
+              </div>
+            </div>
+
+            <nav class="ptabs five" aria-label="تنقل الطالب">
+              <a class="ptab" href="#!" aria-current="page"><svg><use href="#i-home"/></svg> الرئيسية</a>
+              <a class="ptab" href="#!"><svg><use href="#i-file"/></svg> الامتحانات</a>
+              <a class="ptab" href="#!"><svg><use href="#i-chart"/></svg> النتائج</a>
+              <a class="ptab" href="#!"><svg><use href="#i-calendar-check"/></svg> الحضور</a>
+              <a class="ptab" href="#!"><svg><use href="#i-wallet"/></svg> المدفوعات</a>
+            </nav>
+          </div>
+        </div>
+      </figure>
+
+      <!-- 2 · student exams -->
+      <figure class="frame-wrap">
+        <figcaption class="phone-title"><b>2 · الطالب — الامتحانات</b><span>المتاح الآن مع مؤقّت، ثم القادم والمنتهي</span></figcaption>
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="pstat"><span class="num">9:41</span><span class="notch"></span><span class="sig"><svg><use href="#i-wifi"/></svg><svg><use href="#i-battery"/></svg></span></div>
+            <header class="papp">
+              <div class="grow"><h2>الامتحانات</h2><div class="sub">2 متاحة · 3 قادمة · 8 منتهية</div></div>
+              <button class="icon-btn" type="button" aria-label="تحديث"><svg class="i"><use href="#i-sparkle"/></svg></button>
+            </header>
+
+            <div class="pbody">
+              <div class="chip-row" style="display:flex;gap:6px">
+                <button class="pill" type="button" aria-pressed="true" style="min-height:44px;padding:0 16px;border:1px solid var(--primary);background:var(--primary);color:var(--on-primary)">المتاحة</button>
+                <button class="pill" type="button" aria-pressed="false" style="min-height:44px;padding:0 16px;border:1px solid var(--border);background:var(--card)">القادمة</button>
+                <button class="pill" type="button" aria-pressed="false" style="min-height:44px;padding:0 16px;border:1px solid var(--border);background:var(--card)">المنتهية</button>
+              </div>
+
+              <div class="pcard" style="border-color:var(--primary)">
+                <div class="pcard-b" style="padding:14px;display:grid;gap:10px">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span class="pill pill-brand"><i></i> متاح الآن</span>
+                    <span class="timer-chip" style="margin-inline-start:auto;display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;background:var(--muted);font-family:Manrope;font-size:13px;font-weight:800;direction:ltr"><svg style="width:14px;height:14px"><use href="#i-clock"/></svg>12:40</span>
+                  </div>
+                  <b style="font-size:15px">امتحان الوحدة الأولى — رياضيات</b>
+                  <small style="color:var(--text2);font-size:11.5px">20 سؤالًا · 30 دقيقة · ينتهي اليوم 6:30 م</small>
+                  <div class="progress" style="height:6px;border-radius:999px;background:var(--muted);overflow:hidden"><i style="display:block;height:100%;width:30%;background:var(--primary)"></i></div>
+                  <button class="btn btn-primary" type="button" style="width:100%">متابعة الاختبار <svg class="i"><use href="#i-chev-left"/></svg></button>
+                </div>
+              </div>
+
+              <div class="pcard">
+                <div class="pcard-h"><h3><svg><use href="#i-clock"/></svg> قادمة</h3><a href="#!">عرض الكل</a></div>
+                <div>
+                  <div class="exam-item">
+                    <div class="ic" style="background:var(--info-bg);color:var(--info)"><svg><use href="#i-file"/></svg></div>
+                    <div class="t"><b>امتحان العلوم — الوحدة الثانية</b><small>غدًا · 4:00 م · 25 دقيقة</small></div>
+                    <div class="side"><span class="pill pill-info"><i></i> غدًا</span></div>
+                  </div>
+                  <div class="exam-item">
+                    <div class="ic" style="background:var(--warn-bg);color:var(--warn)"><svg><use href="#i-file"/></svg></div>
+                    <div class="t"><b>امتحان اللغة العربية</b><small>الخميس · 5:30 م · 40 دقيقة</small></div>
+                    <div class="side"><span class="pill pill-warn"><i></i> الخميس</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pcard">
+                <div class="pcard-h"><h3><svg><use href="#i-check-circle"/></svg> منتهية</h3><a href="#!">النتائج</a></div>
+                <div>
+                  <div class="exam-item">
+                    <div class="ic" style="background:var(--ok-bg);color:var(--ok)"><svg><use href="#i-check-circle"/></svg></div>
+                    <div class="t"><b>امتحان الأسبوع الأول</b><small>رياضيات · تم النشر منذ يومين</small></div>
+                    <div class="side"><b style="font-family:Manrope;direction:ltr">18 / 20</b><small>90%</small></div>
+                  </div>
+                  <div class="exam-item">
+                    <div class="ic" style="background:var(--muted);color:var(--text2)"><svg><use href="#i-file"/></svg></div>
+                    <div class="t"><b>امتحان القواعد</b><small>عربي · بانتظار النشر</small></div>
+                    <div class="side"><span class="pill pill-mute"><i></i> غير منشور</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <nav class="ptabs five" aria-label="تنقل الطالب">
+              <a class="ptab" href="#!"><svg><use href="#i-home"/></svg> الرئيسية</a>
+              <a class="ptab" href="#!" aria-current="page"><svg><use href="#i-file"/></svg> الامتحانات</a>
+              <a class="ptab" href="#!"><svg><use href="#i-chart"/></svg> النتائج</a>
+              <a class="ptab" href="#!"><svg><use href="#i-calendar-check"/></svg> الحضور</a>
+              <a class="ptab" href="#!"><svg><use href="#i-wallet"/></svg> المدفوعات</a>
+            </nav>
+          </div>
+        </div>
+      </figure>
+
+      <!-- 3 · parent home -->
+      <figure class="frame-wrap">
+        <figcaption class="phone-title"><b>3 · ولي الأمر — الرئيسية</b><span>4 أيقونات: الرئيسية، الأبناء، الإشعارات، حسابي</span></figcaption>
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="pstat"><span class="num">9:41</span><span class="notch"></span><span class="sig"><svg><use href="#i-wifi"/></svg><svg><use href="#i-battery"/></svg></span></div>
+            <header class="papp">
+              <div class="grow"><h2>أبنائي</h2><div class="sub">الطلاب المرتبطون بحسابك في المركز</div></div>
+              <div class="avatar">م</div>
+            </header>
+
+            <div class="pbody">
+              <div class="pcard child-card">
+                <div class="child-top">
+                  <div class="avatar">أ</div>
+                  <div class="grow"><b>أحمد محمود</b><small>الصف الأول - أ · شهري</small></div>
+                  <span class="pill pill-ok"><i></i> نشط</span>
+                </div>
+                <div class="child-stats">
+                  <span><b>92%</b><small>الحضور</small></span>
+                  <span><b><span class="num">850</span></b><small>متبقي</small></span>
+                  <span><b>86%</b><small>المتوسط</small></span>
+                </div>
+                <a class="go" href="#!">عرض التفاصيل <svg><use href="#i-chev-left"/></svg></a>
+              </div>
+
+              <div class="pcard child-card">
+                <div class="child-top">
+                  <div class="avatar">س</div>
+                  <div class="grow"><b>سلمى إبراهيم</b><small>الصف الأول - ب · شهري</small></div>
+                  <span class="pill pill-ok"><i></i> نشط</span>
+                </div>
+                <div class="child-stats">
+                  <span><b>88%</b><small>الحضور</small></span>
+                  <span><b><span class="num">0</span></b><small>متبقي</small></span>
+                  <span><b>91%</b><small>المتوسط</small></span>
+                </div>
+                <a class="go" href="#!">عرض التفاصيل <svg><use href="#i-chev-left"/></svg></a>
+              </div>
+
+              <div class="pcard">
+                <div class="pcard-h"><h3><svg><use href="#i-bell"/></svg> آخر الإشعارات</h3><a href="#!">الكل</a></div>
+                <div>
+                  <div class="notif">
+                    <div class="sq" style="background:var(--ok-bg);color:var(--ok)"><svg><use href="#i-check-circle"/></svg></div>
+                    <div class="grow"><b>تم نشر نتيجة امتحان الرياضيات</b><small>أحمد · 18/20 · منذ ساعتين</small></div>
+                  </div>
+                  <div class="notif">
+                    <div class="sq" style="background:var(--warn-bg);color:var(--warn)"><svg><use href="#i-wallet"/></svg></div>
+                    <div class="grow"><b>تذكير بموعد سداد الاشتراك</b><small>أحمد · 850 ج.م · خلال 5 أيام</small></div>
+                  </div>
+                  <div class="notif">
+                    <div class="sq" style="background:var(--info-bg);color:var(--info)"><svg><use href="#i-calendar-check"/></svg></div>
+                    <div class="grow"><b>تسجيل حضور اليوم</b><small>سلمى · 9:05 ص · منذ 3 ساعات</small></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <nav class="ptabs four" aria-label="تنقل ولي الأمر">
+              <a class="ptab" href="#!" aria-current="page"><svg><use href="#i-home"/></svg> الرئيسية</a>
+              <a class="ptab" href="#!"><svg><use href="#i-users"/></svg> الأبناء</a>
+              <a class="ptab" href="#!"><svg><use href="#i-bell"/></svg> الإشعارات<span class="ndot"></span></a>
+              <a class="ptab" href="#!"><svg><use href="#i-user"/></svg> حسابي</a>
+            </nav>
+          </div>
+        </div>
+      </figure>
+
+      <!-- 4 · parent child details -->
+      <figure class="frame-wrap">
+        <figcaption class="phone-title"><b>4 · ولي الأمر — تفاصيل الابن</b><span>ملخص سريع ثم الحضور والمدفوعات والنتائج</span></figcaption>
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="pstat"><span class="num">9:41</span><span class="notch"></span><span class="sig"><svg><use href="#i-wifi"/></svg><svg><use href="#i-battery"/></svg></span></div>
+            <header class="papp">
+              <button class="icon-btn" type="button" aria-label="رجوع إلى أبنائي"><svg class="i"><use href="#i-chev-right"/></svg></button>
+              <div class="grow"><h2>تفاصيل الابن</h2><div class="sub">أحمد محمود · الصف الأول - أ</div></div>
+              <button class="icon-btn" type="button" aria-label="خيارات"><svg class="i"><use href="#i-sparkle"/></svg></button>
+            </header>
+
+            <div class="pbody">
+              <div class="pcard person-hero">
+                <div class="avatar">أ</div>
+                <div class="grow"><b>أحمد محمود السيد</b><small>الصف الأول - أ · شهري · انضم 2026-09-12</small><span class="pill pill-ok" style="margin-top:4px"><i></i> نشط</span></div>
+                <svg style="width:30px;height:30px;color:var(--text2)"><use href="#i-graduation"/></svg>
+              </div>
+
+              <div class="summary3">
+                <div class="pcard sum"><b style="color:var(--ok)">92%</b><small>الحضور</small></div>
+                <div class="pcard sum"><b><span class="num">850</span></b><small>المتبقي ج.م</small></div>
+                <div class="pcard sum"><b>86%</b><small>متوسط الدرجات</small></div>
+              </div>
+
+              <div class="pcard">
+                <div class="pcard-h"><h3><svg><use href="#i-calendar-check"/></svg> الحضور — آخر 4 حصص</h3><a href="#!">الكل</a></div>
+                <div>
+                  <div class="att-row"><div class="sq" style="width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:var(--ok-bg);color:var(--ok)"><svg style="width:14px;height:14px"><use href="#i-check-circle"/></svg></div><div class="d"><b>السبت 8 نوفمبر</b><small>حضر 9:05 ص</small></div><span class="pill pill-ok"><i></i> حاضر</span></div>
+                  <div class="att-row"><div class="sq" style="width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:var(--ok-bg);color:var(--ok)"><svg style="width:14px;height:14px"><use href="#i-check-circle"/></svg></div><div class="d"><b>الخميس 6 نوفمبر</b><small>حضر 9:12 ص</small></div><span class="pill pill-ok"><i></i> حاضر</span></div>
+                  <div class="att-row"><div class="sq" style="width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:var(--err-bg);color:var(--err)"><svg style="width:14px;height:14px"><use href="#i-x-circle"/></svg></div><div class="d"><b>الثلاثاء 4 نوفمبر</b><small>بدون إذن</small></div><span class="pill pill-err"><i></i> غائب</span></div>
+                  <div class="att-row"><div class="sq" style="width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:var(--ok-bg);color:var(--ok)"><svg style="width:14px;height:14px"><use href="#i-check-circle"/></svg></div><div class="d"><b>السبت 1 نوفمبر</b><small>حضر 9:00 ص</small></div><span class="pill pill-ok"><i></i> حاضر</span></div>
+                </div>
+              </div>
+
+              <div class="pcard">
+                <div class="pcard-h"><h3><svg><use href="#i-wallet"/></svg> المدفوعات</h3><a href="#!">الكل</a></div>
+                <div>
+                  <div class="pay-row"><div class="d"><b>اشتراك نوفمبر</b><small>دفعة نقدية · 2026-11-01</small></div><span class="money">850</span><span class="pill pill-ok"><i></i> مدفوع</span></div>
+                  <div class="pay-row"><div class="d"><b>اشتراك أكتوبر</b><small>دفعة نقدية · 2026-10-02</small></div><span class="money">850</span><span class="pill pill-ok"><i></i> مدفوع</span></div>
+                  <div class="pay-row"><div class="d"><b>اشتراك ديسمبر</b><small>مستحق خلال 21 يومًا</small></div><span class="money">850</span><span class="pill pill-warn"><i></i> مستحق</span></div>
+                </div>
+              </div>
+
+              <div class="pcard">
+                <div class="pcard-h"><h3><svg><use href="#i-chart"/></svg> النتائج المنشورة</h3><a href="#!">الكل</a></div>
+                <div>
+                  <div class="res-row"><div class="d"><b>امتحان الأسبوع الأول — رياضيات</b><small>نُشر منذ يومين</small></div><b style="font-family:Manrope;direction:ltr">18 / 20</b><span class="pill pill-ok"><i></i> 90%</span></div>
+                  <div class="res-row"><div class="d"><b>اختبار القواعد — عربي</b><small>نُشر منذ أسبوع</small></div><b style="font-family:Manrope;direction:ltr">16 / 20</b><span class="pill pill-ok"><i></i> 80%</span></div>
+                </div>
+              </div>
+            </div>
+
+            <nav class="ptabs four" aria-label="تنقل ولي الأمر">
+              <a class="ptab" href="#!"><svg><use href="#i-home"/></svg> الرئيسية</a>
+              <a class="ptab" href="#!" aria-current="page"><svg><use href="#i-users"/></svg> الأبناء</a>
+              <a class="ptab" href="#!"><svg><use href="#i-bell"/></svg> الإشعارات</a>
+              <a class="ptab" href="#!"><svg><use href="#i-user"/></svg> حسابي</a>
+            </nav>
+          </div>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+  <section aria-labelledby="dark-title">
+    <div class="mode-head"><span class="dot" style="background:#8b93ff"></span><h2 id="dark-title">الوضع الليلي</h2><small>#080B18 · #121831 · نفس المحتوى والقياسات</small><span class="line"></span></div>
+    <div class="frames" id="frames-dark"></div>
+  </section>
+
+  <p style="font-size:11.5px;color:var(--text2);border-top:1px solid var(--border);padding-top:12px">
+    كل الأرقام والأسماء تجريبية. الشريط السفلي يحترم <span class="mono" style="font-family:'IBM Plex Mono',monospace;direction:ltr">env(safe-area-inset-bottom)</span>
+    ولا يعتمد على hover؛ كل هدف لمس 44px أو أكثر.
+  </p>
+</main>
+
+<script>
+  (function () {
+    var light = document.getElementById("frames-light");
+    var dark = document.getElementById("frames-dark");
+    light.querySelectorAll(".frame-wrap").forEach(function (frame) {
+      var clone = frame.cloneNode(true);
+      clone.querySelectorAll(".phone-screen").forEach(function (screen) {
+        screen.classList.add("theme-dark");
+      });
+      dark.appendChild(clone);
+    });
+  })();
+</script>
+</body>
+</html>

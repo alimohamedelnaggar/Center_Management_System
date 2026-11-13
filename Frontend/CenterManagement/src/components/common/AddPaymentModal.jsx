@@ -1,6 +1,13 @@
-import { Calendar, Pencil, X } from "@/components/icons";
+import { Calendar, Pencil } from "@/components/icons";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+
+import AppModal from "@/components/ui/AppModal";
+import Button from "@/components/ui/Button";
+import FormField from "@/components/ui/FormField";
+import Input from "@/components/ui/Input";
+import Select from "@/components/ui/Select";
+import Textarea from "@/components/ui/Textarea";
 
 import { attendanceService } from "../../services/attendanceService";
 import { examService } from "../../services/examService";
@@ -538,8 +545,6 @@ const resetPaymentForm = () => {
           notes: notes || null,
         };
 
-        console.log("Update Payment Payload:", payload);
-
         const res = await financeService.updatePayment(payload);
 
         if (res?.succeeded) {
@@ -580,8 +585,6 @@ const resetPaymentForm = () => {
             : null,
       };
 
-      console.log("Add Payment Payload:", payload);
-
       const res = await financeService.addPayment(payload);
 
       if (res?.succeeded) {
@@ -612,7 +615,7 @@ const resetPaymentForm = () => {
     }
   };
 
-  if (!isOpen) return null;
+  const formDisabled = loadingSubmit;
 
   const subscriptionType = Number(
     paymentInfo?.subscriptionType ??
@@ -621,169 +624,161 @@ const resetPaymentForm = () => {
   );
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 dir-rtl text-right">
-      <div className="bg-white w-full max-w-lg max-h-[calc(100vh-40px)] rounded-3xl shadow-2xl overflow-hidden flex flex-col">
-        {/* =====================================================
-            Header
-        ===================================================== */}
-
-        <div className="p-6 pb-3 flex justify-between items-center shrink-0">
-          <div className="flex items-center gap-2">
-            {isEditMode ? (
-              <Pencil className="w-6 h-6 text-[#1e3a8a]" />
-            ) : (
-              <Calendar className="w-6 h-6 text-[#1e3a8a]" />
-            )}
-
-            <h2 className="text-xl font-bold text-[#1e3a8a]">
-              {isEditMode ? "تعديل عملية الدفع" : "إضافة دفعة مالية"}
-            </h2>
-          </div>
-
-          <button
-            type="button"
+    <AppModal
+      open={isOpen}
+      onClose={onClose}
+      busy={loadingSubmit}
+      title={isEditMode ? "تعديل عملية الدفع" : "إضافة دفعة مالية"}
+      icon={isEditMode ? Pencil : Calendar}
+      testId="payment-modal"
+      footer={
+        <div className="flex items-center gap-3">
+          <Button
+            variant="secondary"
             onClick={onClose}
-            className="p-1.5 text-gray-400 hover:text-gray-600 rounded-full hover:bg-gray-100 transition-colors"
+            disabled={formDisabled}
+            className="shrink-0"
           >
-            <X className="w-6 h-6" />
-          </button>
+            إلغاء
+          </Button>
+
+          <Button
+            type="submit"
+            form="payment-form"
+            block
+            loading={loadingSubmit}
+            disabled={formDisabled || !studentId || !groupId || !amount}
+            data-testid="payment-submit"
+          >
+            {loadingSubmit
+              ? isEditMode
+                ? "جاري التعديل..."
+                : "جاري الحفظ..."
+              : isEditMode
+                ? "حفظ التعديل"
+                : "حفظ الدفعة"}
+          </Button>
         </div>
+      }
+    >
+      <form id="payment-form" onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4 rounded-card border border-surface-border bg-surface-bg/60 p-4">
+          {/* =================================================
+              Group
+          ================================================= */}
 
-        {/* =====================================================
-            Form
-        ===================================================== */}
+          <FormField label="المجموعة" htmlFor="payment-group">
+            <Select
+              id="payment-group"
+              value={groupId}
+              onChange={handleGroupChange}
+              disabled={isEditMode || formDisabled}
+              required
+            >
+              <option value="">-- اختر المجموعة --</option>
 
-        <form
-          onSubmit={handleSubmit}
-          className="p-6 pt-3 space-y-4 overflow-y-auto"
-        >
-          <div className="bg-[#f8fafc] border border-gray-100 p-5 rounded-2xl space-y-4">
-            {/* =================================================
-                Group
-            ================================================= */}
+              {groups.map((g) => (
+                <option key={g.id || g.groupId} value={g.id || g.groupId}>
+                  {g.name || g.groupName}
+                </option>
+              ))}
+            </Select>
+          </FormField>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1.5">
-                المجموعة
-              </label>
+          {/* =================================================
+              Student
+          ================================================= */}
 
-              <select
-                value={groupId}
-                onChange={handleGroupChange}
-                disabled={isEditMode}
-                className={`w-full p-3 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]/20 focus:border-[#1e3a8a] transition ${
-                  isEditMode ? "bg-gray-100 cursor-not-allowed" : "bg-white"
-                }`}
-                required
-              >
-                <option value="">-- اختر المجموعة --</option>
+          <StudentSearchSelect
+            students={students}
+            value={studentId}
+            onChange={handleStudentChange}
+            disabled={!groupId || isEditMode || formDisabled}
+          />
 
-                {groups.map((g) => (
-                  <option key={g.id || g.groupId} value={g.id || g.groupId}>
-                    {g.name || g.groupName}
-                  </option>
-                ))}
-              </select>
+          {loadingStudentInfo && (
+            <p className="animate-pulse py-1 text-center text-sm text-text-muted">
+              جاري جلب بيانات الاشتراك...
+            </p>
+          )}
+
+          {/* =================================================
+              Edit Info
+          ================================================= */}
+
+          {isEditMode && (
+            <div className="rounded-control border border-status-warning/40 bg-status-warning-bg p-3 text-sm text-status-warning">
+              <span className="font-bold">تعديل عملية دفع موجودة</span>
+
+              <p className="mt-1">
+                يتم تعديل قيمة العملية الحالية فقط، مع الحفاظ على تاريخ تسجيل
+                الدفع.
+              </p>
             </div>
+          )}
 
-            {/* =================================================
-                Student
-            ================================================= */}
+          {/* =================================================
+              Payment Info
+          ================================================= */}
 
-            <StudentSearchSelect
-              students={students}
-              value={studentId}
-              onChange={handleStudentChange}
-              disabled={!groupId || isEditMode}
-            />
+          {(paymentInfo || isEditMode) && (
+            <div className="space-y-3 border-t border-surface-border pt-3">
+              <div className="flex items-center justify-between gap-3 text-sm font-semibold">
+                <span className="text-text-muted">نوع الاشتراك:</span>
 
-            {loadingStudentInfo && (
-              <div className="text-center py-2 text-xs text-gray-400 animate-pulse">
-                جاري جلب بيانات الاشتراك...
+                <span className="font-bold text-primary">
+                  {subscriptionType === 1 ? "بالحصة" : "شهري"}
+                </span>
               </div>
-            )}
 
-            {/* =================================================
-                Edit Info
-            ================================================= */}
+              {/* =============================================
+                  Session
+              ============================================= */}
 
-            {isEditMode && (
-              <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-800">
-                <span className="font-bold">تعديل عملية دفع موجودة</span>
+              {subscriptionType === 1 && (
+                <FormField
+                  label="الحصة"
+                  htmlFor="payment-session"
+                  helper={
+                    isEditMode
+                      ? "لا يمكن تغيير الحصة المرتبطة بعملية دفع سابقة."
+                      : undefined
+                  }
+                >
+                  <Select
+                    id="payment-session"
+                    value={selectedSessionId}
+                    onChange={(e) => setSelectedSessionId(e.target.value)}
+                    disabled={isEditMode || formDisabled}
+                    required
+                  >
+                    <option value="">-- اختر الحصة --</option>
 
-                <p className="mt-1">
-                  يتم تعديل قيمة العملية الحالية فقط، مع الحفاظ على تاريخ تسجيل
-                  الدفع.
-                </p>
-              </div>
-            )}
+                    {sessions.map((sess) => (
+                      <option key={sess.id} value={sess.id}>
+                        اليوم: {days[sess.dayOfWeek]}
+                      </option>
+                    ))}
+                  </Select>
+                </FormField>
+              )}
 
-            {/* =================================================
-                Payment Info
-            ================================================= */}
+              {/* =============================================
+                  Billing Period
+              ============================================= */}
 
-            {(paymentInfo || isEditMode) && (
-              <div className="pt-2 border-t border-gray-200 space-y-3">
-                <div className="flex justify-between items-center text-xs font-semibold">
-                  <span className="text-gray-500">نوع الاشتراك:</span>
-
-                  <span className="text-[#1e3a8a] font-bold">
-                    {subscriptionType === 1 ? "بالحصة" : "شهري"}
-                  </span>
-                </div>
-
-                {/* =============================================
-                    Session
-                ============================================= */}
-
-                {subscriptionType === 1 && (
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1.5">
-                      الحصة
-                    </label>
-
-                    <select
-                      value={selectedSessionId}
-                      onChange={(e) => setSelectedSessionId(e.target.value)}
-                      disabled={isEditMode}
-                      className={`w-full p-3 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]/20 focus:border-[#1e3a8a] ${
-                        isEditMode
-                          ? "bg-gray-100 cursor-not-allowed"
-                          : "bg-white"
-                      }`}
-                      required
-                    >
-                      <option value="">-- اختر الحصة --</option>
-
-                      {sessions.map((sess) => (
-                        <option key={sess.id} value={sess.id}>
-                          اليوم: {days[sess.dayOfWeek]}
-                        </option>
-                      ))}
-                    </select>
-
-                    {isEditMode && (
-                      <p className="text-[11px] text-gray-400 mt-1">
-                        لا يمكن تغيير الحصة المرتبطة بعملية دفع سابقة.
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {/* =============================================
-                    Billing Period
-                ============================================= */}
-
-                {subscriptionType === 2 && (
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 mb-1.5">
-                      الشهر المستحق للدفع
-                    </label>
-
-                    <select
+              {subscriptionType === 2 && (
+                <div className="space-y-3">
+                  <FormField
+                    label="الشهر المستحق للدفع"
+                    htmlFor="payment-billing-period"
+                  >
+                    <Select
+                      id="payment-billing-period"
                       value={selectedBillingPeriod}
-                      onChange={(e) => setSelectedBillingPeriod(e.target.value)}
-                      className="w-full p-3 rounded-xl border border-gray-200 bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]/20 focus:border-[#1e3a8a]"
+                      onChange={(e) =>
+                        setSelectedBillingPeriod(e.target.value)
+                      }
                       required
                     >
                       <option value="">-- اختر الشهر --</option>
@@ -793,194 +788,171 @@ const resetPaymentForm = () => {
                           {m.label}
                         </option>
                       ))}
-                    </select>
-                    {selectedBillingPeriod && paymentInfo && (
-                      <div className="space-y-2">
-                        <label className="block text-xs font-bold text-gray-500">
-                          طريقة الحساب
-                        </label>
+                    </Select>
+                  </FormField>
 
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setUseFullMonth(true);
-                              setSessionsCount("");
-                            }}
-                            className={`flex-1 py-2.5 rounded-xl text-xs font-bold border transition ${
-                              useFullMonth
-                                ? "bg-[#1e3a8a] text-white border-[#1e3a8a]"
-                                : "bg-white text-gray-600 border-gray-200"
-                            }`}
-                          >
-                            شهر كامل
-                          </button>
+                  {selectedBillingPeriod && paymentInfo && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-text-main">
+                        طريقة الحساب
+                      </p>
 
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setUseFullMonth(false);
-                              setSessionsCount(
-                                String(paymentInfo.attendedSessions || 1),
-                              );
-                            }}
-                            className={`flex-1 py-2.5 rounded-xl text-xs font-bold border transition ${
-                              !useFullMonth
-                                ? "bg-[#1e3a8a] text-white border-[#1e3a8a]"
-                                : "bg-white text-gray-600 border-gray-200"
-                            }`}
-                          >
-                            بعدد الحصص
-                          </button>
-                        </div>
+                      <div
+                        role="group"
+                        aria-label="طريقة الحساب"
+                        className="grid grid-cols-1 gap-2 xs:grid-cols-2"
+                      >
+                        <button
+                          type="button"
+                          aria-pressed={useFullMonth}
+                          onClick={() => {
+                            setUseFullMonth(true);
+                            setSessionsCount("");
+                          }}
+                          className={`min-h-11 rounded-control border px-3 py-2 text-sm font-bold transition-colors ${
+                            useFullMonth
+                              ? "border-primary bg-primary text-primary-contrast"
+                              : "border-surface-border bg-surface-card text-text-main hover:bg-surface-muted"
+                          }`}
+                        >
+                          شهر كامل
+                        </button>
 
-                        {!useFullMonth && (
-                          <div>
-                            <input
-                              type="number"
-                              min="1"
-                              max={paymentInfo.sessionsPerMonth}
-                              value={sessionsCount}
-                              onChange={(e) => setSessionsCount(e.target.value)}
-                              className="w-full p-3 rounded-xl border border-gray-200 bg-white text-sm font-bold"
-                              placeholder="عدد الحصص"
-                            />
-                            <p className="text-[11px] text-gray-400 mt-1">
-                              حضر فعلياً {paymentInfo.attendedSessions} حصة هذا
-                              الشهر — يمكنك التعديل.
-                            </p>
-                          </div>
-                        )}
+                        <button
+                          type="button"
+                          aria-pressed={!useFullMonth}
+                          onClick={() => {
+                            setUseFullMonth(false);
+                            setSessionsCount(
+                              String(paymentInfo.attendedSessions || 1),
+                            );
+                          }}
+                          className={`min-h-11 rounded-control border px-3 py-2 text-sm font-bold transition-colors ${
+                            !useFullMonth
+                              ? "border-primary bg-primary text-primary-contrast"
+                              : "border-surface-border bg-surface-card text-text-main hover:bg-surface-muted"
+                          }`}
+                        >
+                          بعدد الحصص
+                        </button>
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
 
-            {/* =================================================
-                Amount
-            ================================================= */}
-            {subscriptionType === 2 && selectedBillingPeriod && (
-              <PaymentBreakdownCard info={paymentInfo} amount={amount} />
-            )}
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1.5">
-                المبلغ (ج.م)
-              </label>
-
-              <input
-                type="number"
-                min="0.01"
-                step="0.01"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="w-full p-3 rounded-xl border border-gray-200 bg-white text-gray-800 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]/20 focus:border-[#1e3a8a]"
-                placeholder="0"
-                required
-              />
-
-              {isEditMode && (
-                <p className="text-[11px] text-gray-400 mt-1">
-                  اكتب قيمة الدفعة الجديدة.
-                </p>
+                      {!useFullMonth && (
+                        <FormField
+                          label="عدد الحصص"
+                          htmlFor="payment-sessions-count"
+                          helper={`حضر فعلياً ${paymentInfo.attendedSessions} حصة هذا الشهر — يمكنك التعديل.`}
+                        >
+                          <Input
+                            id="payment-sessions-count"
+                            type="number"
+                            inputMode="numeric"
+                            min="1"
+                            max={paymentInfo.sessionsPerMonth}
+                            value={sessionsCount}
+                            onChange={(e) => setSessionsCount(e.target.value)}
+                            placeholder="عدد الحصص"
+                            className="num font-bold"
+                          />
+                        </FormField>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
-            {paymentInfo?.remainingAmount > 0 && !isEditMode && (
-              <button
-                type="button"
-                onClick={() => setAmount(String(paymentInfo.remainingAmount))}
-                className="text-[11px] font-bold text-[#1e3a8a] mt-1 hover:underline"
-              >
-                دفع المتبقي كامل ({paymentInfo.remainingAmount} ج.م)
-              </button>
-            )}
-            {/* =================================================
-                Payment Date
-            ================================================= */}
+          )}
+        </div>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1.5">
-                تاريخ الدفع
-              </label>
+        {/* =================================================
+            Amount breakdown
+        ================================================= */}
 
-              <input
-                type="date"
-                value={paymentDate}
-                disabled={isEditMode}
-                onChange={(e) => setPaymentDate(e.target.value)}
-                className={`w-full p-3 rounded-xl border border-gray-200 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]/20 focus:border-[#1e3a8a] ${
-                  isEditMode ? "bg-gray-100 cursor-not-allowed" : "bg-white"
-                }`}
-                required
-              />
+        {subscriptionType === 2 && selectedBillingPeriod && (
+          <PaymentBreakdownCard info={paymentInfo} amount={amount} />
+        )}
 
-              {isEditMode && (
-                <p className="text-[11px] text-gray-400 mt-1">
-                  تاريخ العملية لا يتم تغييره أثناء التعديل.
-                </p>
-              )}
-            </div>
+        {/* =================================================
+            Amount
+        ================================================= */}
 
-            {/* Received By - set server-side, not from client */}
-            <div className="flex items-center gap-2 pt-1">
-              <span className="text-xs text-gray-500 font-bold">
-                collected by
-              </span>
-              <span className="font-bold text-gray-900">
-                {paymentInfo?.receivedByName || "-"}
-              </span>
-            </div>
+        <FormField
+          label="المبلغ (ج.م)"
+          htmlFor="payment-amount"
+          helper={isEditMode ? "اكتب قيمة الدفعة الجديدة." : undefined}
+        >
+          <Input
+            id="payment-amount"
+            data-testid="payment-amount"
+            type="number"
+            inputMode="decimal"
+            min="0.01"
+            step="0.01"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="0"
+            required
+            className="num text-lg font-bold"
+          />
+        </FormField>
 
-            {/* =================================================
-                Notes
-            ================================================= */}
+        {paymentInfo?.remainingAmount > 0 && !isEditMode && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setAmount(String(paymentInfo.remainingAmount))}
+            className="text-primary"
+          >
+            دفع المتبقي كامل ({paymentInfo.remainingAmount} ج.م)
+          </Button>
+        )}
 
-            <div>
-              <label className="block text-xs font-bold text-gray-500 mb-1.5">
-                ملاحظات
-              </label>
+        {/* =================================================
+            Payment Date
+        ================================================= */}
 
-              <textarea
-                rows={2}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="w-full p-3 rounded-xl border border-gray-200 bg-white text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e3a8a]/20 focus:border-[#1e3a8a] resize-none"
-                placeholder="أية ملاحظات إضافية..."
-              />
-            </div>
+        <FormField
+          label="تاريخ الدفع"
+          htmlFor="payment-date"
+          helper={
+            isEditMode
+              ? "تاريخ العملية لا يتم تغييره أثناء التعديل."
+              : undefined
+          }
+        >
+          <Input
+            id="payment-date"
+            type="date"
+            value={paymentDate}
+            disabled={isEditMode || formDisabled}
+            onChange={(e) => setPaymentDate(e.target.value)}
+            required
+            className="num"
+          />
+        </FormField>
 
-            {/* =================================================
-                Buttons
-            ================================================= */}
+        {/* Received By - set server-side, not from client */}
+        <div className="flex items-center justify-between gap-2 rounded-control border border-surface-border bg-surface-card px-3 py-2.5">
+          <span className="text-sm text-text-muted">استلمها</span>
+          <span className="num font-bold text-text-main">
+            {paymentInfo?.receivedByName || "-"}
+          </span>
+        </div>
 
-            <div className="flex items-center gap-3 pt-2">
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={loadingSubmit}
-                className="px-6 py-3 rounded-2xl bg-[#f1f5f9] text-gray-600 font-bold hover:bg-gray-200 transition-colors text-sm disabled:opacity-50"
-              >
-                إلغاء
-              </button>
+        {/* =================================================
+            Notes
+        ================================================= */}
 
-              <button
-                type="submit"
-                disabled={loadingSubmit || !studentId || !groupId || !amount}
-                className="flex-1 py-3 rounded-2xl bg-[#1e3a8a] hover:bg-[#1e3a8a]/90 text-white font-bold transition-colors disabled:opacity-50 text-sm shadow-sm"
-              >
-                {loadingSubmit
-                  ? isEditMode
-                    ? "جاري التعديل..."
-                    : "جاري الحفظ..."
-                  : isEditMode
-                    ? "حفظ التعديل"
-                    : "حفظ الدفعة"}
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
+        <FormField label="ملاحظات" htmlFor="payment-notes">
+          <Textarea
+            id="payment-notes"
+            rows={2}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="أية ملاحظات إضافية..."
+          />
+        </FormField>
+      </form>
+    </AppModal>
   );
 }

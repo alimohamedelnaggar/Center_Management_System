@@ -2,13 +2,16 @@ import { useEffect, useState } from "react";
 import {
   Trash2,
   Folder,
-  Loader2,
   Edit,
-  X,
   Calendar,
   Users,
   Clock,
 } from "@/components/icons";
+import AppModal from "@/components/ui/AppModal";
+import Button from "@/components/ui/Button";
+import Card, { CardBody } from "@/components/ui/Card";
+import EmptyState from "@/components/ui/EmptyState";
+import Skeleton from "@/components/ui/Skeleton";
 import { groupsService } from "../../services/groupsService";
 import { useAuth } from "../../context/useAuth";
 import toast from "react-hot-toast";
@@ -31,6 +34,20 @@ const DAYS_AR = [
   "الجمعة",
   "السبت",
 ];
+
+// The group form numbers the week from Saturday (0) to Friday (6); the API
+// returns .NET DayOfWeek (0 = Sunday). Keep the two mappings in one place.
+const apiDayToFormDay = (dayOfWeek) => (Number(dayOfWeek) + 1) % 7;
+
+const readSchedule = (group) =>
+  (group?.schedule || group?.Schedule || [])
+    .map((slot) => ({
+      dayIndex: apiDayToFormDay(slot.dayOfWeek ?? slot.DayOfWeek ?? 0),
+      startTime: String(slot.startTime ?? slot.StartTime ?? "").slice(0, 5),
+      endTime: String(slot.endTime ?? slot.EndTime ?? "").slice(0, 5),
+    }))
+    .filter((slot) => slot.startTime && slot.endTime)
+    .sort((a, b) => a.dayIndex - b.dayIndex);
 
 export default function GroupsList({ readOnly = false }) {
   const { isSoloCenter } = useAuth();
@@ -55,8 +72,10 @@ export default function GroupsList({ readOnly = false }) {
     id: null,
     name: "",
     monthlyPrice: 0,
+    perSessionPrice: 0,
     sessionsPerMonth: 8,
     teacherId: "",
+    schedule: [],
   });
   const PAGE_SIZE = 6;
   const fetchGroups = async (pageNumber) => {
@@ -83,11 +102,16 @@ export default function GroupsList({ readOnly = false }) {
     setEditGroupData({
       id: group.id,
       name: group.name || group.Name || "",
-      monthlyPrice: group.monthlyPrice || 0,
-      sessionsPerMonth: group.sessionsPerMonth || 8,
+      monthlyPrice: group.monthlyPrice ?? group.MonthlyPrice ?? 0,
+      perSessionPrice: group.perSessionPrice ?? group.PerSessionPrice ?? 0,
+      sessionsPerMonth:
+        group.sessionsPerMonth ?? group.SessionsPerMonth ?? 8,
       // Preload the currently linked teacher so a multi-center edit cannot
       // silently drop the TeacherGroup link.
       teacherId: group.teacherId || group.TeacherId || "",
+      // Preload the real session rows so editing a price does not wipe the
+      // weekly schedule.
+      schedule: readSchedule(group),
     });
     setIsEditOpen(true);
   };
@@ -98,7 +122,13 @@ export default function GroupsList({ readOnly = false }) {
         Id: editGroupData.id,
         Name: data.name,
         MonthlyPrice: Number(data.monthlyPrice) || 0,
+        PerSessionPrice: Number(data.perSessionPrice) || 0,
         SessionsPerMonth: Number(data.sessionsPerMonth) || 8,
+        Schedule: (data.schedule || []).map((slot) => ({
+          DayIndex: slot.dayIndex,
+          StartTime: slot.startTime,
+          EndTime: slot.endTime,
+        })),
       };
 
       // Solo centers let the backend link the center teacher automatically; a
@@ -111,6 +141,7 @@ export default function GroupsList({ readOnly = false }) {
 
       toast.success("تم تعديل بيانات المجموعة بنجاح!");
       setIsEditOpen(false);
+      fetchGroups(page);
     } catch (err) {
       toast.error("حدث خطأ أثناء تعديل بيانات المجموعة");
       console.error(err);
@@ -157,8 +188,12 @@ export default function GroupsList({ readOnly = false }) {
     });
 
     groupConnection.on("GroupUpdated", (updatedGroup) => {
+      // The hub payload only carries the name and prices; merge it so the
+      // schedule and the student counter are not dropped from the card.
       setGroups((prevGroups) =>
-        prevGroups.map((g) => (g.id === updatedGroup.id ? updatedGroup : g)),
+        prevGroups.map((g) =>
+          g.id === updatedGroup.id ? { ...g, ...updatedGroup } : g,
+        ),
       );
       toast.success(
         `تم تحديث بيانات المجموعة: ${updatedGroup.name || updatedGroup.Name}`,
@@ -179,129 +214,159 @@ export default function GroupsList({ readOnly = false }) {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-20">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div
+        data-testid="groups-loading"
+        className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+      >
+        {Array.from({ length: 6 }).map((_, index) => (
+          <Card key={index}>
+            <CardBody className="space-y-3">
+              <Skeleton className="h-5 w-2/3" />
+              <Skeleton className="h-4 w-1/3" />
+              <Skeleton className="h-16 w-full" />
+              <Skeleton className="h-11 w-full" />
+            </CardBody>
+          </Card>
+        ))}
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="mx-auto max-w-7xl space-y-6">
       {groups.length === 0 ? (
-        <div className="bg-surface-card border border-surface-border rounded-2xl p-12 text-center">
-          <Folder className="w-12 h-12 text-text-muted mx-auto mb-3 opacity-40" />
-          <p className="text-text-muted font-semibold text-sm">
-            {readOnly
-              ? "لا توجد مجموعات مرتبطة بك حالياً."
-              : "لا توجد مجموعات حالياً. قم بإضافة مجموعة جديدة للبدء."}
-          </p>
-        </div>
+        <Card data-testid="groups-empty">
+          <EmptyState
+            icon={Folder}
+            title={readOnly ? "لا توجد مجموعات مرتبطة بك" : "لا توجد مجموعات بعد"}
+            description={
+              readOnly
+                ? "ستظهر المجموعات هنا بمجرد ربط حسابك بها."
+                : "أضف أول مجموعة من تبويب «إضافة مجموعة جديدة» للبدء."
+            }
+          />
+        </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {groups.map((group) => {
             const schedule = group.schedule || group.Schedule || [];
             return (
-              <div
+              <Card
                 key={group.id}
-                className="bg-surface-card border border-surface-border p-4 sm:p-5 rounded-2xl shadow-xs hover:border-primary/40 transition-all duration-200 flex flex-col justify-between gap-4"
+                data-testid={`group-card-${group.id}`}
+                className="flex flex-col justify-between transition-colors hover:border-primary/40"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="p-3 rounded-xl bg-primary-subtle text-primary shrink-0">
-                      <Folder className="w-5 h-5" />
+                <CardBody className="flex flex-1 flex-col gap-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-primary-subtle text-primary">
+                        <Folder className="h-5 w-5" aria-hidden="true" />
+                      </div>
+                      <div className="min-w-0">
+                        <h4 className="truncate text-sm font-bold text-text-main">
+                          {group.name || group.Name}
+                        </h4>
+                        <span className="mt-0.5 inline-flex items-center gap-1 text-xs font-semibold text-text-muted">
+                          <Users className="h-3 w-3 text-primary" aria-hidden="true" />
+                          {group.totalStudentsCount || 0} طالب
+                        </span>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <h4 className="font-bold text-sm text-text-main truncate">
-                        {group.name || group.Name}
-                      </h4>
-                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-text-muted mt-0.5">
-                        <Users className="w-3 h-3 text-primary" />
-                        {group.totalStudentsCount || 0} طالب
-                      </span>
-                    </div>
-                  </div>
 
-                  {!readOnly && (
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        onClick={() => openEditModal(group)}
-                        className="p-2 text-text-muted hover:text-primary hover:bg-primary-subtle rounded-xl transition-colors cursor-pointer"
-                        title="تعديل"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => openDeleteModal(group.id)}
-                        className="p-2 text-text-muted hover:text-status-danger hover:bg-status-danger-bg rounded-xl transition-colors cursor-pointer"
-                        title="حذف"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <div className="bg-surface-muted/60 border border-surface-border/60 p-3 rounded-xl flex items-center justify-between">
-                    <span className="text-xs text-text-muted font-medium">
-                      سعر الاشتراك
-                    </span>
-                    <span className="text-xs font-bold text-text-main flex items-center gap-1">
-                      {group.monthlyPrice}{" "}
-                      <span className="text-[10px] text-text-muted">
-                        ج.م / شهرياً
-                      </span>
-                    </span>
-                  </div>
-
-                  <div className="bg-surface-muted/60 border border-surface-border/60 p-3 rounded-xl flex items-center justify-between">
-                    <span className="text-xs text-text-muted font-medium">
-                      سعر الحصة
-                    </span>
-                    <span className="text-xs font-bold text-text-main flex items-center gap-1">
-                      {group.perSessionPrice ?? 0}{" "}
-                      <span className="text-[10px] text-text-muted">
-                        ج.م / بالحصة
-                      </span>
-                    </span>
-                  </div>
-
-                  <div className="bg-surface-muted/60 border border-surface-border/60 p-3 rounded-xl">
-                    <span className="text-[11px] text-text-muted font-medium flex items-center gap-1 mb-1.5">
-                      <Calendar className="w-3 h-3 text-primary" />
-                      أيام الحصص
-                    </span>
-                    {schedule.length > 0 ? (
-                      <ul className="space-y-1">
-                        {schedule.map((slot, idx) => (
-                          <li
-                            key={`${slot.dayOfWeek}-${idx}`}
-                            className="flex items-center justify-between text-[11px] font-semibold text-text-main"
-                          >
-                            <span>{DAYS_AR[slot.dayOfWeek] ?? "-"}</span>
-                            <span className="text-text-muted flex items-center gap-1">
-                              <Clock className="w-3 h-3" />
-                              {slot.startTime} - {slot.endTime}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <span className="text-[11px] text-text-muted">
-                        لا توجد مواعيد مسجلة
-                      </span>
+                    {!readOnly && (
+                      <div className="flex shrink-0 items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openEditModal(group)}
+                          aria-label={`تعديل مجموعة ${group.name || group.Name}`}
+                          title="تعديل"
+                          data-testid={`group-edit-${group.id}`}
+                        >
+                          <Edit className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => openDeleteModal(group.id)}
+                          aria-label={`حذف مجموعة ${group.name || group.Name}`}
+                          title="حذف"
+                          className="text-status-danger hover:bg-status-danger-bg"
+                          data-testid={`group-delete-${group.id}`}
+                        >
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                      </div>
                     )}
                   </div>
-                </div>
 
-                <button
-                  onClick={() => handleOpenSessions(group)}
-                  className="w-full bg-surface-card hover:bg-primary hover:text-text-inverse border border-surface-border hover:border-primary text-text-main transition-all duration-200 text-xs font-bold py-2.5 px-3 rounded-xl flex items-center justify-center gap-2 shadow-2xs cursor-pointer group"
-                >
-                  <Calendar className="w-4 h-4 text-primary group-hover:text-text-inverse transition-colors" />
-                  <span>مواعيد الحصص</span>
-                </button>
-              </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between rounded-control border border-surface-border bg-surface-muted/60 px-3 py-2.5">
+                      <span className="text-xs font-medium text-text-muted">
+                        سعر الاشتراك
+                      </span>
+                      <span className="flex items-center gap-1 text-xs font-bold text-text-main">
+                        {group.monthlyPrice ?? group.MonthlyPrice ?? 0}
+                        <span className="text-[10px] text-text-muted">
+                          ج.م / شهريًا
+                        </span>
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-control border border-surface-border bg-surface-muted/60 px-3 py-2.5">
+                      <span className="text-xs font-medium text-text-muted">
+                        سعر الحصة
+                      </span>
+                      <span className="flex items-center gap-1 text-xs font-bold text-text-main">
+                        {group.perSessionPrice ?? group.PerSessionPrice ?? 0}
+                        <span className="text-[10px] text-text-muted">
+                          ج.م / بالحصة
+                        </span>
+                      </span>
+                    </div>
+
+                    <div className="rounded-control border border-surface-border bg-surface-muted/60 px-3 py-2.5">
+                      <span className="mb-1.5 flex items-center gap-1 text-xs font-medium text-text-muted">
+                        <Calendar className="h-3 w-3 text-primary" aria-hidden="true" />
+                        أيام الحصص
+                      </span>
+                      {schedule.length > 0 ? (
+                        <ul className="space-y-1">
+                          {schedule.map((slot, idx) => (
+                            <li
+                              key={`${slot.dayOfWeek ?? slot.DayOfWeek}-${idx}`}
+                              className="flex items-center justify-between text-xs font-semibold text-text-main"
+                            >
+                              <span>
+                                {DAYS_AR[slot.dayOfWeek ?? slot.DayOfWeek] ?? "-"}
+                              </span>
+                              <span className="flex items-center gap-1 text-text-muted">
+                                <Clock className="h-3 w-3" aria-hidden="true" />
+                                {slot.startTime ?? slot.StartTime} -{" "}
+                                {slot.endTime ?? slot.EndTime}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <span className="text-xs text-text-muted">
+                          لا توجد مواعيد مسجلة
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="secondary"
+                    block
+                    onClick={() => handleOpenSessions(group)}
+                    data-testid={`group-sessions-${group.id}`}
+                  >
+                    <Calendar className="h-4 w-4 text-primary" aria-hidden="true" />
+                    مواعيد الحصص
+                  </Button>
+                </CardBody>
+              </Card>
             );
           })}
         </div>
@@ -328,35 +393,22 @@ export default function GroupsList({ readOnly = false }) {
         confirmText="تأكيد الحذف"
       />
 
-      {!readOnly && isEditOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
-          <div className="bg-surface-card rounded-2xl p-5 md:p-6 border border-surface-border w-full max-w-lg shadow-xl relative animate-in fade-in zoom-in duration-200 space-y-5">
-            <div className="flex items-center justify-between border-b border-surface-border pb-3">
-              <div className="flex items-center gap-2.5 text-primary">
-                <div className="p-2 rounded-xl bg-primary-subtle">
-                  <Edit className="w-5 h-5" />
-                </div>
-                <h3 className="text-base font-bold text-text-main">
-                  تعديل بيانات المجموعة
-                </h3>
-              </div>
-              <button
-                onClick={() => setIsEditOpen(false)}
-                className="p-1.5 text-text-muted hover:text-text-main rounded-lg hover:bg-surface-muted transition-colors cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <GroupForm
-              initialData={editGroupData}
-              onSubmit={handleUpdate}
-              onCancel={() => setIsEditOpen(false)}
-              submitLabel="حفظ التعديلات"
-            />
-          </div>
-        </div>
-      )}
+      <AppModal
+        open={!readOnly && isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        title="تعديل بيانات المجموعة"
+        icon={Edit}
+        testId="group-edit-modal"
+        size="max-w-lg"
+      >
+        <GroupForm
+          key={editGroupData.id ?? "new"}
+          initialData={editGroupData}
+          onSubmit={handleUpdate}
+          onCancel={() => setIsEditOpen(false)}
+          submitLabel="حفظ التعديلات"
+        />
+      </AppModal>
 
       <GroupSessionsModal
         group={selectedGroupForSessions}

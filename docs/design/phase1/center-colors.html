@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>المرحلة 1 — لون المركز: 5 ألوان × وضعان</title>
+<link rel="stylesheet" href="../fonts/direction-b.css" />
+<link rel="stylesheet" href="app.css" />
+<style>
+  :root {
+    --board-bg: #f4f5fb;
+    --board-card: #ffffff;
+    --board-text: #101528;
+    --board-text2: #5a6178;
+    --board-border: #dde1f0;
+    --font-ui: "Tajawal", "Manrope", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  }
+  body {
+    margin: 0;
+    background: var(--board-bg);
+    color: var(--board-text);
+    font-family: var(--font-ui);
+    font-size: 14.5px;
+    line-height: 1.7;
+  }
+  h1, h2, h3, p { margin: 0; }
+  button, input { font: inherit; color: inherit; }
+  a { color: inherit; }
+  .num, .mono { font-family: "Manrope", ui-sans-serif, sans-serif; direction: ltr; unicode-bidi: isolate; font-variant-numeric: tabular-nums; }
+  .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; letter-spacing: -.02em; }
+  .board { max-width: 1320px; margin: 0 auto; padding: 30px 22px 70px; display: grid; gap: 26px; }
+  .board-head { display: grid; gap: 12px; }
+  .kicker { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: .14em; color: var(--board-text2); text-transform: uppercase; font-family: "Manrope", sans-serif; }
+  .kicker i { width: 22px; height: 2px; background: #4f46e5; border-radius: 2px; }
+  .board-head h1 { font-size: clamp(26px, 3.4vw, 38px); letter-spacing: -.03em; line-height: 1.25; }
+  .board-head > p { max-width: 780px; color: var(--board-text2); font-size: 14px; }
+  .rules { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 4px; }
+  .rule {
+    background: var(--board-card); border: 1px solid var(--board-border);
+    border-radius: 16px; padding: 14px 16px; display: grid; gap: 8px;
+  }
+  .rule h2 { display: flex; align-items: center; gap: 8px; font-size: 13.5px; }
+  .rule h2 svg { width: 18px; height: 18px; }
+  .rule.yes { border-color: #b7e6d2; }
+  .rule.yes h2 { color: #067a52; }
+  .rule.no { border-color: #f2c9d1; }
+  .rule.no h2 { color: #c81e3a; }
+  .rule ul { margin: 0; padding-inline-start: 18px; display: grid; gap: 3px; font-size: 12.5px; color: var(--board-text2); }
+  .rule li b { color: var(--board-text); font-weight: 700; }
+
+  .mode-head { display: flex; align-items: center; gap: 10px; margin-bottom: 2px; }
+  .mode-head h2 { font-size: 18px; letter-spacing: -.01em; }
+  .mode-head .line { flex: 1; height: 1px; background: var(--board-border); }
+  .mode-head .dot { width: 10px; height: 10px; border-radius: 50%; background: #4f46e5; }
+  .mode-head.dark .dot { background: #8b93ff; }
+  .mode-head small { color: var(--board-text2); font-size: 11.5px; }
+
+  .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .cc {
+    background: var(--card); color: var(--text); border: 1px solid var(--border);
+    border-radius: 18px; padding: 15px; display: grid; gap: 12px; align-content: start;
+    box-shadow: 0 1px 2px rgba(16, 21, 40, .04), 0 18px 36px -32px rgba(16, 21, 40, .4);
+  }
+  .cc-head { display: flex; align-items: center; gap: 10px; }
+  .swatch { width: 40px; height: 40px; flex: 0 0 40px; border-radius: 12px; background: var(--fill); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .08); }
+  .cc-head b { display: block; font-size: 14px; }
+  .cc-head small { display: block; font-size: 11px; color: var(--text2); }
+  .cc-head .pill { margin-inline-start: auto; }
+  .cc-demo { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px; border-radius: 12px; background: var(--bg); border: 1px solid var(--border); }
+  .cc .btn { min-height: 44px; padding: 0 16px; }
+  .cc-link {
+    display: inline-flex; align-items: center; min-height: 44px; color: var(--ink);
+    font-size: 13px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px;
+  }
+  .cc .pill-brand { color: var(--ink-soft); background: var(--soft); }
+  .cc-logo { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: var(--fill); color: var(--on); font-weight: 800; font-size: 15px; }
+  .cc-nav {
+    display: flex; align-items: center; gap: 8px; width: 100%; min-height: 40px; padding: 0 10px;
+    border-radius: 10px; background: var(--soft); color: var(--ink); font-size: 12.5px; font-weight: 800;
+  }
+  .cc-nav svg { width: 16px; height: 16px; }
+  .cc-focus { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text2); }
+  .cc-focus span.fire {
+    display: inline-grid; place-items: center; min-width: 44px; min-height: 44px;
+    border-radius: 50%; border: 2px solid var(--fill); box-shadow: 0 0 0 4px color-mix(in srgb, var(--fill) 20%, transparent);
+    background: var(--card); color: var(--fill);
+  }
+  .cc-focus svg { width: 17px; height: 17px; }
+  .ratios { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+  .ratios th { text-align: start; font-size: 10px; letter-spacing: .04em; color: var(--text2); padding: 4px 6px; border-bottom: 1px solid var(--border); font-weight: 700; }
+  .ratios td { padding: 5px 6px; border-bottom: 1px solid var(--border); }
+  .ratios tr:last-child td { border-bottom: 0; }
+  .ratios td.r { font-family: "Manrope", sans-serif; direction: ltr; text-align: end; font-variant-numeric: tabular-nums; }
+  .badge { display: inline-flex; align-items: center; justify-content: center; min-width: 38px; padding: 1px 7px; border-radius: 999px; font-size: 10px; font-weight: 800; font-family: "Manrope", sans-serif; }
+  .badge.ok { background: var(--ok-bg); color: var(--ok); }
+  .badge.bad { background: var(--err-bg); color: var(--err); }
+  .badge.warn { background: var(--warn-bg); color: var(--warn); }
+  .cc-note { font-size: 11px; color: var(--text2); display: flex; gap: 6px; align-items: flex-start; }
+  .cc-note svg { width: 14px; height: 14px; flex: 0 0 14px; margin-top: 2px; }
+  .cc-note b { color: var(--text); }
+  .cc-note.pass b { color: var(--ok); }
+
+  .dark-block {
+    background: #080b18; color: #f2f4ff; border-radius: 24px;
+    padding: 20px; border: 1px solid #2a3357;
+  }
+  .dark-block .mode-head .line { background: #2a3357; }
+  .dark-block .mode-head small { color: #a8b0ca; }
+
+  .not-tinted { display: grid; gap: 12px; }
+  .not-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 12px; }
+  .keep {
+    border-radius: 18px; padding: 16px; border: 1px solid var(--board-border);
+    background: var(--board-card); display: grid; gap: 10px; align-content: start;
+  }
+  .keep h3 { font-size: 13.5px; display: flex; align-items: center; gap: 8px; }
+  .keep h3 svg { width: 17px; height: 17px; color: #c81e3a; }
+  .keep p { font-size: 11.5px; color: var(--board-text2); }
+  .hero-sample {
+    border-radius: 16px; padding: 16px 18px; color: #fff;
+    background: linear-gradient(118deg, #4f46e5 0%, #6d4aee 46%, #a21caf 100%);
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  }
+  .hero-sample b { font-size: 15px; }
+  .hero-sample span { font-size: 11.5px; opacity: .9; }
+  .hero-sample .btn, .hero-sample > button { margin-inline-start: auto; background: #fff; color: #4338ca; border: 0; min-height: 44px; padding: 0 16px; border-radius: 999px; font-weight: 700; font-size: 12.5px; }
+  .status-row { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chart-sample { display: flex; align-items: flex-end; gap: 6px; height: 74px; padding-top: 4px; }
+  .chart-sample i { width: 16px; border-radius: 5px 5px 3px 3px; background: #4f46e5; }
+  .chart-sample i:nth-child(2n) { background: #a21caf; }
+  .chart-sample i:nth-child(3n) { background: #e11d48; }
+
+  .custom { display: grid; gap: 12px; }
+  .custom-card { background: var(--board-card); border: 1px solid var(--board-border); border-radius: 18px; padding: 16px; display: grid; gap: 12px; }
+  .custom-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .custom-row input[type="color"] { width: 54px; height: 44px; padding: 2px; border: 1px solid var(--board-border); border-radius: 10px; background: var(--board-card); }
+  .custom-row code { font-family: "IBM Plex Mono", monospace; font-size: 12px; background: var(--board-bg); border: 1px solid var(--board-border); padding: 4px 8px; border-radius: 7px; }
+  .custom-out { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .tokens { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .token { border: 1px solid var(--board-border); border-radius: 10px; padding: 8px 10px; background: var(--board-bg); }
+  .token small { display: block; font-size: 10px; color: var(--board-text2); }
+  .token b { font-family: "IBM Plex Mono", monospace; font-size: 12px; direction: ltr; display: block; }
+  .token .chip { display: block; height: 20px; border-radius: 6px; margin-top: 4px; border: 1px solid rgba(0,0,0,.06); }
+  .warnbar { display: none; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 10px; background: #fff0d6; color: #9a5b00; font-size: 12px; font-weight: 600; }
+  .warnbar.show { display: flex; }
+  .warnbar svg { width: 16px; height: 16px; }
+  .foot-note { font-size: 11.5px; color: var(--board-text2); border-top: 1px solid var(--board-border); padding-top: 12px; }
+
+  @media (max-width: 1080px) {
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .not-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 720px) {
+    .board { padding: 20px 12px 50px; gap: 20px; }
+    .grid { grid-template-columns: 1fr; }
+    .rules { grid-template-columns: 1fr; }
+    .dark-block { padding: 14px 10px; border-radius: 18px; }
+    .custom-out { grid-template-columns: 1fr; }
+    .tokens { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m20 6-11 11-5-5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-3.5 8-10V5l-8-3-8 3v7c0 6.5 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+</svg>
+
+<main class="board">
+
+  <header class="board-head">
+    <span class="kicker"><i></i> PHASE 1 · CENTER COLOUR</span>
+    <h1>لون المركز: خمسة ألوان، وضعان، ونفس النتيجة</h1>
+    <p>
+      يختار صاحب المركز لونًا واحدًا، ويشتق النظام منه أربع قيم فقط: <b>fill</b> للأزرار والشعار،
+      <b>on</b> للنص فوقه، <b>ink</b> للروابط، و<b>soft</b> للتمييز. لا يُستخدم اللون الخام كنص،
+      ولا يلمس الخلفيات الكبيرة أو التدرجات أو ألوان الحالات.
+    </p>
+    <div class="rules">
+      <section class="rule yes">
+        <h2><svg><use href="#i-check"/></svg> ما يتلوّن بلون المركز</h2>
+        <ul>
+          <li><b>زر الإجراء الأساسي</b> (خلفية fill + نص on)</li>
+          <li><b>الروابط</b> والنص التفاعلي (ink بعد ضبط التباين)</li>
+          <li><b>عنصر التنقل النشط</b> والصف المحدد (soft + ink)</li>
+          <li><b>الشعار</b> وأيقونة الشارة وحلقة التركيز</li>
+        </ul>
+      </section>
+      <section class="rule no">
+        <h2><svg><use href="#i-x"/></svg> ما لا يتلوّن أبدًا</h2>
+        <ul>
+          <li><b>تدرّج الترحيب (hero)</b> — هيوية المنصة الثابتة</li>
+          <li><b>الخلفيات الكبيرة</b> والبطاقات والحدود</li>
+          <li><b>ألوان الحالات</b> (نجاح/تحذير/خطأ/معلومة)</li>
+          <li><b>الرسوم البيانية</b> (لها لوحة ألوان مستقلة)</li>
+        </ul>
+      </section>
+    </div>
+  </header>
+
+  <section aria-labelledby="light-title">
+    <div class="mode-head">
+      <span class="dot"></span>
+      <h2 id="light-title">الوضع الفاتح</h2>
+      <small>خلفية #F4F5FB · بطاقة #FFFFFF · نص #101528</small>
+      <span class="line"></span>
+    </div>
+    <div class="grid" id="grid-light"></div>
+  </section>
+
+  <section class="dark-block" aria-labelledby="dark-title">
+    <div class="mode-head dark">
+      <span class="dot"></span>
+      <h2 id="dark-title" style="color:#f2f4ff">الوضع الليلي</h2>
+      <small>خلفية #080B18 · بطاقة #121831 · نص #F2F4FF</small>
+      <span class="line"></span>
+    </div>
+    <div class="grid" id="grid-dark"></div>
+  </section>
+
+  <section class="not-tinted" aria-labelledby="keep-title">
+    <div class="mode-head">
+      <span class="dot" style="background:#c81e3a"></span>
+      <h2 id="keep-title">هذه العناصر لا تتغيّر مع لون المركز</h2>
+      <span class="line"></span>
+    </div>
+    <div class="not-grid">
+      <div class="keep">
+        <h3><svg><use href="#i-lock"/></svg> التدرّج والحالات</h3>
+        <p>لون المركز لا يصل إلى تدرّج الترحيب ولا إلى شارات الحالة، حتى لا يفقد المعنى.</p>
+        <div class="hero-sample">
+          <div>
+            <b>مساء الخير، أ. محمد</b><br />
+            <span>لديك 3 مدفوعات مستحقة هذا الأسبوع</span>
+          </div>
+          <button type="button">تسجيل حضور</button>
+        </div>
+        <div class="status-row">
+          <span class="pill" style="background:#ddf7ec;color:#067a52">● نشط</span>
+          <span class="pill" style="background:#fff0d6;color:#9a5b00">● يحتاج متابعة</span>
+          <span class="pill" style="background:#ffe4e8;color:#c81e3a">● متأخر</span>
+          <span class="pill" style="background:#dff2ff;color:#0b6fa4">● معلومة</span>
+        </div>
+      </div>
+      <div class="keep">
+        <h3><svg><use href="#i-lock"/></svg> الرسوم البيانية</h3>
+        <p>لوحة ألوان منفصلة للرسوم، لا تُشتق من لون المركز.</p>
+        <div class="chart-sample" aria-hidden="true">
+          <i style="height:38px"></i><i style="height:54px"></i><i style="height:30px"></i><i style="height:66px"></i>
+          <i style="height:44px"></i><i style="height:58px"></i><i style="height:34px"></i><i style="height:72px"></i>
+        </div>
+        <div class="status-row">
+          <span style="font-size:11px;color:var(--board-text2)">أزرق المنصة · بنفسجي · وردي</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="custom" aria-labelledby="custom-title">
+    <div class="mode-head">
+      <span class="dot" style="background:#0ea5e9"></span>
+      <h2 id="custom-title">جرّب أي لون — والفحص يعمل قبل الحفظ</h2>
+      <span class="line"></span>
+    </div>
+    <div class="custom-card">
+      <div class="custom-row">
+        <label for="cc-input" style="font-size:12.5px;font-weight:700">لون المركز</label>
+        <input id="cc-input" type="color" value="#22d3ee" aria-describedby="cc-help" />
+        <code id="cc-hex">#22D3EE</code>
+        <span id="cc-help" style="font-size:11.5px;color:var(--board-text2)">يُعاد حساب on / ink / soft تلقائيًا.</span>
+      </div>
+      <div class="warnbar" id="cc-warn" role="status">
+        <svg><use href="#i-alert"/></svg>
+        <span id="cc-warn-text"></span>
+      </div>
+      <div class="custom-out" id="cc-out"></div>
+    </div>
+  </section>
+
+  <p class="foot-note">
+    كل النسب محسوبة بـ WCAG 2.1 (4.5:1 للنص العادي). لون المركز الخام لا يُستخدم كنص:
+    البرتقالي والأخضر والأصفر تفشل كنص على البطاقة الفاتحة (2.8 و2.54 و1.92) لذلك تُستخدم
+    قيم <b>ink</b> المعدّلة بدلًا منها. التقرير الكامل في <span class="mono">center-color-report.md</span>.
+  </p>
+
+</main>
+
+<script src="center-color.js"></script>
+<script>
+  (function () {
+    var C = window.CenterColor;
+    var COLORS = [
+      { key: "red", name: "أحمر", hex: "#E11D48" },
+      { key: "violet", name: "بنفسجي", hex: "#7C3AED" },
+      { key: "orange", name: "برتقالي", hex: "#F97316" },
+      { key: "green", name: "أخضر", hex: "#10B981" },
+      { key: "yellow", name: "أصفر", hex: "#EAB308" }
+    ];
+    var META = {
+      light: { text: "#101528", text2: "#5A6178", border: "#DDE1F0", ok: "#067A52", okBg: "#DDF7EC", warn: "#9A5B00", warnBg: "#FFF0D6", err: "#C81E3A", errBg: "#FFE4E8" },
+      dark: { text: "#F2F4FF", text2: "#A8B0CA", border: "#2A3357", ok: "#4CE0A5", okBg: "#0B2A1F", warn: "#FFC857", warnBg: "#2B230C", err: "#FF8FA3", errBg: "#2E0F18" }
+    };
+
+    function ratio(r) {
+      return r.toFixed(2) + ":1";
+    }
+    function badge(ok, warn) {
+      if (warn) return '<span class="badge warn">تحذير</span>';
+      return ok ? '<span class="badge ok">AA</span>' : '<span class="badge bad">أقل</span>';
+    }
+    function row(label, r, suffix) {
+      return '<tr><td>' + label + '</td><td class="r">' + ratio(r) + '</td><td>' +
+        (suffix || badge(r >= 4.5)) + '</td></tr>';
+    }
+
+    function card(color, mode) {
+      var theme = C.buildTheme(color.hex);
+      var x = theme[mode];
+      var m = META[mode];
+      var note = x.inkDelta > 0
+        ? '<b>ضُبط اللون ' + x.inkDelta + ' نقطة</b> ليصل الرابط إلى AA على هذه الخلفية.'
+        : '<b>اللون الأصلي يجتاز AA</b> كما هو، دون تعديل.';
+      var status = theme.pass ? '<span class="badge ok">PASS</span>' : '<span class="badge bad">راجع</span>';
+
+      return '' +
+        '<article class="cc" style="' +
+          '--fill:' + x.fill + ';--hover:' + x.hover + ';--on:' + x.on + ';--ink:' + x.ink + ';' +
+          '--soft:' + x.soft + ';--ink-soft:' + x.inkOnSoft + ';' +
+          '--card:' + x.surfaces.card + ';--bg:' + x.surfaces.bg + ';--text:' + m.text + ';' +
+          '--text2:' + m.text2 + ';--border:' + m.border + ';--ok:' + m.ok + ';--ok-bg:' + m.okBg + ';' +
+          '--warn:' + m.warn + ';--warn-bg:' + m.warnBg + ';--err:' + m.err + ';--err-bg:' + m.errBg + '">' +
+          '<div class="cc-head">' +
+            '<span class="swatch" aria-hidden="true"></span>' +
+            '<div><b>' + color.name + '</b><small class="mono">' + x.fill + '</small></div>' +
+            status +
+          '</div>' +
+          '<div class="cc-demo">' +
+            '<button class="btn btn-primary" type="button">إضافة طالب</button>' +
+            '<a class="cc-link" href="#!">عرض كل الطلاب</a>' +
+            '<span class="pill pill-brand">نشط</span>' +
+            '<div class="cc-logo" aria-hidden="true">ن</div>' +
+          '</div>' +
+          '<div class="cc-nav" aria-current="page"><svg><use href="#i-grid"/></svg> لوحة التحكم</div>' +
+          '<div class="cc-focus"><span class="fire"><svg><use href="#i-shield"/></svg></span> حلقة تركيز واضحة حول العنصر</div>' +
+          '<table class="ratios">' +
+            '<thead><tr><th>الاستخدام</th><th style="text-align:end">النسبة</th><th>الحكم</th></tr></thead>' +
+            '<tbody>' +
+              row('نص الزر فوق fill (on)', x.ratios.fillOn) +
+              row('الرابط على البطاقة (ink)', x.ratios.inkCard) +
+              row('الرابط على الخلفية (ink)', x.ratios.inkBg) +
+              row('الشارة على soft (ink)', x.ratios.inkOnSoft) +
+              row('fill كنص — ممنوع', x.ratios.fillAsTextOnCard, '<span class="badge bad">لا يُستخدم</span>') +
+            '</tbody>' +
+          '</table>' +
+          '<p class="cc-note ' + (theme.pass ? 'pass' : '') + '"><svg><use href="#i-' + (theme.pass ? 'check' : 'alert') + '"/></svg><span>' + note + '</span></p>' +
+        '</article>';
+    }
+
+    function render() {
+      var light = document.getElementById("grid-light");
+      var dark = document.getElementById("grid-dark");
+      light.innerHTML = COLORS.map(function (c) { return card(c, "light"); }).join("");
+      dark.innerHTML = COLORS.map(function (c) { return card(c, "dark"); }).join("");
+    }
+    render();
+
+    /* ---- custom colour playground ---- */
+    var input = document.getElementById("cc-input");
+    var hexOut = document.getElementById("cc-hex");
+    var out = document.getElementById("cc-out");
+    var warn = document.getElementById("cc-warn");
+    var warnText = document.getElementById("cc-warn-text");
+
+    function token(label, value, swatch) {
+      return '<div class="token"><small>' + label + '</small><b>' + value + '</b>' +
+        (swatch ? '<span class="chip" style="background:' + value + '"></span>' : '') + '</div>';
+    }
+
+    function drawCustom() {
+      var raw = input.value.toUpperCase();
+      hexOut.textContent = raw;
+      var theme;
+      try {
+        theme = C.buildTheme(raw);
+      } catch (e) {
+        return;
+      }
+      var html = ["light", "dark"].map(function (mode) {
+        var x = theme[mode];
+        var m = META[mode];
+        return '<div class="cc" style="--card:' + x.surfaces.card + ';--bg:' + x.surfaces.bg +
+          ';--text:' + m.text + ';--text2:' + m.text2 + ';--border:' + m.border +
+          ';--ok:' + m.ok + ';--ok-bg:' + m.okBg + ';--warn:' + m.warn + ';--warn-bg:' + m.warnBg +
+          ';--err:' + m.err + ';--err-bg:' + m.errBg + '">' +
+          '<div class="cc-head"><div><b>' + (mode === "light" ? "فاتح" : "ليلي") + '</b>' +
+          '<small class="mono">' + (theme.pass ? "AA ✓" : "راجع") + '</small></div>' +
+          (x.inkDelta > 20 ? '<span class="badge warn">تعديل كبير</span>' : '<span class="badge ok">AA</span>') +
+          '</div>' +
+          '<div class="tokens">' +
+            token("fill", x.fill, true) +
+            token("on", x.on, true) +
+            token("ink", x.ink, true) +
+            token("soft", x.soft, true) +
+            token("fill/on", ratio(x.ratios.fillOn)) +
+            token("ink/card", ratio(x.ratios.inkCard)) +
+          '</div>' +
+          '<p class="cc-note"><svg><use href="#i-info"/></svg><span>soft + ink = ' +
+          ratio(x.ratios.inkOnSoft) + ' · تعديل ink: ' + x.inkDelta + ' نقطة</span></p>' +
+        '</div>';
+      }).join("");
+      out.innerHTML = html;
+
+      var warnings = theme.warnings;
+      if (warnings.length) {
+        warn.classList.add("show");
+        warnText.textContent = "قبل الحفظ: " + warnings.join(" · ") + " — سيُعدَّل اللون تلقائيًا مع إظهار تنبيه.";
+      } else {
+        warn.classList.remove("show");
+        warnText.textContent = "";
+      }
+    }
+    input.addEventListener("input", drawCustom);
+    drawCustom();
+  })();
+</script>
+</body>
+</html>
