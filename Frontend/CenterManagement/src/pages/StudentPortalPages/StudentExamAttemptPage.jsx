@@ -10,6 +10,7 @@ import {
   Send,
   ShieldAlert,
   ShieldCheck,
+  X,
 } from "@/components/icons";
 import toast from "react-hot-toast";
 import ConfirmModal from "../../components/common/ConfirmModal";
@@ -19,6 +20,9 @@ import { questionImageUrl } from "../../services/questionBankService";
 import { studentPortalService } from "../../services/studentPortalService";
 
 const TYPE = { ESSAY: 3 };
+
+const OFFLINE_SUBMIT_MESSAGE =
+  "لا يوجد اتصال. لم يُسلَّم الامتحان بعد، وإجاباتك محفوظة على هذا الجهاز — أعد المحاولة بعد عودة الاتصال.";
 
 const VIOLATION_LABELS = {
   "tab-switch": "مغادرة نافذة الامتحان",
@@ -84,6 +88,12 @@ export default function StudentExamAttemptPage() {
     typeof navigator === "undefined" ? true : navigator.onLine,
   );
   const [draftState, setDraftState] = useState("idle");
+
+  // Short viewport = phone landscape, or a portrait phone with the keyboard
+  // open. The sticky chrome has to stay under 20% of the visible height there,
+  // so it collapses to one row.
+  const [compactHeader, setCompactHeader] = useState(false);
+  const [fsWarningCollapsed, setFsWarningCollapsed] = useState(false);
 
   const draftKey = useMemo(() => `exam-draft:${attemptId}`, [attemptId]);
 
@@ -164,11 +174,19 @@ export default function StudentExamAttemptPage() {
           navigate("/student/results", { replace: true });
         } else {
           autoSubmittedRef.current = false;
-          toast.error(res?.message ?? "تعذّر تسليم الامتحان");
+          toast.error(
+            navigator.onLine === false
+              ? OFFLINE_SUBMIT_MESSAGE
+              : res?.message ?? "تعذّر تسليم الامتحان",
+          );
         }
       } catch {
         autoSubmittedRef.current = false;
-        toast.error("تعذّر تسليم الامتحان");
+        toast.error(
+          navigator.onLine === false
+            ? OFFLINE_SUBMIT_MESSAGE
+            : "تعذّر تسليم الامتحان",
+        );
       } finally {
         setSubmitting(false);
         if (auto) setShowConfirm(false);
@@ -246,6 +264,25 @@ export default function StudentExamAttemptPage() {
     return () => {
       window.removeEventListener("online", goOnline);
       window.removeEventListener("offline", goOffline);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const vv = window.visualViewport;
+
+    const measure = () => {
+      const height = vv?.height || window.innerHeight || 0;
+      setCompactHeader(height > 0 && height < 520);
+    };
+
+    measure();
+    vv?.addEventListener("resize", measure);
+    window.addEventListener("resize", measure);
+
+    return () => {
+      vv?.removeEventListener("resize", measure);
+      window.removeEventListener("resize", measure);
     };
   }, []);
 
@@ -430,15 +467,21 @@ export default function StudentExamAttemptPage() {
           </div>
 
           <ul className="mb-5 space-y-2">
-            {EXAM_RULES.map((rule) => (
-              <li
-                key={rule}
-                className="flex items-start gap-2 text-sm text-text-main"
-              >
-                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-status-warning" />
-                <span>{rule}</span>
-              </li>
-            ))}
+            {EXAM_RULES.map((rule, index) => {
+              const text =
+                !fsSupported && index === 0
+                  ? "متصفح هذا الجهاز لا يدعم ملء الشاشة؛ التزم بالبقاء داخل صفحة الامتحان وعدم مغادرتها."
+                  : rule;
+              return (
+                <li
+                  key={rule}
+                  className="flex items-start gap-2 text-sm text-text-main"
+                >
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-status-warning" />
+                  <span>{text}</span>
+                </li>
+              );
+            })}
           </ul>
 
           <button
@@ -488,8 +531,11 @@ export default function StudentExamAttemptPage() {
         </div>
       )}
 
-      <div className="sticky top-0 z-40 border-b border-surface-border bg-surface-card shadow-sm">
-        {fsSupported && started && !isFullscreen && (
+      <div
+        data-testid="exam-sticky-header"
+        className="sticky top-0 z-40 border-b border-surface-border bg-surface-card shadow-sm"
+      >
+        {fsSupported && !isFullscreen && !fsWarningCollapsed && !compactHeader && (
           <div
             data-testid="exam-fullscreen-warning"
             className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 bg-status-warning-bg px-3 py-1.5 text-xs font-medium text-status-warning"
@@ -501,24 +547,59 @@ export default function StudentExamAttemptPage() {
               onClick={requestFullscreen}
               className="min-h-11 rounded-lg px-2 text-sm font-bold underline"
             >
-              العودة لملء الشاشة
+              ملء الشاشة
+            </button>
+            <button
+              type="button"
+              onClick={() => setFsWarningCollapsed(true)}
+              aria-label="إخفاء تحذير ملء الشاشة"
+              data-testid="exam-fullscreen-dismiss"
+              className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-status-warning transition hover:bg-status-warning/10"
+            >
+              <X className="h-4 w-4" />
             </button>
           </div>
         )}
 
         <header data-testid="exam-header">
-          <div className="mx-auto max-w-4xl px-3 py-2 sm:px-4 md:px-6">
-            <div className="flex flex-wrap items-center justify-between gap-2">
+          <div
+            className={`mx-auto max-w-4xl px-3 sm:px-4 md:px-6 ${
+              compactHeader ? "py-1" : "py-2"
+            }`}
+          >
+            <div
+              className={
+                compactHeader
+                  ? "flex items-center justify-between gap-2"
+                  : "flex flex-wrap items-center justify-between gap-2"
+              }
+            >
               <div className="min-w-0 flex-1">
                 <h1 className="truncate text-sm font-bold text-text-main sm:text-base">
                   {attempt.examName}
                 </h1>
-                <p className="truncate text-[11px] text-text-muted">
+                <p
+                  className={`truncate text-[11px] text-text-muted ${
+                    compactHeader ? "hidden" : ""
+                  }`}
+                >
                   أجب عن جميع الأسئلة • الدرجة الكلية {attempt.totalMark}
                 </p>
               </div>
 
               <div className="flex min-w-0 flex-wrap items-center gap-1.5 sm:gap-2">
+                {fsSupported && !isFullscreen && (compactHeader || fsWarningCollapsed) && (
+                  <button
+                    type="button"
+                    onClick={requestFullscreen}
+                    aria-label="العودة لملء الشاشة"
+                    data-testid="exam-fullscreen-inline"
+                    className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-status-warning-bg text-status-warning transition hover:bg-status-warning/20"
+                  >
+                    <Maximize className="h-4 w-4" />
+                  </button>
+                )}
+
                 <button
                   type="button"
                   onClick={() => setShowViolations(true)}
@@ -565,7 +646,11 @@ export default function StudentExamAttemptPage() {
               </div>
             </div>
 
-            <div className="mt-2 flex items-center gap-2">
+            <div
+              className={
+                compactHeader ? "hidden" : "mt-2 flex items-center gap-2"
+              }
+            >
               <div className="h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-surface-muted">
                 <div
                   className="h-full rounded-full bg-status-success transition-all"
@@ -599,6 +684,20 @@ export default function StudentExamAttemptPage() {
       </div>
 
       <main className="mx-auto max-w-4xl space-y-4 px-4 py-5 md:px-6">
+        {!online && (
+          <div
+            data-testid="exam-offline-note"
+            role="status"
+            className="flex items-start gap-2 rounded-xl border border-status-warning/40 bg-status-warning-bg px-3 py-2.5 text-xs font-medium leading-relaxed text-status-warning"
+          >
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>
+              لا يوجد اتصال بالإنترنت. إجاباتك تُحفظ على هذا الجهاز، وتُرسل عند
+              التسليم بعد عودة الاتصال.
+            </span>
+          </div>
+        )}
+
         {questions.map((q, index) => {
           const entry = answers[q.id] ?? {};
           return (
@@ -756,7 +855,11 @@ export default function StudentExamAttemptPage() {
         onConfirm={() => submitExam(false)}
         loading={submitting}
         title="تسليم الامتحان"
-        message={`هل أنت متأكد من تسليم الامتحان؟ تمت الإجابة عن ${answeredCount} من ${questions.length} سؤال.`}
+        message={`هل أنت متأكد من تسليم الامتحان؟ تمت الإجابة عن ${answeredCount} من ${questions.length} سؤال.${
+          online
+            ? ""
+            : " تنبيه: لا يوجد اتصال حاليًا؛ إجاباتك محفوظة على هذا الجهاز، وسيتاح التسليم بعد عودة الاتصال."
+        }`}
         confirmText="تسليم"
         cancelText="إلغاء"
       />

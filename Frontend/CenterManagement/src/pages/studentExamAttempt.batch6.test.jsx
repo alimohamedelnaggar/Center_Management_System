@@ -294,6 +294,143 @@ describe("student e-exam attempt batch 6", () => {
     expect(JSON.parse(localStorage.getItem(EMAIL_DRAFT_KEY)).answers.q1.selectedOptionId).toBe(
       "o1",
     );
+
+    expect(
+      container.querySelector('[data-testid="exam-offline-note"]').textContent,
+    ).toContain("إجاباتك تُحفظ على هذا الجهاز");
+  });
+
+  it("collapses the sticky chrome on a short viewport (landscape or keyboard)", async () => {
+    const originalHeight = window.innerHeight;
+    Object.defineProperty(window, "innerHeight", {
+      configurable: true,
+      value: 400,
+    });
+
+    try {
+      await startExam();
+
+      const sticky = container.querySelector(
+        '[data-testid="exam-sticky-header"]',
+      );
+      expect(sticky).toBeTruthy();
+      // The tall warning strip is replaced by a 44px icon in the header row.
+      expect(
+        container.querySelector('[data-testid="exam-fullscreen-warning"]'),
+      ).toBeNull();
+      expect(
+        container.querySelector('[data-testid="exam-fullscreen-inline"]'),
+      ).toBeTruthy();
+      // The progress/draft row is hidden so the wrapper stays under 20%.
+      expect(
+        container.querySelector('[data-testid="exam-draft-state"]').parentElement
+          .className,
+      ).toContain("hidden");
+      // Timer and submit stay visible.
+      expect(
+        container.querySelector('[data-testid="exam-timer"]'),
+      ).toBeTruthy();
+      expect(
+        container.querySelector('[data-testid="exam-submit"]'),
+      ).toBeTruthy();
+    } finally {
+      Object.defineProperty(window, "innerHeight", {
+        configurable: true,
+        value: originalHeight,
+      });
+    }
+  });
+
+  it("collapses the fullscreen warning after the student dismisses it", async () => {
+    await startExam();
+
+    const dismiss = container.querySelector(
+      '[data-testid="exam-fullscreen-dismiss"]',
+    );
+    expect(dismiss).toBeTruthy();
+    await click(dismiss);
+
+    expect(
+      container.querySelector('[data-testid="exam-fullscreen-warning"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="exam-fullscreen-inline"]'),
+    ).toBeTruthy();
+    expect(container.textContent).not.toContain("أنت خارج وضع ملء الشاشة");
+    // Dismissing the notice is not a violation.
+    expect(portalMock.reportViolation).not.toHaveBeenCalled();
+  });
+
+  it("submitting offline keeps the draft and explains how to retry", async () => {
+    await startExam();
+    await click(container.querySelector('input[name="question-q1"]'));
+    await wait(320);
+
+    await act(async () => {
+      window.dispatchEvent(new Event("offline"));
+    });
+    Object.defineProperty(navigator, "onLine", {
+      configurable: true,
+      value: false,
+    });
+    portalMock.submitAttempt.mockRejectedValueOnce(new Error("network down"));
+
+    try {
+      await click(container.querySelector('[data-testid="exam-submit"]'));
+      const confirm = container.querySelector('[data-testid="confirm-modal"]');
+      expect(confirm).toBeTruthy();
+      expect(confirm.textContent).toContain("لا يوجد اتصال حاليًا");
+
+      const confirmButton = [...confirm.querySelectorAll("button")].find(
+        (btn) => btn.textContent.trim() === "تسليم",
+      );
+      await click(confirmButton);
+      await wait(200);
+
+      expect(toastMock.error).toHaveBeenCalledWith(
+        expect.stringContaining("إجاباتك محفوظة على هذا الجهاز"),
+      );
+      // Nothing was lost: the local draft is still there and the student stays.
+      expect(
+        JSON.parse(localStorage.getItem(EMAIL_DRAFT_KEY)).answers.q1
+          .selectedOptionId,
+      ).toBe("o1");
+      expect(
+        container.querySelector('[data-testid="student-exam-attempt"]'),
+      ).toBeTruthy();
+      expect(
+        container.querySelector('[data-testid="results-page"]'),
+      ).toBeNull();
+    } finally {
+      Object.defineProperty(navigator, "onLine", {
+        configurable: true,
+        value: true,
+      });
+    }
+  });
+
+  it("does not promise fullscreen on a browser without the API (iPhone Safari)", async () => {
+    Object.defineProperty(document, "fullscreenEnabled", {
+      configurable: true,
+      value: false,
+    });
+
+    await render();
+    expect(container.textContent).toContain(
+      "متصفح هذا الجهاز لا يدعم ملء الشاشة",
+    );
+    expect(container.textContent).not.toContain("الخروج منه يُسجَّل كمخالفة");
+
+    await click(byText("button", "بدء الامتحان"));
+    expect(
+      container.querySelector('[data-testid="exam-fullscreen-warning"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="exam-fullscreen-inline"]'),
+    ).toBeNull();
+    expect(
+      container.querySelector('[data-testid="student-exam-attempt"]'),
+    ).toBeTruthy();
   });
 
   it("reports violations to the API and lists them in the violation log", async () => {

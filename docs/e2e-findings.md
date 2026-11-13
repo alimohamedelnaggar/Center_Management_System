@@ -1357,6 +1357,126 @@ every page and dialog, and fails below 4.5:1 (3:1 for large text). After the fix
 
 ---
 
+## F-027 — The exam's sticky header took 36.7% of a landscape phone screen
+
+**Severity:** High (the header covered a third of the question area exactly when the on-screen keyboard or a landscape phone left the least room)
+
+**Found:** 2026-11-13 during the post-acceptance review of batch 6, by measuring the sticky wrapper on `/student/attempt/:attemptId`.
+
+**Symptom**
+
+At 844×390 the single sticky wrapper (fullscreen warning + timer + submit + violation
+counter) measured **143px of a 390px viewport = 36.7%**. The first question was pushed below
+the fold before the student had read it.
+
+**Root cause**
+
+The warning row, the title row and the timer row were three stacked rows with no compact
+mode. The full warning also stayed expanded forever, so it kept consuming height after the
+student had acknowledged it.
+
+**Fix** — layout only, no behaviour change:
+
+- When `window.innerHeight < 520` the header collapses to **one row**: no subtitle, no
+  progress bar, and the warning becomes a 44px icon inside the row (`exam-fullscreen-inline`).
+- Dismissing the full warning (`exam-fullscreen-dismiss`) remembers the choice
+  (`exam-fullscreen-dismiss` → `exam-fullscreen-inline`) so it does not re-expand on scroll
+  or re-render; the collapsed icon can still request fullscreen again.
+- Measured after the fix: 143px where the viewport is tall enough, **53px (13.3–13.6%)** at
+  390–400px heights, **max 17.9%** at 360×800 and 1280×800 — under the 20% limit.
+
+**Regression guard:** the batch-6 harness now records `stickyHeight`/`stickyRatio` for every
+attempt run and fails when a viewport under 520px exceeds 20%.
+
+**Status: FIXED** in phase 3 batch 6 (post-acceptance).
+
+---
+
+## F-028 — An answered question could look lost when the connection dropped
+
+**Severity:** Medium (no crash, but the student had no signal that the answer survived a failed submit)
+
+**Found:** 2026-11-13 by dispatching `offline` on the attempt screen.
+
+**Symptom**
+
+With the network offline the draft was saved, but the screen gave no notice; if the student
+pressed تسليم the generic failure toast was the only feedback, and it did not say the answers
+were kept.
+
+**Fix** — presentation and local persistence only, no payload or scoring change:
+
+- Answers are written to `localStorage` 250ms after a change (unchanged key/shape).
+- `exam-offline-note` shows «لا يوجد اتصال بالإنترنت. إجاباتك تُحفظ على هذا الجهاز، وتُرسل
+  عند التسليم بعد عودة الاتصال.» while offline.
+- The submit-failure message now says «لا يوجد اتصال. لم يُسلَّم الامتحان بعد، وإجاباتك محفوظة
+  على هذا الجهاز — أعد المحاولة بعد عودة الاتصال.» instead of a generic error.
+- The submit body stays `{questionId, selectedOptionId, essayAnswer}` and the draft is cleared
+  only after a successful submit.
+
+**Regression guard:** the harness dispatches `offline`, asserts the note, the local draft and
+the «غير متصل — حفظ محلي» state, then submits and re-checks the payload and that the draft is
+gone.
+
+**Status: FIXED** in phase 3 batch 6 (post-acceptance).
+
+---
+
+## F-029 — iPhone Safari was promised a fullscreen mode it does not have
+
+**Severity:** Medium (misleading instruction on a supported device; no data loss)
+
+**Found:** 2026-11-13 while reviewing the Fullscreen API branch on a browser without
+`requestFullscreen` (iPhone Safari).
+
+**Root cause**
+
+The screen always rendered the «أنت خارج وضع ملء الشاشة» warning and the start-screen rule
+«الخروج من ملء الشاشة يُسجَّل كمخالفة», even when the browser can never enter fullscreen. On
+iPhone Safari the student would see a permanent warning and a rule they cannot satisfy,
+without any violation actually being recorded.
+
+**Fix** — display branch only; the violation logic did not change:
+
+- The start-screen rule becomes «متصفح هذا الجهاز لا يدعم ملء الشاشة؛ التزم بالبقاء داخل
+  صفحة الامتحان وعدم مغادرتها.» when `fsSupported` is false.
+- The warning row and its «ملء الشاشة» button are not rendered without API support, so no
+  impossible promise is shown.
+- Violations are still emitted only by the existing path; no branch was added, removed or
+  reordered, and the submit contract is unchanged.
+
+**Regression guard:** the harness runs the attempt without injecting the Fullscreen API and
+asserts the fallback text plus the absence of the warning, while the violation/submit probes
+still pass.
+
+**Status: FIXED** in phase 3 batch 6 (post-acceptance).
+
+---
+
+## F-030 — The profile page scrolled sideways at 200% text zoom
+
+**Severity:** Low–Medium (horizontal scrolling at 200% text; no data or logic impact)
+
+**Found:** 2026-11-13 by the batch-7 text-zoom pass (`text200 profile 390 light`), 43px of
+horizontal overflow.
+
+**Root cause**
+
+Long values in the account summary (`InfoItem`) and the current email were plain `<p>`
+elements without any break opportunity. At 200% text a long address cannot wrap, so it grew
+past its 244px card and pushed the whole page 43px wider than the viewport.
+
+**Fix** — one class per element, layout only: `break-words` on the `InfoItem` value and on the
+current-email paragraph in `Profile.jsx`. The same 390px/200% state now reports 0px overflow,
+and the full batch-7 matrix (232 runs) is clean.
+
+**Regression guard:** the batch-7 harness runs every page at 200% text zoom (and 200% page
+zoom) and fails on any horizontal overflow.
+
+**Status: FIXED** in phase 3 batch 7.
+
+---
+
 ## Harness failures during the Stage C dry runs (not product defects)
 
 These stopped recordings before Stage C started. None of them is a product bug, and none of

@@ -59,7 +59,21 @@ const VIEWPORTS = [
   ["land-844", 844, 390],
 ];
 
+// Extra sizes for the e-exam sticky-header measurement only (phone with the
+// on-screen keyboard open). Not part of the default matrix; opt in with
+// PHASE3B6_VIEWPORTS=kb-390.
+const KEYBOARD_VIEWPORTS = [
+  ["kb-360", 360, 400],
+  ["kb-390", 390, 400],
+];
+const KNOWN_VIEWPORTS = [...VIEWPORTS, ...KEYBOARD_VIEWPORTS];
+
 const ALL_VIEWPORTS = VIEWPORTS.map((v) => v[0]);
+// Attempt screens also accept the keyboard-open sizes when explicitly requested.
+const ATTEMPT_VIEWPORTS = [
+  ...ALL_VIEWPORTS,
+  ...KEYBOARD_VIEWPORTS.map((v) => v[0]),
+];
 const THEMES = ["light", "dark"];
 
 const ALL_MODULES = [
@@ -463,7 +477,7 @@ const PAGES = [
     scenario: "student",
     scope: "student-exam-start",
     expect: "attempt-start",
-    viewports: ALL_VIEWPORTS,
+    viewports: ATTEMPT_VIEWPORTS,
     full: true,
   },
   {
@@ -475,8 +489,21 @@ const PAGES = [
     scenario: "student",
     scope: "student-exam-attempt",
     expect: "attempt",
-    viewports: ALL_VIEWPORTS,
+    viewports: ATTEMPT_VIEWPORTS,
     full: true,
+  },
+  {
+    key: "attempt-dismiss",
+    path: "/student/attempt/attempt-1",
+    wait: '[data-testid="student-exam-start"]',
+    action: "attempt-dismiss",
+    expectWait: '[data-testid="student-exam-attempt"]',
+    scenario: "student",
+    scope: "student-exam-attempt",
+    expect: "attempt-dismiss",
+    viewports: ["360", "390"],
+    full: true,
+    extra: true,
   },
   {
     key: "attempt-violations",
@@ -586,7 +613,10 @@ const list = (value, fallback) => {
   return picked.length ? picked : fallback;
 };
 
-const RUN_PAGES = list(process.env.PHASE3B6_PAGES, PAGES.map((p) => p.key));
+const RUN_PAGES = list(
+  process.env.PHASE3B6_PAGES,
+  PAGES.filter((p) => !p.extra).map((p) => p.key),
+);
 const RUN_VIEWPORTS = list(process.env.PHASE3B6_VIEWPORTS, ALL_VIEWPORTS);
 const RUN_THEMES = list(process.env.PHASE3B6_THEMES, THEMES);
 const pages = PAGES.filter((p) => RUN_PAGES.includes(p.key));
@@ -1155,6 +1185,18 @@ async function main() {
 
       if (page.action === "attempt-start") {
         await clickByText(null, "بدء الامتحان");
+      } else if (page.action === "attempt-dismiss") {
+        await clickByText(null, "بدء الامتحان");
+        await waitForSelector('[data-testid="student-exam-attempt"]', 12000);
+        await sleep(400);
+        const dismissed = await evaluate(`(() => {
+          const el = document.querySelector('[data-testid="exam-fullscreen-dismiss"]');
+          if (!el) return false;
+          el.click();
+          return true;
+        })()`);
+        if (!dismissed) throw new Error("missing fullscreen dismiss control");
+        await sleep(400);
       } else if (page.action === "attempt-violations") {
         await clickByText(null, "بدء الامتحان");
         await waitForSelector('[data-testid="student-exam-attempt"]', 12000);
@@ -1259,9 +1301,19 @@ async function main() {
           attempt: header
             ? {
                 stickyCount: document.querySelectorAll(".sticky.top-0").length,
+                stickyHeight: sticky ? Math.round(sticky.getBoundingClientRect().height) : 0,
+                stickyRatio: sticky
+                  ? Math.round((sticky.getBoundingClientRect().height / window.innerHeight) * 1000) / 10
+                  : 0,
+                warningHeight: testid("exam-fullscreen-warning")
+                  ? Math.round(testid("exam-fullscreen-warning").getBoundingClientRect().height)
+                  : 0,
+                viewportHeight: window.innerHeight,
                 stickyClass: String(sticky?.className || ""),
                 warningPresent: Boolean(testid("exam-fullscreen-warning")),
                 warningInsideSticky: Boolean(testid("exam-fullscreen-warning") && sticky?.contains(testid("exam-fullscreen-warning"))),
+                inlineFullscreen: Boolean(testid("exam-fullscreen-inline")),
+                offlineNote: Boolean(testid("exam-offline-note")),
                 headerHasTimer: Boolean(header.contains(testid("exam-timer"))),
                 headerHasSubmit: Boolean(header.contains(testid("exam-submit"))),
                 timer: textOf(testid("exam-timer")),
@@ -1314,7 +1366,7 @@ async function main() {
     const probes = {};
 
     for (const page of pages) {
-      const viewports = VIEWPORTS.filter((v) => page.viewports.includes(v[0])).filter(
+      const viewports = KNOWN_VIEWPORTS.filter((v) => page.viewports.includes(v[0])).filter(
         (v) => RUN_VIEWPORTS.includes(v[0]),
       );
       for (const viewport of viewports) {
@@ -1472,14 +1524,30 @@ async function main() {
 
           if (page.expect === "attempt") {
             const a = p.attempt;
+            if (a) {
+              probes.attemptHeader = probes.attemptHeader || {};
+              probes.attemptHeader[`${viewport[0]} ${theme}`] = {
+                viewportHeight: a.viewportHeight,
+                stickyHeight: a.stickyHeight,
+                ratio: a.stickyRatio,
+                warningPresent: a.warningPresent,
+                warningHeight: a.warningHeight,
+                inlineFullscreen: a.inlineFullscreen,
+              };
+            }
             if (!a) {
               failures.push(`${tag}: exam attempt header is missing`);
             } else {
               if (a.stickyCount !== 1)
                 failures.push(`${tag}: ${a.stickyCount} sticky top-0 wrappers (F-023 expects 1)`);
-              if (!a.warningPresent) failures.push(`${tag}: fullscreen warning is missing`);
-              if (!a.warningInsideSticky)
+              if (!a.warningPresent && !a.inlineFullscreen)
+                failures.push(`${tag}: fullscreen indicator is missing`);
+              if (a.warningPresent && !a.warningInsideSticky)
                 failures.push(`${tag}: fullscreen warning is outside the sticky header`);
+              if (a.viewportHeight < 520 && a.stickyRatio > 20)
+                failures.push(
+                  `${tag}: sticky header is ${a.stickyRatio}% of the ${a.viewportHeight}px viewport (limit 20%)`,
+                );
               if (!a.headerHasTimer) failures.push(`${tag}: timer is outside the header`);
               if (!a.headerHasSubmit) failures.push(`${tag}: submit is outside the header`);
               if (!/^(12:00|11:5\d)$/.test(a.timer)) failures.push(`${tag}: timer is "${a.timer}"`);
@@ -1732,14 +1800,19 @@ async function main() {
     await sleep(600);
     const offline = await evaluate(`(() => {
       const state = document.querySelector('[data-testid="exam-draft-state"]');
+      const note = document.querySelector('[data-testid="exam-offline-note"]');
       return {
         state: state ? state.textContent.trim() : null,
         draft: Boolean(localStorage.getItem(${JSON.stringify(draftKey)})),
+        note: Boolean(note),
+        noteText: note ? note.textContent.replace(/\\s+/g, " ").trim() : null,
       };
     })()`);
     probes.attemptOffline = offline;
     if (!String(offline.state || "").includes("غير متصل"))
       failures.push(`attempt probe: offline state is "${offline.state}"`);
+    if (!offline.note)
+      failures.push(`attempt probe: the offline note is missing`);
     if (!offline.draft) failures.push(`attempt probe: the local draft was lost offline`);
 
     await clickSelector('[data-testid="exam-submit"]');

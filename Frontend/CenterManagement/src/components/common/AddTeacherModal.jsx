@@ -1,6 +1,9 @@
-import { X } from "@/components/icons";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { UserPlus } from "@/components/icons";
+import AdminModal from "../ui/AdminModal";
+import Button from "../ui/Button";
+import { fieldBaseClass } from "../ui/Input";
 import {
   SELECTABLE_PLAN_TYPES,
   isTrialPlan,
@@ -263,35 +266,38 @@ export default function AddTeacherModal({
     }
   };
 
-  const inputClass =
-    "w-full p-2.5 rounded-xl border border-surface-border bg-surface-muted text-text-main focus:outline-none focus:border-primary";
-  const labelClass = "block text-sm font-medium mb-1 text-text-main";
+  const inputClass = fieldBaseClass;
+  const labelClass = "block text-sm font-medium mb-1.5 text-text-main";
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="flex w-full max-w-2xl max-h-[90vh] flex-col rounded-2xl border border-surface-border bg-surface-card shadow-2xl">
-        <div className="shrink-0 flex items-center justify-between border-b border-surface-border p-6">
-          <div>
-            <h2 className="text-xl font-extrabold text-text-main">
-              إضافة مدرس جديد
-            </h2>
-            <p className="mt-1 text-xs text-text-muted">
-              يتم إنشاء حساب المدرس والمركز الخاص به معًا.
-            </p>
-          </div>
-          <button
+    <AdminModal
+      open={isOpen}
+      onClose={onClose}
+      busy={saving}
+      title="إضافة مدرس جديد"
+      subtitle="يتم إنشاء حساب المدرس والمركز الخاص به معًا."
+      icon={UserPlus}
+      size="max-w-2xl"
+      testId="add-teacher-modal"
+      formProps={{ onSubmit: handleSubmit, noValidate: true }}
+      footer={
+        <div className="flex gap-3">
+          <Button
+            type="button"
+            variant="outline"
             onClick={onClose}
-            className="text-text-muted hover:text-text-main"
+            disabled={saving}
+            className="flex-1"
           >
-            <X className="w-5 h-5" />
-          </button>
+            إلغاء
+          </Button>
+          <Button type="submit" loading={saving} className="flex-1">
+            {saving ? "جارٍ الإنشاء..." : "إنشاء الحساب والمركز"}
+          </Button>
         </div>
-
-        <form
-          onSubmit={handleSubmit}
-          noValidate
-          className="flex-1 overflow-y-auto p-6 space-y-4"
-        >
+      }
+    >
+      <div className="space-y-4">
           <h3 className="text-sm font-bold text-primary">بيانات الحساب</h3>
           <div>
             <label className={labelClass}>نوع الحساب *</label>
@@ -353,8 +359,9 @@ export default function AddTeacherModal({
                 كلمة المرور (اختياري)
               </label>
               <input
-                type="text"
+                type="password"
                 dir="ltr"
+                autoComplete="new-password"
                 placeholder="اتركها فارغة لتوليد كلمة مؤقتة"
                 className={inputClass}
                 value={formData.ownerPassword}
@@ -538,7 +545,7 @@ export default function AddTeacherModal({
                     key={preset.key}
                     type="button"
                     onClick={() => applyPreset(preset)}
-                    className="rounded-lg border border-surface-border px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary-subtle"
+                    className="inline-flex min-h-11 items-center rounded-control border border-surface-border px-3 text-xs font-bold text-primary hover:bg-primary-subtle"
                   >
                     {preset.name}
                   </button>
@@ -552,7 +559,7 @@ export default function AddTeacherModal({
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {group.keys.map((key) => (
                     <div key={key}>
-                      <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-surface-border bg-surface-muted px-3 py-2 text-sm text-text-main">
+                      <label className="flex min-h-11 cursor-pointer items-center gap-2 rounded-control border border-surface-border bg-surface-muted px-3 py-2 text-sm text-text-main">
                         <input
                           type="checkbox"
                           className="h-4 w-4 accent-primary"
@@ -562,7 +569,7 @@ export default function AddTeacherModal({
                         {moduleNames[key]}
                       </label>
                       {key === "whatsapp" && (
-                        <p className="mt-1 text-[10px] text-text-muted">
+                        <p className="mt-1 text-xs text-text-muted">
                           يخفي أزرار الواتساب فقط.
                         </p>
                       )}
@@ -579,25 +586,7 @@ export default function AddTeacherModal({
               </p>
             )}
           </div>
-
-          <div className="sticky bottom-0 shrink-0 flex gap-3 border-t border-surface-border bg-surface-card pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-1/2 py-2.5 rounded-xl border border-surface-border text-text-muted hover:bg-surface-muted font-bold transition-all"
-            >
-              إلغاء
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-1/2 py-2.5 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-all disabled:opacity-60"
-            >
-              {saving ? "جارٍ الإنشاء..." : "إنشاء الحساب والمركز"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </div>
+    </AdminModal>
   );
 }

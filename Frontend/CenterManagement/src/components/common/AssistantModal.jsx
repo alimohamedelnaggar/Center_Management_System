@@ -1,13 +1,19 @@
-import { X } from "@/components/icons";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { UserRound } from "@/components/icons";
 
+import AdminModal from "../ui/AdminModal";
+import Button from "../ui/Button";
+import { fieldBaseClass } from "../ui/Input";
 import { teacherService } from "../../services/teacherService";
 import { useAuth } from "../../context/useAuth";
 import {
   STAFF_EMAIL_HELPER_TEXT,
   validateStaffEmail,
 } from "../../utils/staffEmail";
+
+const inputClass = fieldBaseClass;
+const labelClass = "mb-1.5 block text-sm font-medium text-text-main";
 
 export default function AssistantModal({
   isOpen,
@@ -166,163 +172,141 @@ export default function AssistantModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-fade-in">
-      <div className="flex w-full max-w-lg max-h-[90vh] flex-col rounded-2xl border border-surface-border bg-surface-card shadow-2xl">
-        <div className="shrink-0 flex items-center justify-between border-b border-surface-border p-6">
-          <h2 className="text-xl font-extrabold text-text-main">
-            {initialData ? "تعديل بيانات المساعد" : "إضافة مساعد جديد"}
-          </h2>
-          <button
+    <AdminModal
+      open={isOpen}
+      onClose={onClose}
+      title={initialData ? "تعديل بيانات المساعد" : "إضافة مساعد جديد"}
+      subtitle="بيانات الحساب والمرتب."
+      icon={UserRound}
+      testId="assistant-modal"
+      formProps={{ onSubmit: handleSubmit, noValidate: true }}
+      footer={
+        <div className="flex gap-3">
+          <Button
+            type="button"
+            variant="outline"
             onClick={onClose}
-            className="text-text-muted hover:text-text-main"
+            className="flex-1"
           >
-            <X className="w-5 h-5" />
-          </button>
+            إلغاء
+          </Button>
+          <Button type="submit" className="flex-1">
+            حفظ
+          </Button>
         </div>
-        <form
-          onSubmit={handleSubmit}
-          noValidate
-          className="flex-1 overflow-y-auto p-6 space-y-4"
-        >
-          <div>
-            <label className="block text-sm font-medium mb-1 text-text-main">
-              الاسم الكامل *
-            </label>
-            <input
-              type="text"
-              className="w-full p-2.5 rounded-xl border border-surface-border bg-surface-muted text-text-main focus:outline-none focus:border-primary"
-              value={formData.fullName}
-              onChange={(e) =>
-                setFormData({ ...formData, fullName: e.target.value })
-              }
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1 text-text-main">
-              رقم الهاتف (مستخدم للتسجيل) *
-            </label>
-            <input
-              type="text"
-              placeholder="01012345678"
-              className="w-full p-2.5 rounded-xl border border-surface-border bg-surface-muted text-text-main focus:outline-none focus:border-primary"
-              value={formData.phoneNumber}
-              onChange={(e) =>
-                setFormData({ ...formData, phoneNumber: e.target.value })
-              }
-            />
-          </div>
+      }
+    >
+      <div className="space-y-4">
+        <div>
+          <label className={labelClass}>الاسم الكامل *</label>
+          <input
+            type="text"
+            className={inputClass}
+            value={formData.fullName}
+            onChange={(e) =>
+              setFormData({ ...formData, fullName: e.target.value })
+            }
+          />
+        </div>
+        <div>
+          <label className={labelClass}>رقم الهاتف (مستخدم للتسجيل) *</label>
+          <input
+            type="text"
+            dir="ltr"
+            placeholder="01012345678"
+            className={inputClass}
+            value={formData.phoneNumber}
+            onChange={(e) =>
+              setFormData({ ...formData, phoneNumber: e.target.value })
+            }
+          />
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium mb-1 text-text-main">
-              البريد الإلكتروني (اختياري)
-            </label>
-            <input
-              type="email"
-              dir="ltr"
-              placeholder="name@example.com"
-              className="w-full p-2.5 rounded-xl border border-surface-border bg-surface-muted text-text-main focus:outline-none focus:border-primary"
-              value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
-            />
-            <p className="mt-1 text-xs text-text-muted">
-              {STAFF_EMAIL_HELPER_TEXT}
-            </p>
-          </div>
+        <div>
+          <label className={labelClass}>البريد الإلكتروني (اختياري)</label>
+          <input
+            type="email"
+            dir="ltr"
+            placeholder="name@example.com"
+            className={inputClass}
+            value={formData.email}
+            onChange={(e) =>
+              setFormData({ ...formData, email: e.target.value })
+            }
+          />
+          <p className="mt-1 text-sm text-text-muted">{STAFF_EMAIL_HELPER_TEXT}</p>
+        </div>
 
-          {showTeacherField && (
+        {showTeacherField && (
+          <div>
+            <label className={labelClass}>الأستاذ المرتبط (اختياري)</label>
+            <select
+              className={inputClass}
+              value={teacherId}
+              onChange={(e) => setTeacherId(e.target.value)}
+            >
+              <option value="">بدون (على مستوى المركز)</option>
+              {teachersLoading ? (
+                <option disabled>جارٍ تحميل المدرسين...</option>
+              ) : (
+                teachers.map((teacher) => (
+                  <option key={teacher.id} value={teacher.id}>
+                    {teacher.fullName}
+                    {teacher.subject ? ` - ${teacher.subject}` : ""}
+                  </option>
+                ))
+              )}
+            </select>
+          </div>
+        )}
+
+        {!initialData && (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <label className="block text-sm font-medium mb-1 text-text-main">
-                الأستاذ المرتبط (اختياري)
-              </label>
-              <select
-                className="w-full p-2.5 rounded-xl border border-surface-border bg-surface-muted text-text-main focus:outline-none focus:border-primary"
-                value={teacherId}
-                onChange={(e) => setTeacherId(e.target.value)}
-              >
-                <option value="">بدون (على مستوى المركز)</option>
-                {teachersLoading ? (
-                  <option disabled>جارٍ تحميل المدرسين...</option>
-                ) : (
-                  teachers.map((teacher) => (
-                    <option key={teacher.id} value={teacher.id}>
-                      {teacher.fullName}
-                      {teacher.subject ? ` - ${teacher.subject}` : ""}
-                    </option>
-                  ))
-                )}
-              </select>
-            </div>
-          )}
-
-          {!initialData && (
-          <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-1 text-text-main">
-                  كلمة المرور *
-                </label>
-                <input
-                  type="password"
-                  placeholder="٦ أحرف على الأقل"
-                  className="w-full p-2.5 rounded-xl border border-surface-border bg-surface-muted text-text-main focus:outline-none focus:border-primary"
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1 text-text-main">
-                  تأكيد كلمة المرور *
-                </label>
-                <input
-                  type="password"
-                  placeholder="٦ أحرف على الأقل"
-                  className="w-full p-2.5 rounded-xl border border-surface-border bg-surface-muted text-text-main focus:outline-none focus:border-primary"
-                  value={formData.confirmPassword}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      confirmPassword: e.target.value,
-                    })
-                  }
-                />
-              </div>
-            </div>
-          )}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1 text-text-main">
-                المرتب (ج.م)
-              </label>
+              <label className={labelClass}>كلمة المرور *</label>
               <input
-                type="number"
-                className="w-full p-2.5 rounded-xl border border-surface-border bg-surface-muted text-text-main focus:outline-none focus:border-primary"
-                value={formData.salary}
+                type="password"
+                placeholder="٦ أحرف على الأقل"
+                autoComplete="new-password"
+                className={inputClass}
+                value={formData.password}
                 onChange={(e) =>
-                  setFormData({ ...formData, salary: Number(e.target.value) })
+                  setFormData({ ...formData, password: e.target.value })
+                }
+              />
+            </div>
+            <div>
+              <label className={labelClass}>تأكيد كلمة المرور *</label>
+              <input
+                type="password"
+                placeholder="٦ أحرف على الأقل"
+                autoComplete="new-password"
+                className={inputClass}
+                value={formData.confirmPassword}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    confirmPassword: e.target.value,
+                  })
                 }
               />
             </div>
           </div>
-          <div className="sticky bottom-0 shrink-0 flex gap-3 border-t border-surface-border bg-surface-card pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-1/2 py-2.5 rounded-xl border border-surface-border text-text-muted hover:bg-surface-muted font-bold transition-all"
-            >
-              إلغاء
-            </button>
-            <button
-              type="submit"
-              className="w-1/2 py-2.5 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-all"
-            >
-              حفظ
-            </button>
-          </div>
-        </form>
+        )}
+
+        <div>
+          <label className={labelClass}>المرتب (ج.م)</label>
+          <input
+            type="number"
+            min="0"
+            className={inputClass}
+            value={formData.salary}
+            onChange={(e) =>
+              setFormData({ ...formData, salary: Number(e.target.value) })
+            }
+          />
+        </div>
       </div>
-    </div>
+    </AdminModal>
   );
 }

@@ -1,7 +1,10 @@
-import { X } from "@/components/icons";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { Users } from "@/components/icons";
 
+import AdminModal from "../ui/AdminModal";
+import Button from "../ui/Button";
+import { fieldBaseClass } from "../ui/Input";
 import { groupsService } from "../../services/groupsService";
 import {
   STAFF_EMAIL_HELPER_TEXT,
@@ -16,6 +19,9 @@ const emptyForm = {
   password: "",
   confirmPassword: "",
 };
+
+const inputClass = fieldBaseClass;
+const labelClass = "mb-1.5 block text-sm font-medium text-text-main";
 
 export default function TeacherModal({ isOpen, onClose, onSubmit, initialData }) {
   const [formData, setFormData] = useState(emptyForm);
@@ -140,163 +146,149 @@ export default function TeacherModal({ isOpen, onClose, onSubmit, initialData })
     }
   };
 
-  const inputClass =
-    "w-full p-2.5 rounded-xl border border-surface-border bg-surface-muted text-text-main focus:outline-none focus:border-primary";
-  const labelClass = "block text-sm font-medium mb-1 text-text-main";
-
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="flex w-full max-w-lg max-h-[90vh] flex-col rounded-2xl border border-surface-border bg-surface-card shadow-2xl">
-        <div className="shrink-0 flex items-center justify-between border-b border-surface-border p-6">
-          <h2 className="text-xl font-extrabold text-text-main">
-            {initialData ? "تعديل بيانات المدرس" : "إضافة مدرس جديد"}
-          </h2>
-          <button
+    <AdminModal
+      open={isOpen}
+      onClose={onClose}
+      title={initialData ? "تعديل بيانات المدرس" : "إضافة مدرس جديد"}
+      subtitle="بيانات الحساب والمجموعات المرتبطة به."
+      icon={Users}
+      testId="teacher-modal"
+      formProps={{ onSubmit: handleSubmit, noValidate: true }}
+      footer={
+        <div className="flex gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            block
             onClick={onClose}
-            className="text-text-muted hover:text-text-main"
+            className="flex-1"
           >
-            <X className="w-5 h-5" />
-          </button>
+            إلغاء
+          </Button>
+          <Button type="submit" block className="flex-1">
+            حفظ
+          </Button>
+        </div>
+      }
+    >
+      <div className="space-y-4">
+        <div>
+          <label className={labelClass}>الاسم الكامل *</label>
+          <input
+            type="text"
+            className={inputClass}
+            value={formData.fullName}
+            onChange={(e) =>
+              setFormData({ ...formData, fullName: e.target.value })
+            }
+          />
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          noValidate
-          className="flex-1 overflow-y-auto p-6 space-y-4"
-        >
-          <div>
-            <label className={labelClass}>الاسم الكامل *</label>
-            <input
-              type="text"
-              className={inputClass}
-              value={formData.fullName}
-              onChange={(e) =>
-                setFormData({ ...formData, fullName: e.target.value })
-              }
-            />
-          </div>
+        <div>
+          <label className={labelClass}>رقم الهاتف (مستخدم للتسجيل) *</label>
+          <input
+            type="text"
+            dir="ltr"
+            placeholder="01012345678"
+            className={inputClass}
+            value={formData.phoneNumber}
+            onChange={(e) =>
+              setFormData({ ...formData, phoneNumber: e.target.value })
+            }
+          />
+        </div>
 
-          <div>
-            <label className={labelClass}>رقم الهاتف (مستخدم للتسجيل) *</label>
-            <input
-              type="text"
-              dir="ltr"
-              placeholder="01012345678"
-              className={inputClass}
-              value={formData.phoneNumber}
-              onChange={(e) =>
-                setFormData({ ...formData, phoneNumber: e.target.value })
-              }
-            />
-          </div>
+        <div>
+          <label className={labelClass}>البريد الإلكتروني (اختياري)</label>
+          <input
+            type="email"
+            dir="ltr"
+            placeholder="name@example.com"
+            className={inputClass}
+            value={formData.email}
+            onChange={(e) =>
+              setFormData({ ...formData, email: e.target.value })
+            }
+          />
+          <p className="mt-1 text-sm text-text-muted">{STAFF_EMAIL_HELPER_TEXT}</p>
+        </div>
 
-          <div>
-            <label className={labelClass}>البريد الإلكتروني (اختياري)</label>
-            <input
-              type="email"
-              dir="ltr"
-              placeholder="name@example.com"
-              className={inputClass}
-              value={formData.email}
-              onChange={(e) =>
-                setFormData({ ...formData, email: e.target.value })
-              }
-            />
-            <p className="mt-1 text-xs text-text-muted">
-              {STAFF_EMAIL_HELPER_TEXT}
+        <div>
+          <label className={labelClass}>المادة الدراسية *</label>
+          <input
+            type="text"
+            placeholder="مثال: رياضيات"
+            className={inputClass}
+            value={formData.subject}
+            onChange={(e) =>
+              setFormData({ ...formData, subject: e.target.value })
+            }
+          />
+        </div>
+
+        <div>
+          <label className={labelClass}>المجموعات</label>
+          {groupsLoading ? (
+            <p className="text-sm text-text-muted">جارٍ تحميل المجموعات...</p>
+          ) : groups.length === 0 ? (
+            <p className="text-sm text-text-muted">
+              لا توجد مجموعات متاحة لهذا المركز
             </p>
-          </div>
-
-          <div>
-            <label className={labelClass}>المادة الدراسية *</label>
-            <input
-              type="text"
-              placeholder="مثال: رياضيات"
-              className={inputClass}
-              value={formData.subject}
-              onChange={(e) =>
-                setFormData({ ...formData, subject: e.target.value })
-              }
-            />
-          </div>
-
-          <div>
-            <label className={labelClass}>المجموعات</label>
-            {groupsLoading ? (
-              <p className="text-sm text-text-muted">جارٍ تحميل المجموعات...</p>
-            ) : groups.length === 0 ? (
-              <p className="text-sm text-text-muted">
-                لا توجد مجموعات متاحة لهذا المركز
-              </p>
-            ) : (
-              <div className="grid max-h-40 grid-cols-1 gap-1 overflow-y-auto rounded-xl border border-surface-border bg-surface-muted p-2 sm:grid-cols-2">
-                {groups.map((group) => (
-                  <label
-                    key={group.id}
-                    className="flex cursor-pointer items-center gap-2 rounded-lg p-1.5 text-sm text-text-main hover:bg-surface-card"
-                  >
-                    <input
-                      type="checkbox"
-                      className="accent-primary"
-                      checked={groupIds.includes(group.id)}
-                      onChange={() => toggleGroup(group.id)}
-                    />
-                    {group.name}
-                  </label>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {!initialData && (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label className={labelClass}>كلمة المرور *</label>
-                <input
-                  type="password"
-                  placeholder="6 أحرف على الأقل"
-                  className={inputClass}
-                  value={formData.password}
-                  onChange={(e) =>
-                    setFormData({ ...formData, password: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <label className={labelClass}>تأكيد كلمة المرور *</label>
-                <input
-                  type="password"
-                  placeholder="6 أحرف على الأقل"
-                  className={inputClass}
-                  value={formData.confirmPassword}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      confirmPassword: e.target.value,
-                    })
-                  }
-                />
-              </div>
+          ) : (
+            <div className="grid max-h-40 grid-cols-1 gap-1 overflow-y-auto rounded-control border border-surface-border bg-surface-muted p-2 sm:grid-cols-2">
+              {groups.map((group) => (
+                <label
+                  key={group.id}
+                  className="flex min-h-11 cursor-pointer items-center gap-2 rounded-control px-2 text-sm text-text-main hover:bg-surface-card"
+                >
+                  <input
+                    type="checkbox"
+                    className="accent-primary"
+                    checked={groupIds.includes(group.id)}
+                    onChange={() => toggleGroup(group.id)}
+                  />
+                  {group.name}
+                </label>
+              ))}
             </div>
           )}
+        </div>
 
-          <div className="sticky bottom-0 shrink-0 flex gap-3 border-t border-surface-border bg-surface-card pt-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-1/2 py-2.5 rounded-xl border border-surface-border text-text-muted hover:bg-surface-muted font-bold transition-all"
-            >
-              إلغاء
-            </button>
-            <button
-              type="submit"
-              className="w-1/2 py-2.5 rounded-xl bg-primary text-white font-bold hover:bg-primary/90 transition-all"
-            >
-              حفظ
-            </button>
+        {!initialData && (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label className={labelClass}>كلمة المرور *</label>
+              <input
+                type="password"
+                placeholder="6 أحرف على الأقل"
+                autoComplete="new-password"
+                className={inputClass}
+                value={formData.password}
+                onChange={(e) =>
+                  setFormData({ ...formData, password: e.target.value })
+                }
+              />
+            </div>
+            <div>
+              <label className={labelClass}>تأكيد كلمة المرور *</label>
+              <input
+                type="password"
+                placeholder="6 أحرف على الأقل"
+                autoComplete="new-password"
+                className={inputClass}
+                value={formData.confirmPassword}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    confirmPassword: e.target.value,
+                  })
+                }
+              />
+            </div>
           </div>
-        </form>
+        )}
       </div>
-    </div>
+    </AdminModal>
   );
 }
