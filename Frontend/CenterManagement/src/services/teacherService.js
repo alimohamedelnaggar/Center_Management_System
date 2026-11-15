@@ -1,4 +1,5 @@
 import apiClient from "../api/axios";
+import { normalizePaginated } from "../utils/paginated";
 
 export const teacherService = {
   getPaginated: async (pageNumber = 1, pageSize = 10, search = "", centerId) => {
@@ -7,7 +8,8 @@ export const teacherService = {
     if (centerId) params.CenterId = centerId;
 
     const response = await apiClient.get("/Teacher/Paginated", { params });
-    return response.data?.data || response.data;
+    // Same Response<PaginatedResult<T>> envelope as the assistant list.
+    return normalizePaginated(response.data);
   },
 
   create: async (data) => {

@@ -10,6 +10,8 @@
     "test": "playwright test",
     "pretest:smoke": "node scripts/preflight.mjs",
     "test:smoke": "playwright test tests/role-login.spec.js",
+    "pretest:lists": "node scripts/preflight.mjs",
+    "test:lists": "playwright test tests/lists-smoke.spec.js",
     "pretest:video": "node scripts/preflight.mjs",
     "test:video": "playwright test tests/feature-tour.spec.js",
     "report": "playwright show-report"

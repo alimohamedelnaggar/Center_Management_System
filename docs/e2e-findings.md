@@ -1587,6 +1587,104 @@ width and the measured cell text stays 14px.
 
 ---
 
+## F-036 — `/assistants` rendered an empty list although the API returned a row
+
+**Severity:** High (the page claimed there were no assistants; a failed request was also shown
+as "no data", so the user could not tell an empty center from a broken screen)
+
+**Found:** 2026-11-15 on the merged `main` (`7751da6`) against `CenterManagement_E2E`.
+
+**Root cause**
+
+The API answers list endpoints with **two** pagination envelopes, both wrapped in `Response<T>`:
+
+```
+Response<PaginatedResult<T>>            Response<PagedResult<T>>
+{ succeeded, data: {                    { succeeded, data: {
+    data: T[],          ← rows            items: T[],       ← rows
+    currentPage, totalPages,               pageIndex, totalPages,
+    totalCount, pageSize } }               totalCount, pageSize } }
+```
+
+`AssistantManagement` read `res?.items`, while `/Assistant/Paginated` serialises the rows under
+`data.data`. The list was empty, the pager said `1 of 1`, and nothing failed — the request
+succeeded. `GET /Assistant/Paginated?PageNumber=1&PageSize=6&IsActive=true` returned
+`200 { succeeded: true, data: { data: [ …one assistant… ], totalCount: 1, totalPages: 1,
+pageSize: 6 } }`; `data.items` was `undefined` and `data.data.length` was `1`.
+
+The same mismatch hid the teacher picker inside `AssistantModal`, which read `res?.data?.items`
+after `teacherService` had already unwrapped `data`.
+
+This is **not** a UI-identity regression: the `res?.items` line is identical in `ec456e6` and
+`a826c13`; the redesign only moved the surrounding markup.
+
+**Fix** — one normaliser, not ten patches
+
+`src/utils/paginated.js` (`normalizePaginated`) accepts the three shapes the services actually
+see — `Response<PaginatedResult<T>>`, `Response<PagedResult<T>>`, and a bare `PaginatedResult` —
+and always returns `{ items, data, totalCount, totalPages, currentPage, pageSize }`.
+`assistantService.getPaginated` and `teacherService.getPaginated` now go through it, so every
+existing caller keeps reading `res.data` as an array while new callers can read `res.items`.
+
+`AssistantManagement` additionally stopped treating a failed request as an empty list: `error`
+state renders `role="alert"` (`data-testid="assistants-error"`) with the Arabic message
+"تعذر تحميل المساعدين. تحقق من الاتصال ثم أعد المحاولة." and an "إعادة المحاولة" button
+(`data-testid="assistants-retry"`) that re-runs the same fetch.
+
+**Regression tests**
+
+- `src/utils/paginated.test.js` — 5 tests: both envelopes, a bare result, an empty page, and
+  `null`/`undefined`.
+- `src/pages/AssistantManagement.paginated.test.jsx` — 2 jsdom tests whose mock body is a copy of
+  the real response above: the row renders (name + linked teacher, no empty state) and a rejected
+  request shows the error block, hides the empty state, and the retry renders the row.
+- `e2e/tests/lists-smoke.spec.js` — compares the rendered row count with the row count of the live
+  API response for ten lists (see below).
+
+**Verified on the real app + E2E API** (`/assistants`, owner `01000000002`)
+
+| Width | Layout | Visible rows | Horizontal overflow |
+|---|---|---|---|
+| 360, 390 | mobile cards | 1 card (name, phone, 4,500 EGP, linked teacher) | none |
+| 768, 1280, 1920 | table | 1 row, "عرض 1 إلى 1 من 1 مساعد" | none |
+| 844×390 landscape | table | 1 row | none |
+
+Light and dark were captured at each width, plus the forced-failure state at 1280. With the
+request aborted the error block is shown (never "لا يوجد مساعدون بعد"), and clicking
+"إعادة المحاولة" loads the row.
+
+**Status: FIXED** (2026-11-15).
+
+### List sweep — rows rendered vs rows returned
+
+Checked on the same E2E database, signed in as the role that actually owns each route. The smoke
+spec asserts the count; the numbers below are from the same run (`npx playwright test
+tests/lists-smoke.spec.js`: 10 passed).
+
+| List | Role | Endpoint | Envelope | Rows / total |
+|---|---|---|---|---|
+| teachers | owner | `/Teacher/Paginated` | `Response<PaginatedResult>` | 2 / 2 |
+| assistants | owner | `/Assistant/Paginated` | `Response<PaginatedResult>` | 1 / 1 |
+| groups | owner | `/Group/Paginated` | bare `PaginatedResult` | 3 / 3 |
+| payments | owner | `/Payments/Paginated` | bare `PaginatedResult` | 10 / 10 |
+| incomes | owner | `/Income/Paginated` | `Response<PaginatedResult>` | 4 / 4 |
+| expenses | owner | `/Expense/Paginated` | `Response<PaginatedResult>` | 5 / 5 |
+| students | teacher | `/Student/Paginated` | `Response<PagedResult>` | 10 / 10 |
+| question bank | teacher | `/QuestionBank/Paginated` | `Response<PaginatedResult>` | 1 / 1 |
+| exams | teacher | `/QuestionExam/Paginated` | `Response<PaginatedResult>` | 2 / 2 |
+| study notes | teacher | `/StudyNote/Paginated` | `Response<PaginatedResult>` | 1 / 1 |
+
+Two notes for future runs (not defects):
+
+- The owner's `/dashboard` (students) route is `Assistant`/`Teacher` only — it already was in
+  `853d066^` — so the students list is swept as the teacher; an owner is bounced to
+  `/center/dashboard` → `/teachers`.
+- The owner gets `403` from `/QuestionBank/Paginated`, `/QuestionExam/Paginated` and
+  `/StudyNote/Paginated`; those routes are assistant/teacher-only by design, so the sweep uses the
+  teacher account there instead of weakening the assertion.
+
+---
+
 ## Harness failures during the Stage C dry runs (not product defects)
 
 These stopped recordings before Stage C started. None of them is a product bug, and none of

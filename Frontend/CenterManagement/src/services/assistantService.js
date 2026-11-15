@@ -1,4 +1,5 @@
 import apiClient from "../api/axios";
+import { normalizePaginated } from "../utils/paginated";
 
 export const assistantService = {
   getPaginated: async (
@@ -12,7 +13,10 @@ export const assistantService = {
     if (isActive !== null) params.IsActive = isActive;
 
     const response = await apiClient.get("/Assistant/Paginated", { params });
-    return response.data?.data || response.data;
+    // `/Assistant/Paginated` returns Response<PaginatedResult<T>>; the list
+    // lives under `data.data` (not `data.items`). Normalize so callers can
+    // always read `items`.
+    return normalizePaginated(response.data);
   },
 
   create: async (data) => {

@@ -197,6 +197,10 @@ jobs:
         working-directory: e2e
         run: npm run test:video
 
+      - name: Check list rows against the API
+        working-directory: e2e
+        run: npm run test:lists
+
       - name: Upload E2E report, video, and logs
         if: always()
         uses: actions/upload-artifact@v4

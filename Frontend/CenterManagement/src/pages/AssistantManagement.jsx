@@ -9,6 +9,8 @@ import {
   Phone,
   Users,
   Wallet,
+  AlertCircle,
+  RefreshCw,
 } from "@/components/icons";
 
 import Pagination from "../components/common/Pagination";
@@ -43,6 +45,7 @@ export default function AssistantManagement() {
 
   const [assistants, setAssistants] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -76,17 +79,22 @@ export default function AssistantManagement() {
   const fetchAssistants = async () => {
     try {
       setLoading(true);
-      const res = await assistantService.getPaginated(
+      setError(null);
+      const response = await assistantService.getPaginated(
         page,
         PAGE_SIZE,
         search,
         true,
       );
-      const dataList = res?.items || [];
-      setAssistants(dataList);
-      setTotalPages(res?.totalPages || 1);
-      setTotal(res?.totalCount || dataList.length);
+      const { items, totalPages, totalCount } = response;
+      setAssistants(items);
+      setTotalPages(totalPages || 1);
+      setTotal(totalCount || items.length);
     } catch {
+      // Close the door on the misleading empty state: a failed request is not
+      // "there are no assistants".
+      setAssistants([]);
+      setError("تعذر تحميل المساعدين. تحقق من الاتصال ثم أعد المحاولة.");
       toast.error("فشل في تحميل المساعدين");
     } finally {
       setLoading(false);
@@ -332,6 +340,25 @@ export default function AssistantManagement() {
           {loading ? (
             <div className="p-10">
               <Spinner msg="جارٍ تحميل المساعدين..." />
+            </div>
+          ) : error ? (
+            <div
+              role="alert"
+              data-testid="assistants-error"
+              className="flex flex-col items-center gap-3 p-10 text-center"
+            >
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-status-danger-bg text-status-danger">
+                <AlertCircle className="h-6 w-6" aria-hidden="true" />
+              </span>
+              <p className="font-bold text-text-main">{error}</p>
+              <Button
+                variant="outline"
+                onClick={fetchAssistants}
+                data-testid="assistants-retry"
+              >
+                <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                إعادة المحاولة
+              </Button>
             </div>
           ) : assistants.length === 0 ? (
             <div className="flex flex-col items-center gap-3 p-10 text-text-muted">
