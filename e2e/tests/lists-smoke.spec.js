@@ -4,7 +4,7 @@ import { loginAs } from './support/auth.js';
 /**
  * List smoke check.
  *
- * Every list screen rebuilt in phases 3-7 must show the rows the API returned,
+ * Every list screen rebuilt in phases 3-8 must show the rows the API returned,
  * not just "something". For each list we capture the page-1 response of the
  * endpoint the screen itself calls, then assert the rendered row count equals
  * the number of rows in that response. An envelope mismatch (reading
@@ -33,7 +33,17 @@ const readPage = (body) => {
   };
 };
 
-async function captureList(page, { path, api, rows: rowsSelector, open }) {
+// Portal screens answer with plain objects (`{ payments: [...] }`,
+// `{ records: [...] }`) or a bare array, not the paginated envelope.
+const readArray = (body, pick) => {
+  const envelope = body?.data ?? body;
+  const value = pick ? pick(envelope) : envelope;
+  const rows = Array.isArray(value) ? value : [];
+
+  return { rows: rows.length, totalCount: rows.length, pageSize: rows.length };
+};
+
+async function captureList(page, { path, api, rows: rowsSelector, open, parse }) {
   const responsePromise = page.waitForResponse(
     (response) =>
       api.test(response.url()) && response.request().method() === 'GET',
@@ -51,7 +61,7 @@ async function captureList(page, { path, api, rows: rowsSelector, open }) {
   ).toBeTruthy();
 
   const body = await response.json();
-  const expected = readPage(body);
+  const expected = (parse ?? readPage)(body);
 
   await expect(
     page.locator(rowsSelector),
@@ -136,6 +146,59 @@ const TEACHER_LISTS = [
   },
 ];
 
+// Batch 8 rebuilt the two portals. Their lists are cards at every width (the
+// tables that do exist are the desktop variant of the same rows), so the
+// selector targets one card per row.
+const STUDENT_LISTS = [
+  {
+    name: 'student payments',
+    path: '/student/payments',
+    api: /\/StudentPortal\/Payments(\?|$)/,
+    rows: '[data-testid="student-payments-page"] [data-testid="student-payment-card"]',
+    parse: (body) => readArray(body, (data) => data?.payments),
+  },
+  {
+    name: 'student results',
+    path: '/student/results',
+    api: /\/StudentPortal\/Results(\?|$)/,
+    rows: '[data-testid="student-results-page"] [data-testid="student-result-card"]',
+  },
+  {
+    name: 'student attendance',
+    path: '/student/attendance',
+    api: /\/StudentPortal\/Attendance(\?|$)/,
+    rows: '[data-testid="student-attendance-page"] [data-testid="student-attendance-card"]',
+    parse: (body) => readArray(body, (data) => data?.records),
+  },
+  {
+    name: 'student notes',
+    path: '/student/notes',
+    api: /\/StudentPortal\/Notes(\?|$)/,
+    rows: '[data-testid="student-notes-page"] article',
+  },
+  {
+    name: 'student notifications',
+    path: '/student/notifications',
+    api: /\/StudentPortal\/Notifications(\?|$)/,
+    rows: '[data-testid="student-notifications-page"] ul > li',
+  },
+];
+
+const PARENT_LISTS = [
+  {
+    name: 'parent children',
+    path: '/parent/dashboard',
+    api: /\/ParentPortal\/Children(\?|$)/,
+    rows: '[data-testid="parent-child-card"]',
+  },
+  {
+    name: 'parent notifications',
+    path: '/parent/notifications',
+    api: /\/ParentPortal\/Notifications(\?|$)/,
+    rows: '[data-testid="parent-notifications-page"] ul > li',
+  },
+];
+
 test.describe('list rows match the API — center owner', () => {
   test.beforeEach(async ({ page }) => {
     await loginAs(page, 'centerOwner');
@@ -172,6 +235,40 @@ test.describe('list rows match the API — teacher', () => {
       test.info().annotations.push({
         type: 'api-rows',
         description: `${result.rows} of ${result.totalCount} (pageSize ${result.pageSize})`,
+      });
+    });
+  }
+});
+
+test.describe('list rows match the API — student portal', () => {
+  test.beforeEach(async ({ page }) => {
+    await loginAs(page, 'student');
+  });
+
+  for (const list of STUDENT_LISTS) {
+    test(`${list.name} list shows the API rows`, async ({ page }) => {
+      const result = await captureList(page, list);
+
+      test.info().annotations.push({
+        type: 'api-rows',
+        description: `${result.rows} of ${result.totalCount}`,
+      });
+    });
+  }
+});
+
+test.describe('list rows match the API — parent portal', () => {
+  test.beforeEach(async ({ page }) => {
+    await loginAs(page, 'parent');
+  });
+
+  for (const list of PARENT_LISTS) {
+    test(`${list.name} list shows the API rows`, async ({ page }) => {
+      const result = await captureList(page, list);
+
+      test.info().annotations.push({
+        type: 'api-rows',
+        description: `${result.rows} of ${result.totalCount}`,
       });
     });
   }

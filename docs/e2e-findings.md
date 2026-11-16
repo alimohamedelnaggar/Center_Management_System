@@ -1659,7 +1659,7 @@ request aborted the error block is shown (never "لا يوجد مساعدون ب
 
 Checked on the same E2E database, signed in as the role that actually owns each route. The smoke
 spec asserts the count; the numbers below are from the same run (`npx playwright test
-tests/lists-smoke.spec.js`: 10 passed).
+tests/lists-smoke.spec.js`: 17 passed).
 
 | List | Role | Endpoint | Envelope | Rows / total |
 |---|---|---|---|---|
@@ -1673,6 +1673,19 @@ tests/lists-smoke.spec.js`: 10 passed).
 | question bank | teacher | `/QuestionBank/Paginated` | `Response<PaginatedResult>` | 1 / 1 |
 | exams | teacher | `/QuestionExam/Paginated` | `Response<PaginatedResult>` | 2 / 2 |
 | study notes | teacher | `/StudyNote/Paginated` | `Response<PaginatedResult>` | 1 / 1 |
+
+The two portals rebuilt in batch 8 render their lists as cards at every width, so the sweep counts
+one card per row instead of table rows:
+
+| List | Role | Endpoint | Payload | Rows / total |
+|---|---|---|---|---|
+| student payments | student | `/StudentPortal/Payments` | `{ totalPaid, payments[] }` | 2 / 2 |
+| student results | student | `/StudentPortal/Results` | bare array | 1 / 1 |
+| student attendance | student | `/StudentPortal/Attendance` | `{ records[] }` | 6 / 6 |
+| student notes | student | `/StudentPortal/Notes` | bare array | 1 / 1 |
+| student notifications | student | `/StudentPortal/Notifications` | `Response<PaginatedResult>` | 3 / 3 |
+| parent children | parent | `/ParentPortal/Children` | bare array | 2 / 2 |
+| parent notifications | parent | `/ParentPortal/Notifications` | `Response<PaginatedResult>` | 3 / 3 |
 
 Two notes for future runs (not defects):
 

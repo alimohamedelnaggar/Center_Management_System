@@ -1,8 +1,8 @@
-# الدفعة 9 — إصلاح `/assistants` والتحقق من قوائم الدفعات 3–7
+# الدفعة 9 — إصلاح `/assistants` والتحقق من قوائم الدفعات 3–8
 
-تم التوليد: 2026-11-15
+تم التوليد: 2026-11-16
 
-النتيجة: **إصلاح مؤكد على التطبيق الحقيقي + 10/10 اختبارات دخان للقوائم**.
+النتيجة: **إصلاح مؤكد على التطبيق الحقيقي + 17/17 اختبارات دخان للقوائم**.
 
 ## 1) العيب (F-036)
 
@@ -15,6 +15,20 @@
   `Response<PaginatedResult<T>>` أي تحت `data.data`، بينما `/Student/Paginated`
   يستخدم `Response<PagedResult<T>>` (الصفوف تحت `data.items`).
 - ليس انحدار إعادة تصميم: السطر نفسه موجود في `ec456e6` و`a826c13`.
+
+**ما ليس السبب (تم فحصه صراحةً):**
+
+- **الفلتر الافتراضي:** الصفحة تمرّر `IsActive = true` منذ ما قبل إعادة التصميم ولا
+  يوجد في الواجهة مفتاح لعرض غير النشطين. لكن `/Assistant/Salary-Status` (تبويب سجل
+  المرتبات) يطبّق نفس شرط `x.IsActive` في الباك، فلو كان المساعد غير نشط لاختفى من
+  التبويبين معًا؛ لا يفسّر ظهوره في سجل المرتبات.
+- **نطاق المدرس:** `AssistantController` محمي بـ`AppPolicies.CenterAdmin`، والمستودع
+  يفلتر بـ`CenterId` فقط (`AssistantRepository`)، و`TeacherId` يأتي من جسم الطلب ولا
+  يُستنتج من هوية المستدعي (`AddAssistantCommandHandler`: `TeacherId = request.TeacherId`).
+  و`/assistants` مسار `CenterOwner` + `allowSoloTeacher`، فمدرّس المركز متعدد المدرسين
+  لا يصل للصفحة ولا للـ endpoint.
+- **الحالة أثناء التحميل/الخطأ:** التحميل كان ولا يزال يعرض `Spinner`، والحالة الفارغة
+  كانت تُعرض فقط بعد انتهاء الطلب — أي أن الخطأ (نجاح/فشل بلا صفوف) كان يظهر كفراغ.
 
 ## 2) الإصلاح
 
@@ -34,7 +48,7 @@
 |---|---|---|
 | `src/utils/paginated.test.js` | 5 | ناجحة |
 | `src/pages/AssistantManagement.paginated.test.jsx` | 2 | ناجحة (جسم الاستجابة منسوخ من استجابة الـ API الحقيقية) |
-| `e2e/tests/lists-smoke.spec.js` | 10 | ناجحة |
+| `e2e/tests/lists-smoke.spec.js` | 17 | ناجحة |
 
 ## 4) التحقق على التطبيق الحقيقي (E2E API + `CenterManagement_E2E`)
 
@@ -58,7 +72,7 @@
 `assistants-after-844x390-landscape-{light,dark}`،
 `assistants-error-1280-{light,dark}`.
 
-## 5) مسح القوائم (الدفعات 3–7)
+## 5) مسح القوائم (الدفعات 3–8)
 
 | القائمة | الدور | الـ endpoint | الغلاف | الصفوف / الإجمالي |
 |---|---|---|---|---|
@@ -72,6 +86,19 @@
 | بنك الأسئلة | teacher | `/QuestionBank/Paginated` | `Response<PaginatedResult>` | 1 / 1 |
 | الامتحانات | teacher | `/QuestionExam/Paginated` | `Response<PaginatedResult>` | 2 / 2 |
 | المذكرات | teacher | `/StudyNote/Paginated` | `Response<PaginatedResult>` | 1 / 1 |
+
+بوابتا الدفعة 8 تعرضان قوائمهما كبطاقات في كل المقاسات (لا جدول سطح مكتب في
+`/student/notes` و`/parent/dashboard`)، لذلك يُعدّ الاختبار بطاقة واحدة لكل صف:
+
+| القائمة | الدور | الـ endpoint | الشكل | الصفوف / الإجمالي |
+|---|---|---|---|---|
+| مدفوعات الطالب | student | `/StudentPortal/Payments` | `{ totalPaid, payments[] }` | 2 / 2 |
+| نتائج الطالب | student | `/StudentPortal/Results` | مصفوفة مباشرة | 1 / 1 |
+| حضور الطالب | student | `/StudentPortal/Attendance` | `{ records[] }` | 6 / 6 |
+| مذكرات الطالب | student | `/StudentPortal/Notes` | مصفوفة مباشرة | 1 / 1 |
+| إشعارات الطالب | student | `/StudentPortal/Notifications` | `Response<PaginatedResult>` | 3 / 3 |
+| أبناء ولي الأمر | parent | `/ParentPortal/Children` | مصفوفة مباشرة | 2 / 2 |
+| إشعارات ولي الأمر | parent | `/ParentPortal/Notifications` | `Response<PaginatedResult>` | 3 / 3 |
 
 ملاحظتان (ليستا عيبًا جديدًا):
 
@@ -89,11 +116,14 @@
 | اختبارات الباك | `dotnet test --no-build` | **356 ناجحًا / 0 فاشل** |
 | بناء الباك | `dotnet build` | **0 أخطاء** (171 تحذيرًا قائمًا) |
 | بناء الواجهة | `npm run build` | **نجح** — `index-h4QGn_f8.js` 3,036.48 kB (819.38 kB gzip)، `index-DnzcNOYV.css` 99.22 kB |
-| دخان القوائم | `npx playwright test tests/lists-smoke.spec.js` | **10/10 ناجحة** (57.1s) |
+| دخان القوائم | `npx playwright test tests/lists-smoke.spec.js` | **17/17 ناجحة** (2.6m) |
 
 ملاحظة تشغيل: `dotnet build` بالمسار الافتراضي يفشل في نسخ ملفات `CenterManagement.Api`
-لأن نسختي الـ API (E2E 7092 والتطوير 7093) قيد التشغيل وتحتجز الـ DLL؛ البناء نجح
-بإخراج مؤقت (`-p:OutDir=...`)، و`dotnet test --no-build` أعطى نفس العدد 356.
+طالما نسختا الـ API (E2E 7092 والتطوير 7093) قيد التشغيل وتحتجز الـ DLL؛ في تلك الحالة
+يُستخدم `-p:OutDir` مؤقت مع `dotnet test --no-build`. الأفضل إيقاف النسختين قبل بناء
+`CenterManagement.Api`: في 2026-11-16 تسبّب بناء/اختبار سابق أثناء تشغيلهما في إعادة
+كتابة تجميعة تحت التشغيل، فانهارت النسختان بـ`0xC0000006` (in-page error) عند أول طلب.
+أُعيد البناء (`0 أخطاء`) ثم أُعيد تشغيل API الـE2E على 7092، وعادت كل الاستجابات 200.
 
 ## 7) ملاحظات بيئة (ليست عيوبًا)
 
