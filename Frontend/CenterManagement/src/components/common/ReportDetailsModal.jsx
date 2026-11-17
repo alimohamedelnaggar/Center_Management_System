@@ -338,40 +338,49 @@ export default function ReportDetailsModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4">
-      <div className="bg-surface-card rounded-2xl p-6 border border-surface-border w-full max-w-4xl shadow-xl max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-200">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 backdrop-blur-xs sm:p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="report-modal-title"
+      data-testid="report-details-modal"
+    >
+      <div className="bg-surface-card rounded-2xl p-3 border border-surface-border w-full max-w-4xl shadow-xl max-h-[90vh] flex flex-col animate-in fade-in zoom-in duration-200 sm:p-6">
 
         {/* ==========================================
             HEADER
         ========================================== */}
 
-        <div className="flex items-center justify-between border-b border-surface-border pb-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-surface-border pb-4">
 
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
 
             <div className="p-2.5 rounded-xl bg-primary-subtle text-primary">
 
               {type === "attendance" && (
-                <Calendar className="w-6 h-6" />
+                <Calendar className="w-6 h-6" aria-hidden="true" />
               )}
 
               {type === "financial" && (
-                <CreditCard className="w-6 h-6" />
+                <CreditCard className="w-6 h-6" aria-hidden="true" />
               )}
 
               {type === "grades" && (
-                <Award className="w-6 h-6" />
+                <Award className="w-6 h-6" aria-hidden="true" />
               )}
 
               {type === "full" && (
-                <FileText className="w-6 h-6" />
+                <FileText className="w-6 h-6" aria-hidden="true" />
               )}
 
             </div>
 
-            <div>
+            <div className="min-w-0">
 
-              <h3 className="text-base font-bold text-text-main">
+              <h3
+                id="report-modal-title"
+                className="text-base font-bold text-text-main"
+              >
 
                 {type === "attendance" &&
                   "تقرير الحضور والغياب"}
@@ -387,7 +396,7 @@ export default function ReportDetailsModal({
 
               </h3>
 
-              <p className="text-xs text-text-muted mt-0.5">
+              <p className="text-sm text-text-muted mt-0.5 print:text-xs">
 
                 الطالب:{" "}
 
@@ -409,13 +418,15 @@ export default function ReportDetailsModal({
 
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
 
             <button
+              type="button"
               onClick={handlePrint}
-              className="px-3 py-2 bg-primary-subtle text-primary hover:bg-primary/20 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
+              aria-label="طباعة / PDF"
+              className="min-h-11 min-w-11 px-3 py-2 bg-primary-subtle text-primary hover:bg-primary/20 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer print:min-h-0 print:min-w-0"
             >
-              <Printer className="w-4 h-4" />
+              <Printer className="w-4 h-4" aria-hidden="true" />
 
               <span className="hidden sm:inline">
                 طباعة / PDF
@@ -423,10 +434,12 @@ export default function ReportDetailsModal({
             </button>
 
             <button
+              type="button"
               onClick={onClose}
-              className="p-2 text-text-muted hover:text-text-main rounded-xl hover:bg-surface-muted transition-colors cursor-pointer"
+              aria-label="إغلاق التقرير"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center p-2 text-text-muted hover:text-text-main rounded-xl hover:bg-surface-muted transition-colors cursor-pointer print:min-h-0 print:min-w-0"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5" aria-hidden="true" />
             </button>
 
           </div>
@@ -438,9 +451,9 @@ export default function ReportDetailsModal({
         ========================================== */}
 
         {groupHistory.length > 0 && (
-          <div className="pt-3 flex items-center gap-2">
+          <div className="pt-3 flex flex-wrap items-center gap-2">
 
-            <span className="text-xs font-bold text-text-muted whitespace-nowrap">
+            <span className="text-sm font-bold text-text-muted whitespace-nowrap print:text-xs">
               تصفية حسب المجموعة:
             </span>
 
@@ -451,7 +464,8 @@ export default function ReportDetailsModal({
                   e.target.value || null
                 )
               }
-              className="text-xs font-bold border border-surface-border rounded-lg px-2 py-1.5 bg-surface-card text-text-main focus:outline-none focus:border-primary"
+              aria-label="تصفية حسب المجموعة"
+              className="min-h-11 text-sm font-bold border border-surface-border rounded-lg px-2 py-1.5 bg-surface-card text-text-main focus:outline-none focus:border-primary print:min-h-0 print:text-xs"
             >
 
               <option value="">
@@ -494,7 +508,7 @@ export default function ReportDetailsModal({
               <>
                 <div className="bg-surface-muted/60 p-3 rounded-xl border border-surface-border text-center">
 
-                  <span className="text-[11px] text-text-muted block">
+                  <span className="text-xs print:text-[11px] text-text-muted block">
                     إجمالي الحصص
                   </span>
 
@@ -506,7 +520,7 @@ export default function ReportDetailsModal({
 
                 <div className="bg-status-success-bg/50 p-3 rounded-xl border border-status-success/20 text-center">
 
-                  <span className="text-[11px] text-status-success block">
+                  <span className="text-xs print:text-[11px] text-status-success block">
                     مرات الحضور
                   </span>
 
@@ -518,7 +532,7 @@ export default function ReportDetailsModal({
 
                 <div className="bg-status-danger-bg/50 p-3 rounded-xl border border-status-danger/20 text-center">
 
-                  <span className="text-[11px] text-status-danger block">
+                  <span className="text-xs print:text-[11px] text-status-danger block">
                     مرات الغياب
                   </span>
 
@@ -530,7 +544,7 @@ export default function ReportDetailsModal({
 
                 <div className="bg-status-warning-bg/50 p-3 rounded-xl border border-status-warning/20 text-center">
 
-                  <span className="text-[11px] text-status-warning block">
+                  <span className="text-xs print:text-[11px] text-status-warning block">
                     مرات التأخر
                   </span>
 
@@ -542,7 +556,7 @@ export default function ReportDetailsModal({
 
                 <div className="bg-status-info-bg/50 p-3 rounded-xl border border-status-info/20 text-center">
 
-                  <span className="text-[11px] text-status-info block">
+                  <span className="text-xs print:text-[11px] text-status-info block">
                     مرات العذر
                   </span>
 
@@ -554,7 +568,7 @@ export default function ReportDetailsModal({
 
                 <div className="bg-primary-subtle p-3 rounded-xl border border-primary/20 text-center">
 
-                  <span className="text-[11px] text-primary block">
+                  <span className="text-xs print:text-[11px] text-primary block">
                     نسبة الحضور
                   </span>
 
@@ -573,7 +587,7 @@ export default function ReportDetailsModal({
               <>
                 <div className="bg-surface-muted/60 p-3 rounded-xl border border-surface-border text-center">
 
-                  <span className="text-[11px] text-text-muted block">
+                  <span className="text-xs print:text-[11px] text-text-muted block">
                     نوع الاشتراك
                   </span>
 
@@ -587,7 +601,7 @@ export default function ReportDetailsModal({
 
                 <div className="bg-surface-muted/60 p-3 rounded-xl border border-surface-border text-center">
 
-                  <span className="text-[11px] text-text-muted block">
+                  <span className="text-xs print:text-[11px] text-text-muted block">
                     عدد الدفعات
                   </span>
 
@@ -606,7 +620,7 @@ export default function ReportDetailsModal({
               <>
                 <div className="bg-surface-muted/60 p-3 rounded-xl border border-surface-border text-center">
 
-                  <span className="text-[11px] text-text-muted block">
+                  <span className="text-xs print:text-[11px] text-text-muted block">
                     عدد الامتحانات
                   </span>
 
@@ -618,7 +632,7 @@ export default function ReportDetailsModal({
 
                 <div className="bg-surface-muted/60 p-3 rounded-xl border border-surface-border text-center">
 
-                  <span className="text-[11px] text-text-muted block">
+                  <span className="text-xs print:text-[11px] text-text-muted block">
                     مجموع درجات الامتحانات
                   </span>
 
@@ -630,7 +644,7 @@ export default function ReportDetailsModal({
 
                 <div className="bg-surface-muted/60 p-3 rounded-xl border border-surface-border text-center">
 
-                  <span className="text-[11px] text-text-muted block">
+                  <span className="text-xs print:text-[11px] text-text-muted block">
                     إجمالي الدرجات
                   </span>
 
@@ -642,7 +656,7 @@ export default function ReportDetailsModal({
 
                 <div className="bg-primary-subtle p-3 rounded-xl border border-primary/20 text-center">
 
-                  <span className="text-[11px] text-primary block">
+                  <span className="text-xs print:text-[11px] text-primary block">
                     المعدل التراكمي
                   </span>
 
@@ -665,14 +679,24 @@ export default function ReportDetailsModal({
             <div className="space-y-2">
 
               {type === "full" && (
-                <h4 className="font-bold text-xs text-text-muted">
+                <h4 className="font-bold text-sm text-text-muted print:text-xs">
                   تفاصيل الحضور
                 </h4>
               )}
 
-              <div className="w-full overflow-x-auto rounded-xl border border-surface-border">
+              <p className="no-print text-sm font-medium text-text-muted sm:hidden">
+                اسحب الجدول أفقيًا لرؤية بقية الأعمدة.
+              </p>
 
-                <table className="w-full min-w-[500px] text-right text-xs">
+              <div
+                className="w-full overflow-x-auto rounded-xl border border-surface-border"
+                data-scroll-region
+                tabIndex={0}
+                role="region"
+                aria-label="جدول تفاصيل الحضور"
+              >
+
+                <table className="w-full min-w-[500px] text-right text-sm print:text-xs">
 
                   <thead className="bg-surface-muted border-b border-surface-border text-text-muted font-bold">
 
@@ -770,14 +794,24 @@ export default function ReportDetailsModal({
             <div className="space-y-2">
 
               {type === "full" && (
-                <h4 className="font-bold text-xs text-text-muted">
+                <h4 className="font-bold text-sm text-text-muted print:text-xs">
                   تفاصيل المالية
                 </h4>
               )}
 
-              <div className="w-full overflow-x-auto rounded-xl border border-surface-border">
+              <p className="no-print text-sm font-medium text-text-muted sm:hidden">
+                اسحب الجدول أفقيًا لرؤية بقية الأعمدة.
+              </p>
 
-                <table className="w-full min-w-[500px] text-right text-xs">
+              <div
+                className="w-full overflow-x-auto rounded-xl border border-surface-border"
+                data-scroll-region
+                tabIndex={0}
+                role="region"
+                aria-label="جدول تفاصيل المالية"
+              >
+
+                <table className="w-full min-w-[500px] text-right text-sm print:text-xs">
 
                   <thead className="bg-surface-muted border-b border-surface-border text-text-muted font-bold">
 
@@ -917,14 +951,24 @@ export default function ReportDetailsModal({
             <div className="space-y-2">
 
               {type === "full" && (
-                <h4 className="font-bold text-xs text-text-muted">
+                <h4 className="font-bold text-sm text-text-muted print:text-xs">
                   نتائج الامتحانات
                 </h4>
               )}
 
-              <div className="w-full overflow-x-auto rounded-xl border border-surface-border">
+              <p className="no-print text-sm font-medium text-text-muted sm:hidden">
+                اسحب الجدول أفقيًا لرؤية بقية الأعمدة.
+              </p>
 
-                <table className="w-full min-w-[800px] text-right text-xs">
+              <div
+                className="w-full overflow-x-auto rounded-xl border border-surface-border"
+                data-scroll-region
+                tabIndex={0}
+                role="region"
+                aria-label="جدول نتائج الامتحانات"
+              >
+
+                <table className="w-full min-w-[800px] text-right text-sm print:text-xs">
 
                   <thead className="bg-surface-muted border-b border-surface-border text-text-muted font-bold">
 
@@ -1068,8 +1112,9 @@ export default function ReportDetailsModal({
         <div className="border-t border-surface-border pt-3 flex justify-end">
 
           <button
+            type="button"
             onClick={onClose}
-            className="px-5 py-2 border border-surface-border rounded-xl text-xs font-bold text-text-muted hover:bg-surface-muted transition-colors cursor-pointer"
+            className="min-h-11 px-5 py-2 border border-surface-border rounded-xl text-sm font-bold text-text-muted hover:bg-surface-muted transition-colors cursor-pointer print:min-h-0 print:text-xs"
           >
             إغلاق
           </button>

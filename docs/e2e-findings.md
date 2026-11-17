@@ -1698,6 +1698,55 @@ Two notes for future runs (not defects):
 
 ---
 
+## F-037 — The center report's print button failed AA contrast in dark mode
+
+**Severity:** Medium (one 14px control on every dark-theme viewport; no data loss)
+
+**Found:** 2026-11-17 by the full batch 9 matrix (360/390/768/1024/1280/1440/1920/2560,
+both landscape sizes, 200% text and page zoom, light and dark).
+
+**Symptom**
+
+`center-reports` and `center-reports-solo` failed the contrast audit in every dark run:
+
+```
+tag=button  class=flex.min-h-11  text="طباعة"  font=14px
+fg=rgb(255, 255, 255)  bg=rgba(132,126,237,1)  ratio=3.39:1  (AA floor 4.5:1)
+```
+
+The light-theme runs measured 4.9:1 and passed, which is why a light-only iteration missed it.
+The same defect appeared at all 10 dark viewports per page (32 failures in the first full run,
+including the harness scroll-expectation issue noted below).
+
+**Root cause**
+
+Same hard-coded pattern as F-026: `CenterReportsPage` used `text-white` on `bg-primary`.
+In dark mode `BrandingContext` deliberately lightens the authored brand colour so primary
+*text* clears 4.5:1 on dark cards; that lighter tint then needs a dark foreground. The design
+system already exposes `text-primary-contrast` for exactly this pair (white in light mode,
+`#0f172a` in dark). The retry button used the same pair and was corrected in the same change.
+
+**Fix** — colours only; no visible text, behaviour, API contract or print DOM change:
+
+- `CenterReportsPage` print and retry buttons now use `text-primary-contrast`.
+- Dark-mode contrast on those screens rose from 3.39:1 to 5.15:1; light mode stayed at 4.9:1.
+
+**Regression guard**
+
+The batch 9 harness computes WCAG contrast from computed styles for every visible text node on
+every page, dialog and zoom state. After the fix the full matrix is clean: **ALL PASS, 266 runs**.
+Other legacy screens that still hard-code `text-white` on a tinted background were outside this
+batch's scope and were not touched.
+
+**Not a product defect:** the harness also failed wide viewports for "no horizontally scrolling
+report container". At 1440/1920/2560 the 900px report tables fit, so no scrolling is expected;
+the check was corrected to assert the keyboard-accessible `overflow-x:auto` container itself
+rather than requiring actual overflow.
+
+**Status: FIXED** in phase 3 batch 9.
+
+---
+
 ## Harness failures during the Stage C dry runs (not product defects)
 
 These stopped recordings before Stage C started. None of them is a product bug, and none of

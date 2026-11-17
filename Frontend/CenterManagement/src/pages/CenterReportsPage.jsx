@@ -135,6 +135,27 @@ const csvEscape = (value) => `"${String(value ?? "").replace(/"/g, '""')}"`;
 const tableToCsv = (headers, rows) =>
   [headers.map(csvEscape).join(","), ...rows.map((r) => r.map(csvEscape).join(","))].join("\n");
 
+// Axes on a 360px phone cannot hold "1,234,567"; a compact tick keeps the
+// chart readable without changing the tooltip (which still shows the exact
+// currency value).
+const compactNumber = (value) => {
+  const number = Number(value) || 0;
+  const abs = Math.abs(number);
+  if (abs >= 1000000) return `${(number / 1000000).toFixed(1)}م`;
+  if (abs >= 1000) return `${(number / 1000).toFixed(1)}ألف`;
+  return String(number);
+};
+
+// Wide reports scroll inside their own container only. The hint is screen-only
+// (and phone-only) so the printed page is byte-for-byte the same as before.
+function ScrollHint({ label }) {
+  return (
+    <p className="no-print mb-2 text-xs font-medium text-text-muted sm:hidden">
+      {label}
+    </p>
+  );
+}
+
 export default function CenterReportsPage() {
   const { hasModule } = useAuth();
   const showPayments = hasModule("payments");
@@ -305,7 +326,11 @@ export default function CenterReportsPage() {
   // Render
   // =========================================================
   return (
-    <div className="space-y-6 p-4 md:p-6 dir-rtl" dir="rtl">
+    <div
+      data-testid="center-reports-page"
+      className="space-y-6 p-4 md:p-6 dir-rtl"
+      dir="rtl"
+    >
       {/* ---------- Header + controls (hidden when printing) ---------- */}
       <div className="no-print flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
@@ -320,18 +345,18 @@ export default function CenterReportsPage() {
             type="button"
             onClick={handleExportCsv}
             disabled={!data}
-            className="flex items-center gap-2 rounded-lg border border-surface-border bg-surface-card px-3 py-2 text-sm font-semibold text-text-main transition hover:bg-surface-muted disabled:opacity-50"
+            className="flex min-h-11 items-center gap-2 rounded-lg border border-surface-border bg-surface-card px-3 py-2 text-sm font-semibold text-text-main transition hover:bg-surface-muted disabled:opacity-50"
           >
-            <Download className="h-4 w-4" />
+            <Download className="h-4 w-4" aria-hidden="true" />
             تصدير CSV
           </button>
           <button
             type="button"
             onClick={handlePrint}
             disabled={!data}
-            className="flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+            className="flex min-h-11 items-center gap-2 rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-primary-contrast transition hover:opacity-90 disabled:opacity-50"
           >
-            <Printer className="h-4 w-4" />
+            <Printer className="h-4 w-4" aria-hidden="true" />
             طباعة
           </button>
         </div>
@@ -340,38 +365,38 @@ export default function CenterReportsPage() {
       {/* ---------- Filters ---------- */}
       <div className="no-print rounded-xl border border-surface-border bg-surface-card p-4">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <label className="flex flex-col gap-1 text-xs font-semibold text-text-muted">
+          <label className="flex flex-col gap-1 text-sm font-semibold text-text-muted">
             من شهر
             <input
               type="month"
               value={fromYm}
               onChange={(e) => setFromYm(e.target.value)}
-              className="rounded-lg border border-surface-border bg-surface-bg px-3 py-2 text-sm text-text-main"
+              className="min-h-11 rounded-lg border border-surface-border bg-surface-bg px-3 py-2 text-sm text-text-main"
             />
           </label>
 
-          <label className="flex flex-col gap-1 text-xs font-semibold text-text-muted">
+          <label className="flex flex-col gap-1 text-sm font-semibold text-text-muted">
             إلى شهر
             <input
               type="month"
               value={toYm}
               onChange={(e) => setToYm(e.target.value)}
-              className="rounded-lg border border-surface-border bg-surface-bg px-3 py-2 text-sm text-text-main"
+              className="min-h-11 rounded-lg border border-surface-border bg-surface-bg px-3 py-2 text-sm text-text-main"
             />
           </label>
 
-          <label className="flex flex-col gap-1 text-xs font-semibold text-text-muted lg:col-span-2">
+          <label className="flex flex-col gap-1 text-sm font-semibold text-text-muted lg:col-span-2">
             شهر الفوترة (المتوقع والمتبقي)
             <input
               type="month"
               value={billingYm}
               onChange={(e) => setBillingYm(e.target.value)}
-              className="rounded-lg border border-surface-border bg-surface-bg px-3 py-2 text-sm text-text-main"
+              className="min-h-11 rounded-lg border border-surface-border bg-surface-bg px-3 py-2 text-sm text-text-main"
             />
           </label>
         </div>
 
-        <p className="mt-3 text-xs text-text-muted">
+        <p className="mt-3 text-sm text-text-muted">
           «المحصّل في الفترة» ونسب الحضور تُحتسب من <b>{fromYm || "—"}</b> إلى{" "}
           <b>{toYm || "—"}</b>، أمّا «المتوقع / المتبقي للشهر» فتُحتسب لشهر الفوترة{" "}
           <b>{billingYm || "—"}</b>.
@@ -388,16 +413,21 @@ export default function CenterReportsPage() {
 
       {/* ---------- Error ---------- */}
       {!loading && error && (
-        <div className="flex flex-col items-center gap-3 rounded-xl border border-surface-border bg-surface-card py-16">
+        <div
+          role="alert"
+          data-testid="center-reports-error"
+          className="flex flex-col items-center gap-3 rounded-xl border border-surface-border bg-surface-card py-16"
+        >
           <AlertTriangle className="h-10 w-10 text-status-danger" />
           <p className="text-sm font-semibold text-text-main">تعذّر تحميل التقرير</p>
-          <p className="text-xs text-text-muted">{error}</p>
+          <p className="text-sm text-text-muted">{error}</p>
           <button
             type="button"
             onClick={load}
-            className="mt-1 flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white"
+            data-testid="center-reports-retry"
+            className="mt-1 flex min-h-11 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-contrast"
           >
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className="h-4 w-4" aria-hidden="true" />
             إعادة المحاولة
           </button>
         </div>
@@ -418,10 +448,12 @@ export default function CenterReportsPage() {
               ].map((card) => (
                 <div
                   key={card.label}
-                  className="rounded-xl border border-surface-border bg-surface-card p-4"
+                  className="min-w-0 rounded-xl border border-surface-border bg-surface-card p-4"
                 >
-                  <p className="text-xs text-text-muted">{card.label}</p>
-                  <p className="mt-1 text-2xl font-bold text-text-main">{card.value}</p>
+                  <p className="text-sm text-text-muted">{card.label}</p>
+                  <p className="mt-1 break-words text-xl font-bold tabular-nums text-text-main sm:text-2xl">
+                    {card.value}
+                  </p>
                 </div>
               ))}
             </div>
@@ -434,33 +466,33 @@ export default function CenterReportsPage() {
             </h2>
             <div className="overflow-hidden rounded-xl border border-surface-border bg-surface-card">
               <dl className="divide-y divide-surface-border">
-                <div className="flex items-center justify-between px-4 py-3">
-                  <dt className="text-sm text-text-muted">مدفوعات الطلاب المحصّلة</dt>
-                  <dd className="text-sm font-bold text-text-main">
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3">
+                  <dt className="min-w-0 text-sm text-text-muted">مدفوعات الطلاب المحصّلة</dt>
+                  <dd className="shrink-0 text-sm font-bold tabular-nums text-text-main">
                     {formatCurrency(finance?.studentPaymentsCollected ?? 0)}
                   </dd>
                 </div>
-                <div className="flex items-center justify-between px-4 py-3">
-                  <dt className="text-sm text-text-muted">إيرادات أخرى</dt>
-                  <dd className="text-sm font-bold text-text-main">
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3">
+                  <dt className="min-w-0 text-sm text-text-muted">إيرادات أخرى</dt>
+                  <dd className="shrink-0 text-sm font-bold tabular-nums text-text-main">
                     {formatCurrency(finance?.otherIncomes ?? 0)}
                   </dd>
                 </div>
-                <div className="flex items-center justify-between px-4 py-3">
-                  <dt className="text-sm text-text-muted">المصاريف</dt>
-                  <dd className="text-sm font-bold text-text-main">
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3">
+                  <dt className="min-w-0 text-sm text-text-muted">المصاريف</dt>
+                  <dd className="shrink-0 text-sm font-bold tabular-nums text-text-main">
                     {formatCurrency(finance?.expenses ?? 0)}
                   </dd>
                 </div>
-                <div className="flex items-center justify-between px-4 py-3">
-                  <dt className="text-sm text-text-muted">مصروفات المساعدين</dt>
-                  <dd className="text-sm font-bold text-text-main">
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 px-4 py-3">
+                  <dt className="min-w-0 text-sm text-text-muted">مصروفات المساعدين</dt>
+                  <dd className="shrink-0 text-sm font-bold tabular-nums text-text-main">
                     {formatCurrency(finance?.assistantSalaries ?? 0)}
                   </dd>
                 </div>
-                <div className="flex items-center justify-between bg-surface-muted px-4 py-3">
-                  <dt className="text-sm font-semibold text-text-main">الصافي</dt>
-                  <dd className="text-base font-bold text-status-success">
+                <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 bg-surface-muted px-4 py-3">
+                  <dt className="min-w-0 text-sm font-semibold text-text-main">الصافي</dt>
+                  <dd className="shrink-0 text-base font-bold tabular-nums text-status-success">
                     {formatCurrency(finance?.net ?? 0)}
                   </dd>
                 </div>
@@ -481,11 +513,16 @@ export default function CenterReportsPage() {
                   <p className="text-sm">لا توجد بيانات للفترة المحددة</p>
                 </div>
               ) : (
-                <div className="h-72" dir="ltr">
+                <div
+                  className="h-72"
+                  dir="ltr"
+                  role="img"
+                  aria-label="رسم الإيرادات مقابل المصروفات لآخر ستة أشهر"
+                >
                   <ResponsiveContainer width="100%" height="100%">
                     <ComposedChart
                       data={trendData}
-                      margin={{ top: 4, right: 8, left: -8, bottom: 0 }}
+                      margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
                     >
                       <CartesianGrid
                         stroke="var(--color-surface-border)"
@@ -493,12 +530,16 @@ export default function CenterReportsPage() {
                       />
                       <XAxis
                         dataKey="name"
-                        tick={{ fill: "var(--color-text-muted)", fontSize: 11 }}
+                        interval={0}
+                        tickMargin={6}
+                        tick={{ fill: "var(--color-text-muted)", fontSize: 12 }}
                         axisLine={false}
                         tickLine={false}
                       />
                       <YAxis
-                        tick={{ fill: "var(--color-text-muted)", fontSize: 11 }}
+                        width={48}
+                        tickFormatter={compactNumber}
+                        tick={{ fill: "var(--color-text-muted)", fontSize: 12 }}
                         axisLine={false}
                         tickLine={false}
                       />
@@ -546,16 +587,25 @@ export default function CenterReportsPage() {
           {!isSoloReport && (
           <section>
             <h2 className="mb-3 text-base font-bold text-text-main">بالمدرسون</h2>
-            <div className="overflow-x-auto rounded-xl border border-surface-border bg-surface-card">
+            {teachers.length > 0 && (
+              <ScrollHint label="اسحب الجدول أفقيًا لرؤية بقية الأعمدة." />
+            )}
+            <div
+              className="overflow-x-auto rounded-xl border border-surface-border bg-surface-card"
+              data-scroll-region
+              tabIndex={0}
+              role="region"
+              aria-label="جدول المدرسين"
+            >
               {teachers.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 py-14 text-text-muted">
                   <AlertTriangle className="h-9 w-9" />
                   <p className="text-sm">لا يوجد مدرّسون في المركز</p>
                 </div>
               ) : (
-                <table className="w-full text-sm">
+                <table className="w-full min-w-[720px] text-sm">
                   <thead>
-                    <tr className="border-b border-surface-border bg-surface-muted text-xs text-text-muted">
+                    <tr className="border-b border-surface-border bg-surface-muted text-sm text-text-muted">
                       <th className="px-3 py-3 text-right font-semibold">#</th>
                       <th className="px-3 py-3 text-right font-semibold">المدرس</th>
                       <th className="px-3 py-3 text-right font-semibold">المجموعات</th>
@@ -578,33 +628,37 @@ export default function CenterReportsPage() {
                   </thead>
                   <tbody className="divide-y divide-surface-border">
                     {teachers.map((t, i) => (
-                      <tr key={t.teacherId} className="hover:bg-surface-muted">
-                        <td className="px-3 py-3 text-text-muted">{i + 1}</td>
+                      <tr
+                        key={t.teacherId}
+                        data-testid="center-teacher-row"
+                        className="hover:bg-surface-muted"
+                      >
+                        <td className="px-3 py-3 tabular-nums text-text-muted">{i + 1}</td>
                         <td className="px-3 py-3 font-semibold text-text-main">
-                          {t.teacherName}
+                          <span className="block min-w-0 break-words">{t.teacherName}</span>
                         </td>
-                        <td className="px-3 py-3 text-text-main">{t.groupsCount}</td>
-                        <td className="px-3 py-3 text-text-main">{t.studentsCount}</td>
+                        <td className="px-3 py-3 tabular-nums text-text-main">{t.groupsCount}</td>
+                        <td className="px-3 py-3 tabular-nums text-text-main">{t.studentsCount}</td>
                         {showPayments && (
-                          <td className="px-3 py-3 font-bold text-text-main">
+                          <td className="px-3 py-3 whitespace-nowrap font-bold tabular-nums text-text-main">
                             {formatCurrency(t.collectedInRange)}
                           </td>
                         )}
                         {showAttendance && (
                           <>
-                            <td className="px-3 py-3 text-text-main">
+                            <td className="px-3 py-3 tabular-nums text-text-main">
                               {t.presentCount ?? 0}
                             </td>
-                            <td className="px-3 py-3 text-text-main">
+                            <td className="px-3 py-3 tabular-nums text-text-main">
                               {t.absentCount ?? 0}
                             </td>
-                            <td className="px-3 py-3 text-text-main">
+                            <td className="px-3 py-3 tabular-nums text-text-main">
                               {t.lateCount ?? 0}
                             </td>
-                            <td className="px-3 py-3 text-text-main">
+                            <td className="px-3 py-3 tabular-nums text-text-main">
                               {t.excusedCount ?? 0}
                             </td>
-                            <td className="px-3 py-3 text-text-main">
+                            <td className="px-3 py-3 whitespace-nowrap tabular-nums text-text-main">
                               {formatAttendanceRate(t.attendanceRate)}
                             </td>
                           </>
@@ -622,21 +676,29 @@ export default function CenterReportsPage() {
           <section>
             <div className="mb-3 flex items-center justify-between">
               <h2 className="text-base font-bold text-text-main">بالمجموعات</h2>
-              <span className="text-xs text-text-muted">
+              <span className="text-sm text-text-muted">
                 شهر الفوترة: {billingYm || "—"}
               </span>
             </div>
 
-            <div className="overflow-x-auto rounded-xl border border-surface-border bg-surface-card">
+            <ScrollHint label="اسحب الجدول أفقيًا لرؤية المتوقع والمحصّل والمتبقي." />
+
+            <div
+              className="overflow-x-auto rounded-xl border border-surface-border bg-surface-card"
+              data-scroll-region
+              tabIndex={0}
+              role="region"
+              aria-label="جدول المجموعات"
+            >
               {groups.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 py-14 text-text-muted">
                   <AlertTriangle className="h-9 w-9" />
                   <p className="text-sm">لا توجد مجموعات في المركز</p>
                 </div>
               ) : (
-                <table className="w-full text-sm">
+                <table className="w-full min-w-[900px] text-sm">
                   <thead>
-                    <tr className="border-b border-surface-border bg-surface-muted text-xs text-text-muted">
+                    <tr className="border-b border-surface-border bg-surface-muted text-sm text-text-muted">
                       <th className="px-3 py-3 text-right font-semibold">#</th>
                       <th className="px-3 py-3 text-right font-semibold">المجموعة</th>
                       <th className="px-3 py-3 text-right font-semibold">
@@ -664,50 +726,56 @@ export default function CenterReportsPage() {
                   </thead>
                   <tbody className="divide-y divide-surface-border">
                     {groups.map((g, i) => (
-                      <tr key={g.groupId} className="hover:bg-surface-muted">
-                        <td className="px-3 py-3 text-text-muted">{i + 1}</td>
+                      <tr
+                        key={g.groupId}
+                        data-testid="center-group-row"
+                        className="hover:bg-surface-muted"
+                      >
+                        <td className="px-3 py-3 tabular-nums text-text-muted">{i + 1}</td>
                         <td className="px-3 py-3 font-semibold text-text-main">
-                          {g.groupName}
+                          <span className="block min-w-0 break-words">{g.groupName}</span>
                         </td>
                         <td className="px-3 py-3 text-text-main">
-                          {isSoloReport ? (soloTeacherSubject || "—") : (g.teacherName || "—")}
+                          <span className="block min-w-0 break-words">
+                            {isSoloReport ? (soloTeacherSubject || "—") : (g.teacherName || "—")}
+                          </span>
                         </td>
-                        <td className="px-3 py-3 text-text-main">{g.studentsCount}</td>
+                        <td className="px-3 py-3 tabular-nums text-text-main">{g.studentsCount}</td>
                         {showAttendance && (
                           <>
-                            <td className="px-3 py-3 text-text-main">
+                            <td className="px-3 py-3 tabular-nums text-text-main">
                               {g.presentCount ?? 0}
                             </td>
-                            <td className="px-3 py-3 text-text-main">
+                            <td className="px-3 py-3 tabular-nums text-text-main">
                               {g.absentCount ?? 0}
                             </td>
-                            <td className="px-3 py-3 text-text-main">
+                            <td className="px-3 py-3 tabular-nums text-text-main">
                               {g.lateCount ?? 0}
                             </td>
-                            <td className="px-3 py-3 text-text-main">
+                            <td className="px-3 py-3 tabular-nums text-text-main">
                               {g.excusedCount ?? 0}
                             </td>
-                            <td className="px-3 py-3 text-text-main">
+                            <td className="px-3 py-3 whitespace-nowrap tabular-nums text-text-main">
                               {formatAttendanceRate(g.attendanceRate)}
                             </td>
                           </>
                         )}
                         {showPayments && (
                           <>
-                            <td className="px-3 py-3 text-text-main">
+                            <td className="px-3 py-3 whitespace-nowrap tabular-nums text-text-main">
                               {formatCurrency(g.expected)}
                             </td>
-                            <td className="px-3 py-3 text-text-main">
+                            <td className="px-3 py-3 whitespace-nowrap tabular-nums text-text-main">
                               {formatCurrency(g.collected)}
                             </td>
-                            <td className="px-3 py-3 font-bold text-status-danger">
+                            <td className="px-3 py-3 whitespace-nowrap font-bold tabular-nums text-status-danger">
                               {formatCurrency(g.outstanding)}
                             </td>
                             <td className="no-print px-3 py-3">
                               {Number(g.outstanding) > 0 && (
                                 <Link
                                   to={overdueLink(g.groupId)}
-                                  className="rounded-lg border border-surface-border px-2.5 py-1.5 text-xs font-semibold text-primary transition hover:bg-surface-muted"
+                                  className="inline-flex min-h-11 items-center rounded-lg border border-surface-border px-2.5 py-1.5 text-sm font-semibold text-primary transition hover:bg-surface-muted"
                                 >
                                   عرض المتأخرين
                                 </Link>
@@ -719,23 +787,23 @@ export default function CenterReportsPage() {
                     ))}
                   </tbody>
                   <tfoot>
-                    <tr className="border-t border-surface-border bg-surface-muted text-xs font-bold">
+                    <tr className="border-t border-surface-border bg-surface-muted text-sm font-bold">
                       <td className="px-3 py-3" colSpan={4 + (showAttendance ? 5 : 0)}>
                         الإجمالي (كل المجموعات)
                       </td>
                       {showPayments && (
                         <>
-                          <td className="px-3 py-3 text-text-main">
+                          <td className="px-3 py-3 whitespace-nowrap tabular-nums text-text-main">
                             {formatCurrency(
                               groups.reduce((s, g) => s + Number(g.expected || 0), 0),
                             )}
                           </td>
-                          <td className="px-3 py-3 text-text-main">
+                          <td className="px-3 py-3 whitespace-nowrap tabular-nums text-text-main">
                             {formatCurrency(
                               groups.reduce((s, g) => s + Number(g.collected || 0), 0),
                             )}
                           </td>
-                          <td className="px-3 py-3 text-status-danger">
+                          <td className="px-3 py-3 whitespace-nowrap tabular-nums text-status-danger">
                             {formatCurrency(
                               groups.reduce((s, g) => s + Number(g.outstanding || 0), 0),
                             )}
@@ -750,9 +818,12 @@ export default function CenterReportsPage() {
             </div>
 
             {showPayments && (
-              <p className="mt-3 text-xs text-text-muted">
+              <p className="mt-3 text-sm text-text-muted">
                 «المتبقي للشهر» هو نفسه رقم متأخّري ذلك الشهر بالضبط —{" "}
-                <Link to={overdueLink(null)} className="font-semibold text-primary">
+                <Link
+                  to={overdueLink(null)}
+                  className="inline-flex min-h-11 items-center font-semibold text-primary print:min-h-0"
+                >
                   فتح صفحة المتأخرين
                 </Link>
               </p>

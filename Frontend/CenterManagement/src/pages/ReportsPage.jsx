@@ -36,28 +36,36 @@ export default function ReportsPage() {
   const current = tabs.find((tab) => tab.key === activeTab) || tabs[0];
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="mx-auto w-full min-w-0 max-w-7xl space-y-6" data-testid="reports-page">
       <div className="flex flex-col gap-4">
         <div>
           <h1 className="text-xl font-bold text-text-main">التقارير</h1>
-          <p className="mt-1 text-xs text-text-muted">الرئيسية / التقارير</p>
+          <p className="mt-1 text-sm text-text-muted">الرئيسية / التقارير</p>
         </div>
 
-        <div className="flex flex-wrap gap-2 rounded-2xl border border-surface-border bg-surface-card p-2 shadow-xs">
+        <div
+          role="tablist"
+          aria-label="تبويبات التقارير"
+          className="flex flex-wrap gap-2 rounded-2xl border border-surface-border bg-surface-card p-2 shadow-xs"
+        >
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = current?.key === tab.key;
             return (
               <button
                 key={tab.key}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                data-testid={`reports-tab-${tab.key}`}
                 onClick={() => setActiveTab(tab.key)}
-                className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all ${
+                className={`flex min-h-11 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all ${
                   isActive
                     ? "bg-primary text-text-inverse shadow-sm"
                     : "text-text-muted hover:bg-surface-muted hover:text-text-main"
                 }`}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className="h-4 w-4" aria-hidden="true" />
                 <span>{tab.title}</span>
               </button>
             );

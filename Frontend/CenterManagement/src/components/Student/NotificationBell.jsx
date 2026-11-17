@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
-import { Bell, CheckCheck, Info } from "@/components/icons";
+import { AlertTriangle, Bell, CheckCheck, RefreshCw } from "@/components/icons";
 import { studentPortalService } from "../../services/studentPortalService";
 import {
   notificationConnection,
@@ -38,31 +38,39 @@ export default function NotificationBell({
   const [unread, setUnread] = useState(0);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const panelRef = useRef(null);
 
-  const loadUnreadCount = async () => {
+  const loadUnreadCount = useCallback(async () => {
     try {
       const res = await service.getUnreadCount();
       if (res?.succeeded) setUnread(res.data ?? 0);
     } catch {
-      // ignore
+      // The badge is a nice-to-have: a failed count must not block the bell.
     }
-  };
+  }, [service]);
 
-  const loadList = async () => {
+  const loadList = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await service.getNotifications({
         pageNumber: 1,
         pageSize: 10,
       });
-      if (res?.succeeded) setItems(res.data?.data ?? []);
-    } catch {
-      // ignore
+      if (res?.succeeded) {
+        setItems(res.data?.data ?? []);
+      } else {
+        setError(res?.message || "تعذّر تحميل الإشعارات");
+      }
+    } catch (err) {
+      setError(
+        err?.response?.data?.message || err?.message || "تعذّر تحميل الإشعارات",
+      );
     } finally {
       setLoading(false);
     }
-  };
+  }, [service]);
 
   useEffect(() => {
     startNotificationConnection();
@@ -77,7 +85,7 @@ export default function NotificationBell({
 
     notificationConnection.on("NotificationReceived", handler);
     return () => notificationConnection.off("NotificationReceived", handler);
-  }, []);
+  }, [loadUnreadCount]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -87,9 +95,16 @@ export default function NotificationBell({
         setOpen(false);
       }
     };
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") setOpen(false);
+    };
     document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
-  }, [open]);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onClickOutside);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open, loadList]);
 
   const handleClick = async (item) => {
     if (!item.isRead) {
@@ -100,7 +115,7 @@ export default function NotificationBell({
         );
         setUnread((prev) => Math.max(0, prev - 1));
       } catch {
-        // ignore
+        toast.error("تعذّر تعليم الإشعار كمقروء");
       }
     }
 
@@ -113,37 +128,54 @@ export default function NotificationBell({
       setItems((prev) => prev.map((n) => ({ ...n, isRead: true })));
       setUnread(0);
     } catch {
-      // ignore
+      toast.error("تعذّر تعليم الإشعارات كمقروءة");
     }
   };
 
   return (
-    <div className="relative" ref={panelRef}>
+    <div className="relative" ref={panelRef} data-testid="notification-bell">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="relative flex h-11 w-11 items-center justify-center rounded-control border border-surface-border bg-surface-card text-text-muted transition hover:bg-surface-muted hover:text-text-main"
+        className="relative inline-flex h-11 w-11 items-center justify-center rounded-control border border-surface-border bg-surface-card text-text-muted transition hover:bg-surface-muted hover:text-text-main"
         title="الإشعارات"
-        aria-label="الإشعارات"
+        aria-label={
+          unread > 0
+            ? `الإشعارات (${unread} غير مقروء)`
+            : "الإشعارات"
+        }
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-controls="notification-panel"
+        data-testid="notification-bell-button"
       >
-        <Bell className="h-5 w-5" />
+        <Bell className="h-5 w-5" aria-hidden="true" />
         {unread > 0 && (
-          <span className="absolute -top-1.5 -left-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-status-danger px-1 text-[11px] font-bold text-text-inverse">
+          <span
+            data-testid="notification-unread-count"
+            className="absolute -top-1.5 -left-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-status-danger px-1 text-xs font-bold tabular-nums text-text-inverse"
+          >
             {unread > 99 ? "99+" : unread}
           </span>
         )}
       </button>
 
       {open && (
-        <div className="absolute left-0 z-40 mt-2 w-80 overflow-hidden rounded-xl border border-surface-border bg-surface-card shadow-lg">
-          <div className="flex items-center justify-between border-b border-surface-border px-4 py-3">
+        <div
+          id="notification-panel"
+          role="dialog"
+          aria-label="الإشعارات"
+          data-testid="notification-panel"
+          className="absolute left-0 z-40 mt-2 w-[min(20rem,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-surface-border bg-surface-card shadow-lg"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-surface-border px-4 py-3">
             <h3 className="text-sm font-bold text-text-main">الإشعارات</h3>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               {viewAllPath && (
                 <Link
                   to={viewAllPath}
                   onClick={() => setOpen(false)}
-                  className="text-xs font-medium text-text-muted transition hover:text-primary"
+                  className="inline-flex min-h-11 items-center text-sm font-medium text-text-muted transition hover:text-primary"
                 >
                   عرض الكل
                 </Link>
@@ -151,9 +183,11 @@ export default function NotificationBell({
               <button
                 type="button"
                 onClick={handleMarkAll}
-                className="inline-flex items-center gap-1 text-xs font-medium text-primary transition hover:opacity-80"
+                data-testid="notification-mark-all"
+                className="inline-flex min-h-11 items-center gap-1 text-sm font-medium text-primary transition hover:opacity-80 disabled:opacity-50"
+                disabled={items.length === 0}
               >
-                <CheckCheck className="h-3.5 w-3.5" />
+                <CheckCheck className="h-4 w-4" aria-hidden="true" />
                 تعليم الكل كمقروء
               </button>
             </div>
@@ -166,25 +200,55 @@ export default function NotificationBell({
               </p>
             )}
 
-            {!loading && items.length === 0 && (
+            {!loading && error && (
+              <div
+                role="alert"
+                data-testid="notification-error"
+                className="flex flex-col items-center gap-2 px-4 py-6 text-center"
+              >
+                <AlertTriangle
+                  className="h-7 w-7 text-status-danger"
+                  aria-hidden="true"
+                />
+                <p className="text-sm font-semibold text-text-main">
+                  تعذّر تحميل الإشعارات
+                </p>
+                <p className="text-sm text-text-muted">{error}</p>
+                <button
+                  type="button"
+                  onClick={loadList}
+                  data-testid="notification-retry"
+                  className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white"
+                >
+                  <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                  إعادة المحاولة
+                </button>
+              </div>
+            )}
+
+            {!loading && !error && items.length === 0 && (
               <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
-                <Bell className="h-8 w-8 text-text-muted" />
+                <Bell
+                  className="h-8 w-8 text-text-muted"
+                  aria-hidden="true"
+                />
                 <p className="text-sm text-text-muted">لا توجد إشعارات</p>
               </div>
             )}
 
             {!loading &&
+              !error &&
               items.map((item) => (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => handleClick(item)}
-                  className={`flex w-full items-start gap-3 border-b border-surface-border px-4 py-3 text-right transition last:border-0 hover:bg-surface-muted ${
+                  className={`flex min-h-11 w-full items-start gap-3 border-b border-surface-border px-4 py-3 text-right transition last:border-0 hover:bg-surface-muted ${
                     item.isRead ? "opacity-70" : ""
                   }`}
                 >
                   <span className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-subtle text-primary">
-                    <Bell className="h-4 w-4" />
+                    <Bell className="h-4 w-4" aria-hidden="true" />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-2">
@@ -192,15 +256,18 @@ export default function NotificationBell({
                         {item.title}
                       </span>
                       {!item.isRead && (
-                        <span className="h-2 w-2 shrink-0 rounded-full bg-status-info" />
+                        <span
+                          className="h-2 w-2 shrink-0 rounded-full bg-status-info"
+                          aria-label="غير مقروء"
+                        />
                       )}
                     </span>
                     {item.body && (
-                      <span className="mt-0.5 block text-xs text-text-muted">
+                      <span className="mt-0.5 block text-sm text-text-muted">
                         {item.body}
                       </span>
                     )}
-                    <span className="mt-1 block text-[11px] text-text-muted">
+                    <span className="mt-1 block text-xs text-text-muted">
                       {formatDate(item.createdAt)}
                     </span>
                   </span>

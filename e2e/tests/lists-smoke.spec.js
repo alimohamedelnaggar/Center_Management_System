@@ -43,6 +43,36 @@ const readArray = (body, pick) => {
   return { rows: rows.length, totalCount: rows.length, pageSize: rows.length };
 };
 
+// The overview tab has no table rows: it renders one card for every numeric
+// aggregate the API returned. Keep this list in the same order as the cards in
+// ReportsOverviewTab so a missing/extra card fails the smoke check.
+const OVERVIEW_STAT_FIELDS = [
+  'studentsCount',
+  'activeStudentsCount',
+  'inactiveStudentsCount',
+  'groupsCount',
+  'teachersCount',
+  'assistantsCount',
+  'sessionsCount',
+  'presentCount',
+  'absentCount',
+  'lateCount',
+  'excusedCount',
+  'totalCount',
+  'monthlyRevenue',
+  'monthlyExpenses',
+  'netProfit',
+];
+
+const readOverviewCards = (body) => {
+  const data = body?.data ?? body ?? {};
+  const cards = OVERVIEW_STAT_FIELDS.filter(
+    (key) => data[key] !== null && data[key] !== undefined,
+  ).length;
+
+  return { rows: cards, totalCount: cards, pageSize: cards };
+};
+
 async function captureList(page, { path, api, rows: rowsSelector, open, parse }) {
   const responsePromise = page.waitForResponse(
     (response) =>
@@ -69,6 +99,76 @@ async function captureList(page, { path, api, rows: rowsSelector, open, parse })
   ).toHaveCount(expected.rows, { timeout: 30_000 });
 
   return expected;
+}
+
+// Batch 9: the center report answers once and paints two independent tables.
+// Comparing both against the same payload catches a regression that hides one
+// breakdown or renders rows from a different envelope.
+async function captureCenterReports(page) {
+  const responsePromise = page.waitForResponse(
+    (response) =>
+      /\/Reports\/Center-Overview(\?|$)/.test(response.url()) &&
+      response.request().method() === 'GET',
+    { timeout: 60_000 },
+  );
+
+  await page.goto('/center-reports', { waitUntil: 'domcontentloaded' });
+
+  const response = await responsePromise;
+  expect(
+    response.ok(),
+    `/center-reports: ${response.url()} answered ${response.status()}`,
+  ).toBeTruthy();
+
+  const body = await response.json();
+  const report = body?.data ?? body ?? {};
+  const teachers = Array.isArray(report.teachers) ? report.teachers : [];
+  const groups = Array.isArray(report.groups) ? report.groups : [];
+
+  await expect(page.getByTestId('center-reports-page')).toBeVisible();
+  await expect(page.getByTestId('center-teacher-row')).toHaveCount(
+    teachers.length,
+  );
+  await expect(page.getByTestId('center-group-row')).toHaveCount(groups.length);
+
+  return { teachers: teachers.length, groups: groups.length };
+}
+
+// Batch 9: the header bell must mirror the unread-count endpoint, including
+// the "99+" cap, instead of showing a stale or hard-coded number.
+async function captureBellUnread(page, { path, api }) {
+  const responsePromise = page.waitForResponse(
+    (response) =>
+      api.test(response.url()) && response.request().method() === 'GET',
+    { timeout: 60_000 },
+  );
+
+  await page.goto(path, { waitUntil: 'domcontentloaded' });
+
+  const response = await responsePromise;
+  expect(
+    response.ok(),
+    `${path}: ${response.url()} answered ${response.status()}`,
+  ).toBeTruthy();
+
+  const body = await response.json();
+  const count = Number(body?.data ?? 0) || 0;
+  const badge = page.locator('[data-testid="notification-unread-count"]:visible');
+  const bell = page.locator('[data-testid="notification-bell-button"]:visible');
+
+  await expect(bell.first()).toBeVisible();
+  if (count > 0) {
+    await expect(badge.first()).toHaveText(count > 99 ? '99+' : String(count));
+    await expect(bell.first()).toHaveAttribute(
+      'aria-label',
+      `الإشعارات (${count} غير مقروء)`,
+    );
+  } else {
+    await expect(badge).toHaveCount(0);
+    await expect(bell.first()).toHaveAttribute('aria-label', 'الإشعارات');
+  }
+
+  return count;
 }
 
 // `/dashboard` (the students list) is an Assistant/Teacher route — it has been
@@ -143,6 +243,28 @@ const TEACHER_LISTS = [
     path: '/notes',
     api: /\/StudyNote\/Paginated(\?|$)/,
     rows: '[data-testid="study-notes-page"] table tbody tr',
+  },
+  {
+    name: 'student report rows',
+    path: '/student-reports',
+    api: /\/Student\/Paginated(\?|$)/,
+    rows: '[data-testid="reports-students-page"] table tbody tr',
+  },
+  {
+    name: 'report groups',
+    path: '/reports',
+    api: /\/Group\/Paginated(\?|$)/,
+    rows: '[data-testid="reports-groups-page"] table tbody tr',
+    open: async (page) => {
+      await page.getByTestId('reports-tab-groups').click();
+    },
+  },
+  {
+    name: 'report overview cards',
+    path: '/reports',
+    api: /\/Reports\/Overview(\?|$)/,
+    rows: '[data-testid="reports-stat-card"]',
+    parse: readOverviewCards,
   },
 ];
 
@@ -221,6 +343,17 @@ test.describe('list rows match the API — center owner', () => {
       });
     });
   }
+
+  test('center report teacher and group rows match the API payload', async ({
+    page,
+  }) => {
+    const result = await captureCenterReports(page);
+
+    test.info().annotations.push({
+      type: 'api-rows',
+      description: `${result.teachers} teachers, ${result.groups} groups`,
+    });
+  });
 });
 
 test.describe('list rows match the API — teacher', () => {
@@ -272,4 +405,40 @@ test.describe('list rows match the API — parent portal', () => {
       });
     });
   }
+});
+
+test.describe('notification bell mirrors the API — student', () => {
+  test.beforeEach(async ({ page }) => {
+    await loginAs(page, 'student');
+  });
+
+  test('unread count matches Unread-Count', async ({ page }) => {
+    const count = await captureBellUnread(page, {
+      path: '/student/dashboard',
+      api: /\/StudentPortal\/Notifications\/Unread-Count(\?|$)/,
+    });
+
+    test.info().annotations.push({
+      type: 'api-rows',
+      description: `${count} unread`,
+    });
+  });
+});
+
+test.describe('notification bell mirrors the API — parent', () => {
+  test.beforeEach(async ({ page }) => {
+    await loginAs(page, 'parent');
+  });
+
+  test('unread count matches Unread-Count', async ({ page }) => {
+    const count = await captureBellUnread(page, {
+      path: '/parent/dashboard',
+      api: /\/ParentPortal\/Notifications\/Unread-Count(\?|$)/,
+    });
+
+    test.info().annotations.push({
+      type: 'api-rows',
+      description: `${count} unread`,
+    });
+  });
 });

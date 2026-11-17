@@ -1,6 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, CheckCheck, ChevronLeft, Loader2 } from "@/components/icons";
+import {
+  AlertTriangle,
+  Bell,
+  CheckCheck,
+  ChevronLeft,
+  Loader2,
+  RefreshCw,
+} from "@/components/icons";
 import toast from "react-hot-toast";
 import Button from "../../components/ui/Button";
 import PageHeader from "../../components/ui/PageHeader";
@@ -38,6 +45,8 @@ function formatDateTime(value) {
 export default function ParentNotificationsPage() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [lastPage, setLastPage] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -45,6 +54,8 @@ export default function ParentNotificationsPage() {
 
   const loadNotifications = useCallback(async (page = 1) => {
     setLoading(true);
+    setError(null);
+    setLastPage(page);
     try {
       const res = await parentPortalService.getNotifications({
         pageNumber: page,
@@ -56,9 +67,13 @@ export default function ParentNotificationsPage() {
         setTotalPages(res.data?.totalPages ?? 1);
         setTotalCount(res.data?.totalCount ?? 0);
       } else {
+        setError(res?.message ?? "فشل في تحميل الإشعارات");
         toast.error(res?.message ?? "فشل في تحميل الإشعارات");
       }
-    } catch {
+    } catch (err) {
+      setError(
+        err?.response?.data?.message || err?.message || "فشل في تحميل الإشعارات",
+      );
       toast.error("فشل في تحميل الإشعارات");
     } finally {
       setLoading(false);
@@ -77,7 +92,7 @@ export default function ParentNotificationsPage() {
           prev.map((n) => (n.id === item.id ? { ...n, isRead: true } : n)),
         );
       } catch {
-        // ignore
+        toast.error("تعذّر تعليم الإشعار كمقروء");
       }
     }
 
@@ -113,11 +128,29 @@ export default function ParentNotificationsPage() {
 
       {loading && <PortalLoading icon={Loader2} />}
 
-      {!loading && notifications.length === 0 && (
+      {!loading && error && (
+        <div
+          role="alert"
+          data-testid="parent-notifications-error"
+          className="flex flex-col items-center gap-3 rounded-card border border-surface-border bg-surface-card p-8 text-center shadow-soft"
+        >
+          <AlertTriangle className="h-9 w-9 text-status-danger" />
+          <p className="text-sm font-bold text-text-main">
+            تعذّر تحميل الإشعارات
+          </p>
+          <p className="text-sm text-text-muted">{error}</p>
+          <Button variant="primary" onClick={() => loadNotifications(lastPage)}>
+            <RefreshCw className="h-4 w-4" aria-hidden="true" />
+            إعادة المحاولة
+          </Button>
+        </div>
+      )}
+
+      {!loading && !error && notifications.length === 0 && (
         <PortalEmpty icon={Bell} title="لا توجد إشعارات." />
       )}
 
-      {!loading && notifications.length > 0 && (
+      {!loading && !error && notifications.length > 0 && (
         <div className="overflow-hidden rounded-card border border-surface-border bg-surface-card shadow-soft">
           <ul className="divide-y divide-surface-border">
             {notifications.map((item) => (
@@ -161,7 +194,7 @@ export default function ParentNotificationsPage() {
         </div>
       )}
 
-      {!loading && notifications.length > 0 && (
+      {!loading && !error && notifications.length > 0 && (
         <div className="mt-4">
           <Pagination
             currentPage={currentPage}

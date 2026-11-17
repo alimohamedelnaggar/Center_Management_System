@@ -6,6 +6,7 @@ import {
   LayoutGrid,
   Loader2,
   ReceiptText,
+  RefreshCw,
   ShieldCheck,
   TrendingUp,
   UserCheck,
@@ -38,15 +39,17 @@ const MONTHS = [
 
 function StatCard({ title, value, icon: Icon, iconClass }) {
   return (
-    <div className="flex min-w-0 items-center gap-4 rounded-2xl border border-surface-border bg-surface-card p-4 shadow-sm md:p-5">
+    <div data-testid="reports-stat-card" className="flex min-w-0 items-center gap-4 rounded-2xl border border-surface-border bg-surface-card p-4 shadow-sm md:p-5">
       <div
         className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${iconClass}`}
       >
-        <Icon className="h-5 w-5" />
+        <Icon className="h-5 w-5" aria-hidden="true" />
       </div>
       <div className="min-w-0">
-        <p className="truncate text-xs font-semibold text-text-muted">{title}</p>
-        <p className="truncate text-xl font-bold text-text-main">{value}</p>
+        <p className="truncate text-sm font-semibold text-text-muted">{title}</p>
+        <p className="break-words text-xl font-bold tabular-nums text-text-main">
+          {value}
+        </p>
       </div>
     </div>
   );
@@ -58,6 +61,7 @@ export default function ReportsOverviewTab() {
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const years = useMemo(() => {
     const current = new Date().getFullYear();
@@ -69,9 +73,11 @@ export default function ReportsOverviewTab() {
   const fetchOverview = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const res = await reportsService.getOverview({ year, month });
       setData(res);
     } catch (err) {
+      setError(err?.response?.data?.message || err?.message || "تعذّر تحميل الملخص");
       toast.error("تعذر جلب ملخص التقارير");
       console.error(err);
     } finally {
@@ -181,13 +187,14 @@ export default function ReportsOverviewTab() {
     : [];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" data-testid="reports-overview-page">
       <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-surface-border bg-surface-card p-4 shadow-sm">
-        <span className="text-xs font-bold text-text-muted">الفترة</span>
+        <span className="text-sm font-bold text-text-muted">الفترة</span>
         <select
           value={month}
           onChange={(e) => setMonth(Number(e.target.value))}
-          className="rounded-xl border border-surface-border bg-surface-muted/40 px-3 py-2 text-xs font-bold text-text-main focus:border-primary focus:outline-none"
+          aria-label="الشهر"
+          className="min-h-11 rounded-xl border border-surface-border bg-surface-muted/40 px-3 py-2 text-sm font-bold text-text-main focus:border-primary focus:outline-none"
         >
           {MONTHS.map((m) => (
             <option key={m.value} value={m.value}>
@@ -198,7 +205,8 @@ export default function ReportsOverviewTab() {
         <select
           value={year}
           onChange={(e) => setYear(Number(e.target.value))}
-          className="rounded-xl border border-surface-border bg-surface-muted/40 px-3 py-2 text-xs font-bold text-text-main focus:border-primary focus:outline-none"
+          aria-label="السنة"
+          className="min-h-11 rounded-xl border border-surface-border bg-surface-muted/40 px-3 py-2 text-sm font-bold text-text-main focus:border-primary focus:outline-none"
         >
           {years.map((y) => (
             <option key={y} value={y}>
@@ -211,6 +219,24 @@ export default function ReportsOverviewTab() {
       {loading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : error ? (
+        <div
+          role="alert"
+          data-testid="reports-overview-error"
+          className="flex flex-col items-center gap-3 rounded-2xl border border-surface-border bg-surface-card p-12 text-center"
+        >
+          <span className="text-sm font-bold text-text-main">تعذّر تحميل ملخص التقارير</span>
+          <p className="text-sm text-text-muted">{error}</p>
+          <button
+            type="button"
+            onClick={fetchOverview}
+            data-testid="reports-overview-retry"
+            className="inline-flex min-h-11 items-center gap-2 rounded-action bg-primary px-4 py-2 text-sm font-bold text-white"
+          >
+            <RefreshCw className="h-4 w-4" aria-hidden="true" />
+            إعادة المحاولة
+          </button>
         </div>
       ) : cards.length === 0 ? (
         <div className="rounded-2xl border border-surface-border bg-surface-card p-12 text-center text-sm font-semibold text-text-muted">
