@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
+  AlertCircle,
   Building2,
   Copy,
   Key,
@@ -16,7 +17,6 @@ import {
 } from "@/components/icons";
 import AddTeacherModal from "../components/common/AddTeacherModal";
 import CenterEditModal from "../components/common/CenterEditModal";
-import Spinner from "../components/common/Spinner";
 import { useAuth } from "../context/useAuth";
 import { centerService } from "../services/centerService";
 
@@ -37,6 +37,58 @@ const statusLabels = {
   Expired: "منتهي",
 };
 
+const fieldClass =
+  "min-h-11 w-full rounded-xl border border-surface-border bg-surface-card px-3 py-2 text-sm text-text-main placeholder:text-text-muted focus:border-primary focus:outline-none";
+const buttonClass =
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 text-sm font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-60";
+const iconButtonClass =
+  "inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-surface-border text-text-muted transition-colors hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-60";
+
+function ScrollHint({ label }) {
+  return (
+    <p className="no-print mb-2 text-xs font-medium text-text-muted sm:hidden">
+      {label}
+    </p>
+  );
+}
+
+function LoadingState({ message }) {
+  return (
+    <div
+      role="status"
+      className="flex min-h-[16rem] flex-col items-center justify-center gap-3 p-6"
+    >
+      <span
+        aria-hidden="true"
+        className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent"
+      />
+      <p className="text-sm font-medium text-text-muted">{message}</p>
+    </div>
+  );
+}
+
+function ErrorState({ testId, message, onRetry }) {
+  return (
+    <div
+      role="alert"
+      data-testid={testId}
+      className="flex min-h-[16rem] flex-col items-center justify-center gap-3 p-6 text-center"
+    >
+      <AlertCircle className="h-10 w-10 text-status-danger" aria-hidden="true" />
+      <p className="text-sm font-bold text-text-main">{message}</p>
+      <button
+        type="button"
+        onClick={onRetry}
+        data-testid={`${testId.replace(/-error$/, "")}-retry`}
+        className={`${buttonClass} bg-primary px-5 text-primary-contrast hover:bg-primary-hover`}
+      >
+        <RefreshCw className="h-4 w-4" aria-hidden="true" />
+        إعادة المحاولة
+      </button>
+    </div>
+  );
+}
+
 function CopyButton({ value }) {
   const copy = async () => {
     try {
@@ -51,11 +103,132 @@ function CopyButton({ value }) {
     <button
       onClick={copy}
       type="button"
-      className="rounded-lg p-1.5 text-text-muted hover:bg-surface-muted"
+      aria-label="نسخ"
       title="نسخ"
+      className={iconButtonClass}
     >
-      <Copy size={16} />
+      <Copy size={16} aria-hidden="true" />
     </button>
+  );
+}
+
+function CenterActions({ center, suspended, busy, accessToken, onImpersonate, onConfirm, onEdit, onPasswordInfo }) {
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <button
+        type="button"
+        onClick={() => onImpersonate(center)}
+        disabled={!center.ownerId || !accessToken}
+        data-testid="center-impersonate"
+        className="inline-flex min-h-11 items-center rounded-lg border border-surface-border bg-surface-card px-3 text-sm font-bold text-primary transition-colors hover:bg-primary-subtle disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        دخول كالمالك
+      </button>
+      {center.type === "SoloTeacher" && (
+        <button
+          type="button"
+          title="ترقية إلى متعدد المدرسين"
+          aria-label="ترقية إلى متعدد المدرسين"
+          disabled={busy}
+          onClick={() =>
+            onConfirm({
+              title: "ترقية إلى متعدد المدرسين",
+              message: `هل تريد ترقية ${center?.name || "هذا المركز"} إلى مركز متعدد المدرسين؟ سيتمكن المالك بعدها من إضافة مدرسين ومجموعات لكل مدرس.`,
+              confirmText: "ترقية",
+              successMessage: "تمت ترقية المركز",
+              action: () => centerService.upgradeToMultiTeacher(center.id),
+            })
+          }
+          className="inline-flex min-h-11 items-center rounded-lg border border-surface-border bg-surface-card px-3 text-sm font-bold text-status-warning transition-colors hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          ترقية
+        </button>
+      )}
+      <button
+        type="button"
+        title="تعديل"
+        aria-label="تعديل"
+        onClick={() => onEdit(center)}
+        className={iconButtonClass}
+      >
+        <Pencil size={16} aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        title={suspended ? "تفعيل" : "إيقاف"}
+        aria-label={suspended ? "تفعيل" : "إيقاف"}
+        disabled={busy}
+        onClick={() =>
+          onConfirm({
+            title: suspended ? "تفعيل المركز" : "إيقاف المركز",
+            message: suspended
+              ? `هل تريد تفعيل ${center?.name || "هذا المركز"}؟ سيستعيد المستخدمون الدخول فوراً.`
+              : `هل تريد إيقاف ${center?.name || "هذا المركز"}؟ سيمنع جميع المستخدمين من الدخول فوراً.`,
+            confirmText: suspended ? "تفعيل" : "إيقاف",
+            danger: !suspended,
+            successMessage: suspended ? "تم تفعيل المركز" : "تم إيقاف المركز",
+            action: () => centerService.setStatus(center.id, suspended ? 1 : 2),
+          })
+        }
+        className={iconButtonClass}
+      >
+        {suspended ? (
+          <PlayCircle size={16} aria-hidden="true" />
+        ) : (
+          <XCircle size={16} aria-hidden="true" />
+        )}
+      </button>
+      <button
+        type="button"
+        title="إعادة تعيين كلمة المرور"
+        aria-label="إعادة تعيين كلمة المرور"
+        disabled={!center.ownerId || busy}
+        onClick={() =>
+          onConfirm({
+            title: "إعادة تعيين كلمة المرور",
+            message: `هل تريد إعادة تعيين كلمة مرور ${center.ownerName || "مالك المركز"}؟ سيُطلب منه تغييرها عند الدخول.`,
+            confirmText: "إعادة التعيين",
+            successMessage: "تم إعادة تعيين كلمة المرور",
+            action: async () => {
+              const response = await centerService.resetUserPassword(center.ownerId);
+              if (
+                response?.succeeded !== false &&
+                response?.data?.temporaryPassword
+              ) {
+                onPasswordInfo({
+                  title: "كلمة مرور مؤقتة",
+                  phone: response.data.phoneNumber,
+                  password: response.data.temporaryPassword,
+                });
+              }
+              return response;
+            },
+          })
+        }
+        className={iconButtonClass}
+      >
+        <Key size={16} aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        title="حذف"
+        aria-label="حذف"
+        disabled={busy}
+        onClick={() =>
+          onConfirm({
+            title: "حذف المركز",
+            message: `هل تريد حذف ${center?.name || "هذا المركز"}؟ لا يمكن التراجع عن هذه العملية.`,
+            confirmText: "حذف",
+            danger: true,
+            successMessage: "تم حذف المركز",
+            action: () => centerService.softDelete(center.id),
+          })
+        }
+        className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-surface-border text-status-danger transition-colors hover:bg-status-danger-bg"
+      >
+        <Trash2 size={16} aria-hidden="true" />
+      </button>
+    </div>
   );
 }
 
@@ -69,6 +242,7 @@ export default function CentersManagement() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [modalPreset, setModalPreset] = useState(null);
   const [editCenter, setEditCenter] = useState(null);
@@ -78,6 +252,7 @@ export default function CentersManagement() {
 
   const loadCenters = useCallback(async () => {
     setLoading(true);
+    setError("");
     try {
       const response = await centerService.getCentersPaged({
         pageNumber: page,
@@ -85,15 +260,26 @@ export default function CentersManagement() {
         search: search.trim() || undefined,
         status: status || undefined,
       });
-      const data = response?.data;
-      setRows(data?.data ?? []);
+      if (response?.succeeded === false) {
+        throw new Error(response?.message || "تعذر تحميل المراكز");
+      }
+      const payload = response?.data;
+      const list = Array.isArray(payload)
+        ? payload
+        : payload?.data ?? payload?.items ?? [];
+      setRows(Array.isArray(list) ? list : []);
       setMeta({
-        totalPages: data?.totalPages ?? 0,
-        totalCount: data?.totalCount ?? 0,
+        totalPages: payload?.totalPages ?? 0,
+        totalCount: payload?.totalCount ?? 0,
       });
-    } catch {
-      toast.error("تعذر تحميل المراكز");
+    } catch (caught) {
+      const message = caught?.message || "تعذر تحميل المراكز";
+      // The inline retryable error is the single source of feedback here. A
+      // toast would be a second, transient copy and (measured at 768 and
+      // 844x390) covered the header actions, so it is intentionally omitted.
+      setError(message);
       setRows([]);
+      setMeta({ totalPages: 0, totalCount: 0 });
     } finally {
       setLoading(false);
     }
@@ -156,6 +342,8 @@ export default function CentersManagement() {
     }
   };
 
+  const openConfirm = (action) => setConfirm(action);
+
   const runConfirm = async () => {
     if (!confirm) return;
     setBusy(true);
@@ -175,106 +363,212 @@ export default function CentersManagement() {
     }
   };
 
-  const centerName = (center) => center?.name || "هذا المركز";
+  const statusBadge = (status) => (
+    <span
+      className={`inline-flex min-h-7 items-center rounded-full px-3 py-1 text-xs font-bold ${
+        statusStyles[status] ?? "bg-surface-muted text-text-muted"
+      }`}
+    >
+      {statusLabels[status] ?? status}
+    </span>
+  );
 
   return (
-    <div className="p-6">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold text-text-main">إدارة المراكز</h1>
+    <div
+      data-testid="centers-page"
+      dir="rtl"
+      className="mx-auto w-full min-w-0 max-w-7xl space-y-6 p-4 md:p-6"
+    >
+      <div className="no-print flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <h1 className="text-xl font-bold text-text-main md:text-2xl">إدارة المراكز</h1>
         <div className="flex flex-wrap items-center gap-2">
           <button
+            type="button"
             onClick={loadCenters}
-            className="flex items-center gap-2 rounded-lg border border-surface-border px-3 py-2 text-text-muted hover:bg-surface-muted"
+            data-testid="centers-refresh"
+            aria-label="تحديث المراكز"
+            className={`${buttonClass} border border-surface-border bg-surface-card text-text-muted hover:bg-surface-muted`}
           >
-            <RefreshCw size={16} /> تحديث
+            <RefreshCw size={16} aria-hidden="true" /> تحديث
           </button>
           <button
+            type="button"
             onClick={() => setModalPreset("Teacher")}
-            className="flex items-center gap-2 rounded-lg bg-secondary px-4 py-2 text-white hover:bg-secondary-hover"
+            data-testid="centers-create-solo"
+            className={`${buttonClass} bg-secondary text-primary-contrast hover:bg-secondary-hover`}
           >
-            <UserRound size={16} /> مدرس فردي
+            <UserRound size={16} aria-hidden="true" /> مدرس فردي
           </button>
           <button
+            type="button"
             onClick={() => setModalPreset("CenterOwner")}
-            className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-white hover:bg-primary-hover"
+            data-testid="centers-create-center"
+            className={`${buttonClass} bg-primary text-primary-contrast hover:bg-primary-hover`}
           >
-            <UserPlus size={16} /> مركز جديد
+            <UserPlus size={16} aria-hidden="true" /> مركز جديد
           </button>
         </div>
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <input
-          type="text"
-          placeholder="بحث بالاسم أو الهاتف..."
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-          className="min-w-[220px] flex-1 rounded-xl border border-surface-border bg-surface-muted p-2.5 text-text-main focus:border-primary focus:outline-none"
-        />
-        <select
-          value={status}
-          onChange={(e) => {
-            setStatus(e.target.value);
-            setPage(1);
-          }}
-          className="rounded-xl border border-surface-border bg-surface-muted p-2.5 text-text-main focus:border-primary focus:outline-none"
-        >
-          <option value="">كل الحالات</option>
-          <option value="Active">نشط</option>
-          <option value="Suspended">موقوف</option>
-          <option value="Expired">منتهي</option>
-        </select>
+      <div
+        data-testid="centers-filters"
+        className="no-print grid grid-cols-1 gap-3 rounded-card border border-surface-border bg-surface-card p-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_14rem]"
+      >
+        <label className="sr-only" htmlFor="centers-search-input">
+          بحث بالاسم أو الهاتف
+        </label>
+        <div className="min-w-0">
+          <input
+            id="centers-search-input"
+            type="search"
+            placeholder="بحث بالاسم أو الهاتف..."
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            data-testid="centers-search"
+            aria-label="بحث بالاسم أو الهاتف"
+            className={fieldClass}
+          />
+        </div>
+        <div className="min-w-0">
+          <label className="sr-only" htmlFor="centers-status-select">
+            كل الحالات
+          </label>
+          <select
+            id="centers-status-select"
+            value={status}
+            onChange={(e) => {
+              setStatus(e.target.value);
+              setPage(1);
+            }}
+            data-testid="centers-status"
+            aria-label="تصفية حسب الحالة"
+            className={fieldClass}
+          >
+            <option value="">كل الحالات</option>
+            <option value="Active">نشط</option>
+            <option value="Suspended">موقوف</option>
+            <option value="Expired">منتهي</option>
+          </select>
+        </div>
       </div>
 
-      <div className="rounded-lg border border-surface-border bg-surface-card shadow">
-        {loading ? (
-          <div className="p-10">
-            <Spinner msg="جارٍ تحميل المراكز..." />
-          </div>
-        ) : rows.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 p-10 text-text-muted">
-            <Building2 size={40} />
-            <p>لا توجد مراكز بعد</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-right">
-              <thead className="bg-surface-muted text-sm text-text-muted">
-                <tr>
-                  <th className="p-4 font-medium">#</th>
-                  <th className="p-4 font-medium">المركز</th>
-                  <th className="p-4 font-medium">المالك</th>
-                  <th className="p-4 font-medium">النوع</th>
-                  <th className="p-4 font-medium">المدرسون</th>
-                  <th className="p-4 font-medium">الطلاب</th>
-                  <th className="p-4 font-medium">الحالة</th>
-                  <th className="p-4 font-medium">إجراءات</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((center, index) => {
-                  const suspended = center.status === "Suspended";
-                  return (
+      {loading ? (
+        <LoadingState message="جارٍ تحميل المراكز..." />
+      ) : error ? (
+        <ErrorState testId="centers-error" message={error} onRetry={loadCenters} />
+      ) : rows.length === 0 ? (
+        <div
+          data-testid="centers-empty"
+          className="flex min-h-[16rem] flex-col items-center justify-center gap-3 rounded-card border border-surface-border bg-surface-card p-6 text-center text-text-muted"
+        >
+          <Building2 size={40} aria-hidden="true" />
+          <p className="text-sm font-semibold">لا توجد مراكز بعد</p>
+        </div>
+      ) : (
+        <>
+          <ul data-testid="centers-cards" className="space-y-3 md:hidden">
+            {rows.map((center) => (
+              <li
+                key={center.id}
+                data-testid="centers-card"
+                className="min-w-0 rounded-card border border-surface-border bg-surface-card p-4 shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="break-words text-base font-bold text-text-main">
+                      {center.name}
+                    </p>
+                    <p className="mt-1 break-words text-sm text-text-muted">
+                      {center.ownerName || "-"}
+                    </p>
+                    <p className="break-all text-sm text-text-muted" dir="ltr">
+                      {center.ownerPhone || ""}
+                    </p>
+                    {center.ownerEmail && (
+                      <p className="break-all text-sm text-text-muted" dir="ltr">
+                        {center.ownerEmail}
+                      </p>
+                    )}
+                  </div>
+                  {statusBadge(center.status)}
+                </div>
+                <dl className="mt-3 grid grid-cols-3 gap-2 rounded-lg bg-surface-muted p-3 text-sm">
+                  <div className="min-w-0">
+                    <dt className="text-xs text-text-muted">النوع</dt>
+                    <dd className="break-words font-bold text-text-main">
+                      {typeLabels[center.type] ?? center.type}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-text-muted">المدرسون</dt>
+                    <dd className="font-bold text-text-main">{center.teachersCount}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-text-muted">الطلاب</dt>
+                    <dd className="font-bold text-text-main">{center.studentsCount}</dd>
+                  </div>
+                </dl>
+                <div className="mt-4 border-t border-surface-border pt-3">
+                  <CenterActions
+                    center={center}
+                    suspended={center.status === "Suspended"}
+                    busy={busy}
+                    accessToken={accessToken}
+                    onImpersonate={handleImpersonate}
+                    onConfirm={openConfirm}
+                    onEdit={setEditCenter}
+                    onPasswordInfo={setPasswordInfo}
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+
+          <div className="hidden md:block">
+            <ScrollHint label="اسحب الجدول أفقيًا لرؤية بقية الأعمدة." />
+            <div
+              data-scroll-region
+              tabIndex={0}
+              role="region"
+              aria-label="جدول المراكز"
+              className="overflow-x-auto rounded-card border border-surface-border bg-surface-card shadow-sm"
+            >
+              <table data-testid="centers-table" className="w-full min-w-[1040px] text-right text-sm">
+                <thead className="bg-surface-muted text-text-muted">
+                  <tr>
+                    <th className="p-4 font-semibold">#</th>
+                    <th className="p-4 font-semibold">المركز</th>
+                    <th className="p-4 font-semibold">المالك</th>
+                    <th className="p-4 font-semibold">النوع</th>
+                    <th className="p-4 font-semibold">المدرسون</th>
+                    <th className="p-4 font-semibold">الطلاب</th>
+                    <th className="p-4 font-semibold">الحالة</th>
+                    <th className="p-4 font-semibold">إجراءات</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-surface-border">
+                  {rows.map((center, index) => (
                     <tr
                       key={center.id}
-                      className="border-t border-surface-border hover:bg-surface-muted/50"
+                      data-testid="center-row"
+                      className="hover:bg-surface-muted/50"
                     >
                       <td className="p-4 text-text-muted">
                         {(page - 1) * pageSize + index + 1}
                       </td>
                       <td className="p-4 font-bold text-text-main">
-                        {center.name}
+                        <span className="block break-words">{center.name}</span>
                       </td>
                       <td className="p-4 text-text-muted">
-                        <div>{center.ownerName || "-"}</div>
-                        <div className="text-xs" dir="ltr">
+                        <div className="break-words">{center.ownerName || "-"}</div>
+                        <div className="break-all text-sm" dir="ltr">
                           {center.ownerPhone || ""}
                         </div>
                         {center.ownerEmail && (
-                          <div className="text-xs" dir="ltr">
+                          <div className="break-all text-sm" dir="ltr">
                             {center.ownerEmail}
                           </div>
                         )}
@@ -282,164 +576,57 @@ export default function CentersManagement() {
                       <td className="p-4 text-text-muted">
                         {typeLabels[center.type] ?? center.type}
                       </td>
-                      <td className="p-4 text-text-muted">
-                        {center.teachersCount}
-                      </td>
-                      <td className="p-4 text-text-muted">
-                        {center.studentsCount}
-                      </td>
+                      <td className="p-4 text-text-muted">{center.teachersCount}</td>
+                      <td className="p-4 text-text-muted">{center.studentsCount}</td>
+                      <td className="p-4">{statusBadge(center.status)}</td>
                       <td className="p-4">
-                        <span
-                          className={`rounded-full px-3 py-1 text-xs font-bold ${
-                            statusStyles[center.status] ??
-                            "bg-surface-muted text-text-muted"
-                          }`}
-                        >
-                          {statusLabels[center.status] ?? center.status}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <button
-                            onClick={() => handleImpersonate(center)}
-                            disabled={!center.ownerId || !accessToken}
-                            className="rounded-lg border border-surface-border px-2.5 py-1.5 text-xs font-bold text-primary hover:bg-primary-subtle disabled:opacity-50"
-                          >
-                            دخول كالمالك
-                          </button>
-                          {center.type === "SoloTeacher" && (
-                            <button
-                              title="ترقية إلى متعدد المدرسين"
-                              disabled={busy}
-                              onClick={() =>
-                                setConfirm({
-                                  title: "ترقية إلى متعدد المدرسين",
-                                  message: `هل تريد ترقية ${centerName(center)} إلى مركز متعدد المدرسين؟ سيتمكن المالك بعدها من إضافة مدرسين ومجموعات لكل مدرس.`,
-                                  confirmText: "ترقية",
-                                  successMessage: "تمت ترقية المركز",
-                                  action: () =>
-                                    centerService.upgradeToMultiTeacher(center.id),
-                                })
-                              }
-                              className="rounded-lg border border-surface-border px-2.5 py-1.5 text-xs font-bold text-status-warning hover:bg-surface-muted disabled:opacity-50"
-                            >
-                              ترقية
-                            </button>
-                          )}
-                          <button
-                            title="تعديل"
-                            onClick={() => setEditCenter(center)}
-                            className="rounded-lg border border-surface-border p-1.5 text-text-muted hover:bg-surface-muted"
-                          >
-                            <Pencil size={16} />
-                          </button>
-                          <button
-                            title={suspended ? "تفعيل" : "إيقاف"}
-                            onClick={() =>
-                              setConfirm({
-                                title: suspended ? "تفعيل المركز" : "إيقاف المركز",
-                                message: suspended
-                                  ? `هل تريد تفعيل ${centerName(center)}؟ سيستعيد المستخدمون الدخول فوراً.`
-                                  : `هل تريد إيقاف ${centerName(center)}؟ سيمنع جميع المستخدمين من الدخول فوراً.`,
-                                confirmText: suspended ? "تفعيل" : "إيقاف",
-                                danger: !suspended,
-                                successMessage: suspended
-                                  ? "تم تفعيل المركز"
-                                  : "تم إيقاف المركز",
-                                action: () =>
-                                  centerService.setStatus(center.id, suspended ? 1 : 2),
-                              })
-                            }
-                            className="rounded-lg border border-surface-border p-1.5 text-text-muted hover:bg-surface-muted"
-                          >
-                            {suspended ? (
-                              <PlayCircle size={16} />
-                            ) : (
-                              <XCircle size={16} />
-                            )}
-                          </button>
-                          <button
-                            title="إعادة تعيين كلمة المرور"
-                            disabled={!center.ownerId}
-                            onClick={() =>
-                              setConfirm({
-                                title: "إعادة تعيين كلمة المرور",
-                                message: `هل تريد إعادة تعيين كلمة مرور ${center.ownerName || "مالك المركز"}؟ سيُطلب منه تغييرها عند الدخول.`,
-                                confirmText: "إعادة التعيين",
-                                successMessage: "تم إعادة تعيين كلمة المرور",
-                                action: async () => {
-                                  const response =
-                                    await centerService.resetUserPassword(
-                                      center.ownerId,
-                                    );
-                                  if (
-                                    response?.succeeded !== false &&
-                                    response?.data?.temporaryPassword
-                                  ) {
-                                    setPasswordInfo({
-                                      title: "كلمة مرور مؤقتة",
-                                      phone: response.data.phoneNumber,
-                                      password:
-                                        response.data.temporaryPassword,
-                                    });
-                                  }
-                                  return response;
-                                },
-                              })
-                            }
-                            className="rounded-lg border border-surface-border p-1.5 text-text-muted hover:bg-surface-muted disabled:opacity-50"
-                          >
-                            <Key size={16} />
-                          </button>
-                          <button
-                            title="حذف"
-                            onClick={() =>
-                              setConfirm({
-                                title: "حذف المركز",
-                                message: `هل تريد حذف ${centerName(center)}؟ لا يمكن التراجع عن هذه العملية.`,
-                                confirmText: "حذف",
-                                danger: true,
-                                successMessage: "تم حذف المركز",
-                                action: () => centerService.softDelete(center.id),
-                              })
-                            }
-                            className="rounded-lg border border-surface-border p-1.5 text-status-danger hover:bg-surface-muted"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
+                        <CenterActions
+                          center={center}
+                          suspended={center.status === "Suspended"}
+                          busy={busy}
+                          accessToken={accessToken}
+                          onImpersonate={handleImpersonate}
+                          onConfirm={openConfirm}
+                          onEdit={setEditCenter}
+                          onPasswordInfo={setPasswordInfo}
+                        />
                       </td>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        )}
-      </div>
 
-      {meta.totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between text-sm text-text-muted">
-          <span>
-            صفحة {page} من {meta.totalPages} — إجمالي {meta.totalCount}
-          </span>
-          <div className="flex gap-2">
-            <button
-              disabled={page <= 1}
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="rounded-lg border border-surface-border px-3 py-1.5 hover:bg-surface-muted disabled:opacity-50"
+          {meta.totalPages > 1 && (
+            <div
+              data-testid="centers-pagination"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-card border border-surface-border bg-surface-card p-4 text-sm text-text-muted"
             >
-              السابق
-            </button>
-            <button
-              disabled={page >= meta.totalPages}
-              onClick={() => setPage((p) => p + 1)}
-              className="rounded-lg border border-surface-border px-3 py-1.5 hover:bg-surface-muted disabled:opacity-50"
-            >
-              التالي
-            </button>
-          </div>
-        </div>
+              <span>
+                صفحة {page} من {meta.totalPages} — إجمالي {meta.totalCount}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  className={`${buttonClass} border border-surface-border bg-surface-card text-text-main hover:bg-surface-muted`}
+                >
+                  السابق
+                </button>
+                <button
+                  type="button"
+                  disabled={page >= meta.totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                  className={`${buttonClass} border border-surface-border bg-surface-card text-text-main hover:bg-surface-muted`}
+                >
+                  التالي
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       <AddTeacherModal
@@ -459,31 +646,43 @@ export default function CentersManagement() {
 
       {confirm && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl border border-surface-border bg-surface-card p-6 shadow-2xl">
-            <div className="mb-2 flex items-center justify-between">
-              <h2 className="text-lg font-extrabold text-text-main">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="center-confirm-title"
+            className="w-full max-w-md rounded-2xl border border-surface-border bg-surface-card p-6 shadow-2xl"
+          >
+            <div className="mb-2 flex items-start justify-between gap-3">
+              <h2
+                id="center-confirm-title"
+                className="text-lg font-extrabold text-text-main"
+              >
                 {confirm.title}
               </h2>
               <button
+                type="button"
                 onClick={() => setConfirm(null)}
-                className="rounded-lg p-1 text-text-muted hover:bg-surface-muted"
+                aria-label="إغلاق"
+                className={iconButtonClass}
               >
-                <X size={20} />
+                <X size={20} aria-hidden="true" />
               </button>
             </div>
-            <p className="mb-5 text-sm text-text-muted">{confirm.message}</p>
-            <div className="flex justify-end gap-3">
+            <p className="mb-5 break-words text-sm text-text-muted">{confirm.message}</p>
+            <div className="flex flex-wrap justify-end gap-3">
               <button
+                type="button"
                 onClick={() => setConfirm(null)}
                 disabled={busy}
-                className="rounded-xl border border-surface-border px-4 py-2 text-text-muted hover:bg-surface-muted disabled:opacity-60"
+                className={`${buttonClass} border border-surface-border bg-surface-card text-text-main hover:bg-surface-muted`}
               >
                 إلغاء
               </button>
               <button
+                type="button"
                 onClick={runConfirm}
                 disabled={busy}
-                className={`rounded-xl px-5 py-2 font-bold text-white disabled:opacity-60 ${
+                className={`${buttonClass} px-5 text-primary-contrast ${
                   confirm.danger
                     ? "bg-status-danger hover:opacity-90"
                     : "bg-primary hover:bg-primary-hover"
@@ -498,8 +697,16 @@ export default function CentersManagement() {
 
       {passwordInfo && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl border border-surface-border bg-surface-card p-6 shadow-2xl">
-            <h2 className="mb-2 text-lg font-extrabold text-text-main">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="center-password-title"
+            className="w-full max-w-md rounded-2xl border border-surface-border bg-surface-card p-6 shadow-2xl"
+          >
+            <h2
+              id="center-password-title"
+              className="mb-2 text-lg font-extrabold text-text-main"
+            >
               {passwordInfo.title}
             </h2>
             <p className="mb-4 text-sm text-text-muted">
@@ -508,23 +715,28 @@ export default function CentersManagement() {
             </p>
             <div className="space-y-2 rounded-xl bg-surface-muted p-4 text-sm">
               <div className="flex items-center justify-between gap-2">
-                <div>
+                <div className="min-w-0">
                   <span className="text-text-muted">اسم الدخول: </span>
-                  <b dir="ltr">{passwordInfo.phone}</b>
+                  <b className="break-all" dir="ltr">
+                    {passwordInfo.phone}
+                  </b>
                 </div>
                 <CopyButton value={passwordInfo.phone} />
               </div>
               <div className="flex items-center justify-between gap-2">
-                <div>
+                <div className="min-w-0">
                   <span className="text-text-muted">كلمة المرور المؤقتة: </span>
-                  <b dir="ltr">{passwordInfo.password}</b>
+                  <b className="break-all" dir="ltr">
+                    {passwordInfo.password}
+                  </b>
                 </div>
                 <CopyButton value={passwordInfo.password} />
               </div>
             </div>
             <button
+              type="button"
               onClick={() => setPasswordInfo(null)}
-              className="mt-5 w-full rounded-xl bg-primary py-2.5 font-bold text-white hover:bg-primary-hover"
+              className={`${buttonClass} mt-5 w-full bg-primary text-primary-contrast hover:bg-primary-hover`}
             >
               تم
             </button>

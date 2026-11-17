@@ -1747,6 +1747,65 @@ rather than requiring actual overflow.
 
 ---
 
+## F-038 — Duplicate load-error toasts covered header controls on narrow layouts
+
+**Severity:** Medium (a retryable load failure hid another control at 768px and on a 844x390 landscape phone; no data loss)
+
+**Found:** 2026-11-17 by the first full phase 3 batch 10 matrix (360/390/768/1024/1280/1440/1920/2560,
+844x390 and 640x360, 200% text/page zoom, light and dark).
+
+**Symptom**
+
+The four redesigned SuperAdmin screens render an inline `role="alert"` with a retry
+button. Their load handlers also fired `toast.error(...)`, so a transient second copy
+of the same message appeared over the page. The DOM overlap probe measured one
+covered interactive control in each of these runs:
+
+```
+centers-error 768 light      button class=inline-flex.min-h-11
+centers-error 768 dark       covered by div class=go3615723686, text="تعذر تحميل المراكز"
+centers-error land-844 light button class=inline-flex.min-h-11
+centers-error land-844 dark  covered by div class=go3615723686, text="تعذر تحميل المراكز"
+```
+
+The covered button was a header action (the toast's fixed position crossed it at
+those widths). The other viewports passed, which is why a phone-only or desktop-only
+iteration would not have caught it.
+
+**Root cause**
+
+The redesign added a persistent, retryable inline error region but kept the legacy
+`react-hot-toast` call in the `catch` branch. The toast was not the only feedback;
+it was a second, transient copy with a fixed overlay position.
+
+**Fix** — feedback consolidation, no API or permission change:
+
+- `CentersManagement`, `SubscriptionsManagement`, `PlatformStatistics` and
+  `AuditLogPage` now show the inline error only on load failure. The message text and
+  retry action are unchanged; the toast import was removed where it became unused
+  (`SubscriptionsManagement`, `PlatformStatistics`, `AuditLogPage`).
+- `CentersManagement` keeps `react-hot-toast` for success/copy/action feedback, but
+  no longer calls `toast.error` for a failed initial load.
+- A comment at each load-error branch records why the toast is intentionally absent.
+
+**Regression guard**
+
+The batch 10 harness checks every visible interactive control for geometric coverage
+by a later DOM element on every page, viewport, theme and zoom state. After the fix the
+full matrix is clean: **ALL PASS, 242 runs**, including the four previously failing
+`centers-error` runs. The inline error, its retry button and the underlying error text
+are asserted in `batch10SuperAdmin.test.jsx`.
+
+**Harness note (not a product defect):** the first full run also reported
+`platform-error 1920 dark: Manrope not loaded`. That page uses only a local fallback
+font until an error is shown, so the declared face had not been fetched. The harness
+now calls `document.fonts.load('12px Tajawal')` and `document.fonts.load('12px Manrope')`
+before asserting font availability; no product font or CSS changed.
+
+**Status: FIXED** in phase 3 batch 10.
+
+---
+
 ## Harness failures during the Stage C dry runs (not product defects)
 
 These stopped recordings before Stage C started. None of them is a product bug, and none of
