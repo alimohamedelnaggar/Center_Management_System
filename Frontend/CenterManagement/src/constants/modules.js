@@ -47,7 +47,7 @@ export const MODULES = {
 
 export const MODULE_LABELS = {
   [MODULES.ATTENDANCE]: "الحضور والغياب",
-  [MODULES.GRADES]: "الدرجات",
+  // [MODULES.GRADES]: "الدرجات",
   [MODULES.QUESTION_BANK]: "بنك الأسئلة",
   [MODULES.ONLINE_EXAMS]: "الاختبارات الإلكترونية",
   [MODULES.STUDY_NOTES]: "المذكرات",
@@ -104,7 +104,7 @@ export const NAV_ITEMS = [
   // Student reports (accounts / attendance / exams): a core page for teachers -
   // every column is gated by its own module inside the page itself.
   { key: "student-reports", path: "/student-reports", label: "تقارير الطلاب", icon: FileText, module: null, roles: ["teacher"] },
-  { key: "grades", path: "/grades", label: "الدرجات", icon: Star, module: MODULES.GRADES, roles: ["assistant", "teacher"] },
+  // { key: "grades", path: "/grades", label: "الدرجات", icon: Star, module: MODULES.GRADES, roles: ["assistant", "teacher"] },
   { key: "question-bank", path: "/question-bank", label: "بنك الأسئلة", icon: LibraryBig, module: MODULES.QUESTION_BANK, roles: ["assistant", "teacher"] },
   { key: "exams", path: "/exams", label: "الامتحانات", icon: ClipboardList, module: MODULES.ONLINE_EXAMS, roles: ["assistant", "teacher"] },
   { key: "notes", path: "/notes", label: "الملاحظات", icon: NotebookText, module: MODULES.STUDY_NOTES, roles: ["assistant", "teacher"] },

@@ -1,6 +1,6 @@
 import apiClient from "../api/axios";
 
-const baseURL = import.meta.env.VITE_HUB_API_URL;
+const baseURL = import.meta.env.  VITE_API_BASE_URL;
 
 export const financeService = {
   // =========================================================
