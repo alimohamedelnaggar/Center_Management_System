@@ -1,4 +1,5 @@
 import apiClient from "../api/axios";
+import { normalizePaginatedResponse } from "../utils/paginated";
 
 /**
  * The import endpoints return `Response<T>` (see Core/Bases/Response.cs) with
@@ -164,7 +165,7 @@ export const studentsService = {
       `/Student/Paginated?${params.toString()}`,
     );
 
-    return response.data;
+    return normalizePaginatedResponse(response.data);
   },
 
   getAll: async (pageIndex = 1, pageSize = 7, search = "") => {
@@ -175,7 +176,7 @@ export const studentsService = {
         search,
       },
     });
-    return response.data?.data || response.data;
+    return normalizePaginatedResponse(response.data);
   },
 
   getStats: async () => {

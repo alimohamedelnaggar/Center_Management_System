@@ -71,3 +71,19 @@ export function normalizePaginated(payload) {
 
   return { items, data: items, totalCount, totalPages, currentPage, pageSize };
 }
+
+/**
+ * Service-layer wrapper. It exposes the normalized fields at the top level
+ * while keeping the backend envelope in `data` (and keeping `succeeded`,
+ * `message`, `statusCode` and friends) so existing list screens keep reading
+ * exactly the same values as before. No endpoint, permission or UI change.
+ */
+export function normalizePaginatedResponse(payload) {
+  const normalized = normalizePaginated(payload);
+  if (!isObject(payload)) return normalized;
+  return {
+    ...payload,
+    ...normalized,
+    data: payload.data ?? normalized.items,
+  };
+}

@@ -1,11 +1,12 @@
 import apiClient from "../api/axios";
+import { normalizePaginatedResponse } from "../utils/paginated";
 
 export const groupsService = {
   getAll: async (pageNumber = 1, pageSize = 10) => {
     const response = await apiClient.get(
       `/Group/Paginated?pageNumber=${pageNumber}&pageSize=${pageSize}`,
     );
-    return response.data;
+    return normalizePaginatedResponse(response.data);
   },
   getAllGroups: async () => {
     const response = await apiClient.get(`/Group/get-all`);
