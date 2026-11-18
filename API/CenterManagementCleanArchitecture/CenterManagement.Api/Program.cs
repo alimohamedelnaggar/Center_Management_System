@@ -195,6 +195,10 @@ app.UseStaticFiles();
 // Brute-force protection for the sign-in endpoint (per-IP and per-phone).
 app.UseMiddleware<SignInRateLimitingMiddleware>();
 
+// Anti-enumeration protection for the anonymous student-card lookup (per-IP,
+// per-code and per-IP missed lookups).
+app.UseMiddleware<StudentCardRateLimitingMiddleware>();
+
 app.UseAuthentication();
 
 // Enforce center/account lifecycle on every authenticated request so a

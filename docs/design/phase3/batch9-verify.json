@@ -1,0 +1,409 @@
+{
+  "summary": {
+    "generated": "2026-11-17T11:52:43.981Z",
+    "viewports": 10,
+    "pages": [
+      "center-reports"
+    ],
+    "runs": 4,
+    "baseRuns": 1,
+    "textZoom": 2,
+    "pageZoom": 1,
+    "failures": [],
+    "byPage": {
+      "center-reports": [
+        {
+          "id": "390",
+          "width": 390,
+          "height": 844,
+          "theme": "light",
+          "overflowX": 0,
+          "outside": 0,
+          "small": 0,
+          "primary": 0,
+          "clipped": 0,
+          "covered": 0,
+          "overlap": 0,
+          "contrast": 4.9,
+          "state": "teachers · 2"
+        }
+      ]
+    },
+    "apiCalls": 4,
+    "apiSummary": {
+      "/Api/V1/Authentication/refresh-token": 5,
+      "/Api/V1/Reports/Center-Overview": 9,
+      "/Api/V1/Center/MyCenter": 9,
+      "/Api/V1/Profile/GetMyProfile": 8
+    },
+    "console": {
+      "entries": 15,
+      "leaks": 0
+    },
+    "pageErrors": 0
+  },
+  "runs": [
+    {
+      "page": "center-reports",
+      "id": "390",
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "vw": 390,
+      "vh": 844,
+      "dir": "rtl",
+      "overflowX": 0,
+      "overflowY": 1729,
+      "outside": [],
+      "outsideCount": 0,
+      "wide": [],
+      "beyond": [],
+      "chain": [],
+      "docWidths": {
+        "innerWidth": 390,
+        "client": 390,
+        "scroll": 390,
+        "body": 390
+      },
+      "small": [],
+      "smallCount": 0,
+      "primary": [],
+      "primaryCount": 0,
+      "clipped": [],
+      "clippedCount": 0,
+      "covered": [],
+      "coveredCount": 0,
+      "overlaps": [],
+      "overlapCount": 0,
+      "contrastMin": 4.9,
+      "contrastLow": [],
+      "fonts": {
+        "tajawal": true,
+        "manrope": true,
+        "status": "loaded",
+        "body": "Tajawal, Manrope, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif"
+      },
+      "pageHeading": "تقارير المركز",
+      "badText": [],
+      "ui": {
+        "qr": null,
+        "bulk": null,
+        "wizard": null,
+        "accounts": null,
+        "text": "تقارير المركزأرقام المركز كاملة: الإجماليات، القيود المالية، المدرسون والمجموعات.تصدير CSVطباعةمن شهرإلى شهرشهر الفوترة (المتوقع والمتبقي)«المحصّل في الفترة» ونسب الحضور تُحتسب من 2026-11 إلى 2026-12، أمّا «المتوقع / المتبقي للشهر» فتُحتسب لشهر الفوترة 2026-11"
+      },
+      "shell": {},
+      "probe": {
+        "text": "تقارير المركزأرقام المركز كاملة: الإجماليات، القيود المالية، المدرسون والمجموعات.تصدير CSVطباعةمن شهرإلى شهرشهر الفوترة (المتوقع والمتبقي)«المحصّل في الفترة» ونسب الحضور تُحتسب من 2026-11 إلى 2026-12، أمّا «المتوقع / المتبقي للشهر» فتُحتسب لشهر الفوترة 2026-11.الإجمالياتالطلاب النشطون12345المدرسون234المساعدون56المجموعات789القيود المالية للفترةمدفوعات الطلاب المحصّلة1,234,567,890 ج.مإيرادات أخرى987,654,321 ج.مالمصاريف456,789,123 ج.ممصروفات المساعدين123,456,789 ج.مالصافي1,644,068,899 ج.مالإيرادات مقابل المصروفات (آخر 6 أشهر)الإيراداتالمصروفات2026-062026-072026-082026-092026-102026-110500.0ألف1.0م1.5م2.0مبالمدرسوناسحب الجدول أفقيًا لرؤية بقية الأعمدة.#المدرسالمجموعاتالطلابالمحصّل في الفترةحضورغيابتأخربعذرنسبة الحضور1أ. سارة إبراهيم عبد الرحمن — مدرسة اللغة العربية والتفسير12345456,789.50 ج.م110054602089.1%2أ. محمد عبد الرحمن8210123,456.75 ج.م70050302087.5%بالمجموعاتشهر الفوترة: 2026-11اسحب الجدول أفقيًا لرؤية المتوقع والمحصّل والمتبقي.#المجموعةالمدرسالطلابحضورغيابتأخربعذرنسبة الحضورالمتوقع للشهرالمحصّل للشهرالمتبقي للشهر1مجموعة الصف الثالث الثانوي — الرياضيات المتقدمة والمراجعة النهائيةأ. سارة إبراهيم عبد الرحمن — مدرسة اللغة العربية والتفسير345110054602089.1%1,234,567.50 ج.م1,000,000.25 ج.م234,567.25 ج.معرض المتأخرين2مراجعة ليلة الامتحانأ. محمد عبد الرحمن21070050302087.5%987,654.50 ج.م800,000 ج.م187,654.50 ج.معرض المتأخرينالإجمالي (كل المجموعات)2,222,222 ج.م1,800,000.25 ج.م422,221.75 ج.م«المتبقي للشهر» هو نفسه رقم متأخّري ذلك الشهر بالضبط — فتح صفحة المتأخرين",
+        "heading": "تقارير المركز",
+        "table": true,
+        "tableRows": 4,
+        "stats": 50,
+        "counts": {
+          "teacherRows": 2,
+          "groupRows": 2,
+          "teacherTable": 0,
+          "groupTable": 0,
+          "statCards": 50,
+          "reportTables": 0,
+          "dialogs": 0,
+          "scrollHints": 7,
+          "inputs": 3,
+          "unread": null
+        },
+        "scrollRegions": [
+          {
+            "label": "جدول المدرسين",
+            "client": 356,
+            "scroll": 720,
+            "overflowX": "auto",
+            "tabIndex": "0"
+          },
+          {
+            "label": "جدول المجموعات",
+            "client": 356,
+            "scroll": 1058,
+            "overflowX": "auto",
+            "tabIndex": "0"
+          }
+        ],
+        "dialog": null,
+        "chart": {
+          "ticks": 11,
+          "minTickFont": 12,
+          "labels": [
+            "2026-06",
+            "2026-07",
+            "2026-08",
+            "2026-09",
+            "2026-10",
+            "2026-11",
+            "0",
+            "500.0ألف",
+            "1.0م",
+            "1.5م",
+            "2.0م"
+          ],
+          "svg": 3
+        },
+        "bell": {
+          "expanded": null,
+          "panel": false,
+          "markAll": false,
+          "count": null
+        },
+        "shell": {
+          "app": true,
+          "student": false,
+          "parent": false
+        },
+        "dir": "rtl"
+      }
+    }
+  ],
+  "probes": {
+    "csvExport": {
+      "blobs": 1,
+      "bytes": [
+        239,
+        187,
+        191
+      ],
+      "download": "تقارير_المركز_2026-11.csv",
+      "header": [
+        "تقرير المركز,من 2026-11 إلى 2026-12,شهر الفوترة 2026-11,",
+        "\"الإجماليات\",\"\"",
+        "\"الطلاب النشطون\",\"12345\""
+      ],
+      "hasTeacherRows": true,
+      "hasGroupRows": true
+    },
+    "print": {
+      "asideDisplay": "none",
+      "noPrint": 7,
+      "noPrintHidden": true,
+      "printArea": true,
+      "printAreaMinWidth": "0px",
+      "tableDisplay": "table",
+      "tableMinWidth": "0px",
+      "tableCellFont": "11px"
+    }
+  },
+  "textZoom": [
+    {
+      "page": "center-reports",
+      "id": "390",
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "vw": 390,
+      "vh": 844,
+      "dir": "rtl",
+      "overflowX": 0,
+      "overflowY": 5682,
+      "outside": [],
+      "outsideCount": 0,
+      "wide": [],
+      "beyond": [],
+      "chain": [],
+      "docWidths": {
+        "innerWidth": 390,
+        "client": 390,
+        "scroll": 390,
+        "body": 390
+      },
+      "small": [],
+      "smallCount": 0,
+      "primary": [],
+      "primaryCount": 0,
+      "clipped": [],
+      "clippedCount": 0,
+      "covered": [],
+      "coveredCount": 0,
+      "overlaps": [],
+      "overlapCount": 0,
+      "contrastMin": 4.9,
+      "contrastLow": [],
+      "fonts": {
+        "tajawal": true,
+        "manrope": true,
+        "status": "loaded",
+        "body": "Tajawal, Manrope, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif"
+      },
+      "pageHeading": "تقارير المركز",
+      "badText": [],
+      "ui": {
+        "qr": null,
+        "bulk": null,
+        "wizard": null,
+        "accounts": null,
+        "text": "تقارير المركزأرقام المركز كاملة: الإجماليات، القيود المالية، المدرسون والمجموعات.تصدير CSVطباعةمن شهرإلى شهرشهر الفوترة (المتوقع والمتبقي)«المحصّل في الفترة» ونسب الحضور تُحتسب من 2026-11 إلى 2026-12، أمّا «المتوقع / المتبقي للشهر» فتُحتسب لشهر الفوترة 2026-11"
+      }
+    },
+    {
+      "page": "center-reports",
+      "id": "1440",
+      "width": 1440,
+      "height": 900,
+      "theme": "light",
+      "vw": 1440,
+      "vh": 900,
+      "dir": "rtl",
+      "overflowX": 0,
+      "overflowY": 3592,
+      "outside": [],
+      "outsideCount": 0,
+      "wide": [],
+      "beyond": [],
+      "chain": [],
+      "docWidths": {
+        "innerWidth": 1440,
+        "client": 1440,
+        "scroll": 1440,
+        "body": 1440
+      },
+      "small": [],
+      "smallCount": 0,
+      "primary": [],
+      "primaryCount": 0,
+      "clipped": [],
+      "clippedCount": 0,
+      "covered": [],
+      "coveredCount": 0,
+      "overlaps": [],
+      "overlapCount": 0,
+      "contrastMin": 4.9,
+      "contrastLow": [],
+      "fonts": {
+        "tajawal": true,
+        "manrope": true,
+        "status": "loaded",
+        "body": "Tajawal, Manrope, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif"
+      },
+      "pageHeading": "تقارير المركز",
+      "badText": [],
+      "ui": {
+        "qr": null,
+        "bulk": null,
+        "wizard": null,
+        "accounts": null,
+        "text": "تقارير المركزأرقام المركز كاملة: الإجماليات، القيود المالية، المدرسون والمجموعات.تصدير CSVطباعةمن شهرإلى شهرشهر الفوترة (المتوقع والمتبقي)«المحصّل في الفترة» ونسب الحضور تُحتسب من 2026-11 إلى 2026-12، أمّا «المتوقع / المتبقي للشهر» فتُحتسب لشهر الفوترة 2026-11"
+      }
+    }
+  ],
+  "pageZoom": [
+    {
+      "page": "center-reports",
+      "id": "1440",
+      "width": 720,
+      "height": 450,
+      "theme": "light",
+      "vw": 720,
+      "vh": 450,
+      "dir": "rtl",
+      "overflowX": 0,
+      "overflowY": 1919,
+      "outside": [],
+      "outsideCount": 0,
+      "wide": [],
+      "beyond": [],
+      "chain": [],
+      "docWidths": {
+        "innerWidth": 720,
+        "client": 720,
+        "scroll": 720,
+        "body": 720
+      },
+      "small": [],
+      "smallCount": 0,
+      "primary": [],
+      "primaryCount": 0,
+      "clipped": [],
+      "clippedCount": 0,
+      "covered": [],
+      "coveredCount": 0,
+      "overlaps": [],
+      "overlapCount": 0,
+      "contrastMin": 4.9,
+      "contrastLow": [],
+      "fonts": {
+        "tajawal": true,
+        "manrope": true,
+        "status": "loaded",
+        "body": "Tajawal, Manrope, ui-sans-serif, system-ui, -apple-system, \"Segoe UI\", sans-serif"
+      },
+      "pageHeading": "تقارير المركز",
+      "badText": [],
+      "ui": {
+        "qr": null,
+        "bulk": null,
+        "wizard": null,
+        "accounts": null,
+        "text": "تقارير المركزأرقام المركز كاملة: الإجماليات، القيود المالية، المدرسون والمجموعات.تصدير CSVطباعةمن شهرإلى شهرشهر الفوترة (المتوقع والمتبقي)«المحصّل في الفترة» ونسب الحضور تُحتسب من 2026-11 إلى 2026-12، أمّا «المتوقع / المتبقي للشهر» فتُحتسب لشهر الفوترة 2026-11"
+      }
+    }
+  ],
+  "consoleLog": [
+    {
+      "type": "debug",
+      "text": "[vite] connecting..."
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connected."
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connecting..."
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connected."
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connecting..."
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connected."
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connecting..."
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connected."
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connecting..."
+    },
+    {
+      "type": "debug",
+      "text": "[vite] connected."
+    },
+    {
+      "type": "info",
+      "text": "%cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold"
+    }
+  ],
+  "pageErrors": []
+}
