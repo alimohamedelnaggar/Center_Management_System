@@ -4,11 +4,19 @@ import { auditLogService } from "../services/platformService";
 
 const actionLabels = {
   OnboardCenter: "إنشاء مركز",
+  CenterCreated: "إنشاء مركز جديد",
+  SubscriptionRenewed: "تجديد اشتراك",
+  ModulesUpdated: "تعديل الوحدات المفعّلة",
+  PasswordReset: "إعادة تعيين كلمة مرور",
+  PlatformStatisticsViewed: "الاطلاع على إحصائيات المنصة",
   Impersonate: "بدء انتحال",
   ImpersonationEnd: "إنهاء انتحال",
+  ConfirmEmail: "تأكيد البريد الإلكتروني",
 };
 
-const formatAction = (action) => actionLabels[action] ?? action;
+// Display only. The raw action value is still sent to search/filter, so this
+// map never changes which rows the API returns.
+const formatAction = (action) => actionLabels[action] ?? "إجراء آخر";
 
 const fieldClass =
   "min-h-11 w-full rounded-xl border border-surface-border bg-surface-card px-3 py-2 text-sm text-text-main placeholder:text-text-muted focus:border-primary focus:outline-none";

@@ -304,7 +304,7 @@ const AUDIT_ROWS = [
     id: "audit-3",
     createdAt: "2026-11-16T10:20:00Z",
     actorName: "أ. خالد محمود",
-    // F-004: the raw action string must stay visible, not be silently mapped.
+    // F-004: the raw value still drives search/filter; only the cell is labelled.
     action: "PlatformStatisticsViewed",
     details: "عرض إحصائيات المنصة",
     ipAddress: "192.168.1.10",
@@ -743,13 +743,14 @@ describe("platform statistics (batch 10)", () => {
 // ---------------------------------------------------------------------------
 
 describe("audit log (batch 10)", () => {
-  it("filters and paginates events while keeping the raw action visible", async () => {
+  it("filters and paginates events with Arabic action labels", async () => {
     await mountPage(AuditLogPage);
 
     expect(byTestId("audit-page")).toBeTruthy();
     expect(byTestId("audit-cards") || byTestId("audit-table")).toBeTruthy();
     await waitFor(() => expect(auditRows()).toHaveLength(4));
-    expect(container.textContent).toContain("PlatformStatisticsViewed");
+    expect(container.textContent).toContain("الاطلاع على إحصائيات المنصة");
+    expect(container.textContent).not.toContain("PlatformStatisticsViewed");
 
     services.getPaginated.mockResolvedValue(AUDIT_SEARCH_PAGE);
     await type(byTestId("audit-search"), "  نور  ");
@@ -766,7 +767,8 @@ describe("audit log (batch 10)", () => {
     services.getPaginated.mockResolvedValue(AUDIT_PAGE);
     await click(byTestId("audit-refresh"));
     await waitFor(() => expect(auditRows()).toHaveLength(4));
-    expect(container.textContent).toContain("PlatformStatisticsViewed");
+    expect(container.textContent).toContain("الاطلاع على إحصائيات المنصة");
+    expect(container.textContent).not.toContain("PlatformStatisticsViewed");
 
     await click(paginationButton("audit-pagination", "التالي"));
     await waitFor(() =>
