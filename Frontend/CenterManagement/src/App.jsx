@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 
+import LoginPage from "./components/Auth/LoginComponent/Login";
 import ProtectedRoute from "./components/Auth/ProtectedRoute";
 import Spinner from "./components/common/Spinner";
 import ModuleGuard from "./components/common/ModuleGuard";
@@ -15,13 +16,11 @@ import { ROUTE_GUARDS } from "./constants/routeGuards";
 import { moduleForPath } from "./constants/modules";
 
 /**
- * Every page and portal layout is loaded on demand. Guards stay eager so the
- * shell and access checks render immediately while the page chunk (charts,
- * Excel, SignalR, QR/barcode or validation) arrives in the background.
+ * Every protected page and portal layout is loaded on demand. Guards and the
+ * login screen stay eager so signing in never waits for an extra route chunk;
+ * the heavy page chunks (charts, Excel, SignalR, QR/barcode, validation)
+ * arrive only after authentication.
  */
-const LoginPage = lazy(() =>
-  import("./components/Auth/LoginComponent/Login"),
-);
 const ForgotPasswordPage = lazy(() => import("./pages/ForgotPasswordPage"));
 const EmailConfirmedPage = lazy(() => import("./pages/EmailConfirmedPage"));
 const StudentCardLookupPage = lazy(() =>

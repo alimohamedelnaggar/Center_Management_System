@@ -17,18 +17,36 @@ export function RouteLoading() {
   );
 }
 
+const AUTO_RELOAD_KEY = "routeChunkAutoReloadAttempted";
+
 /**
  * Catches chunk-load failures (offline, stale deploy, missing file) and shows
  * the same Arabic recovery screen for every route instead of a blank page.
+ * After a deploy, an open tab can still hold an old HTML file and request a
+ * hashed chunk that no longer exists. One automatic full reload is enough to
+ * fetch the new HTML; sessionStorage prevents an endless reload loop when the
+ * chunk is genuinely unavailable.
  */
 export default class RouteLoadBoundary extends Component {
   constructor(props) {
     super(props);
-    this.state = { error: null };
+    this.state = { error: null, autoReloading: false };
   }
 
   static getDerivedStateFromError(error) {
     return { error };
+  }
+
+  shouldRetryAutomatically() {
+    if (typeof window === "undefined") return false;
+    try {
+      const storage = window.sessionStorage;
+      if (!storage || storage.getItem(AUTO_RELOAD_KEY) === "1") return false;
+      storage.setItem(AUTO_RELOAD_KEY, "1");
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   componentDidCatch(error, info) {
@@ -37,6 +55,11 @@ export default class RouteLoadBoundary extends Component {
       error,
       info?.componentStack,
     );
+
+    if (this.shouldRetryAutomatically()) {
+      this.setState({ error: null, autoReloading: true });
+      if (typeof window !== "undefined") window.location.reload();
+    }
   }
 
   handleRetry = () => {
@@ -45,6 +68,7 @@ export default class RouteLoadBoundary extends Component {
   };
 
   render() {
+    if (this.state.autoReloading) return null;
     if (!this.state.error) return this.props.children;
 
     return (
