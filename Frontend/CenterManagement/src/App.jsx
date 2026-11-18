@@ -126,8 +126,12 @@ function App() {
       <Route path="/student-card/:code" element={<StudentCardLookupPage />} />
       <Route path="/student-card" element={<StudentCardLookupPage />} />
 
-      {/* Internal design-system gallery (not linked from the product nav). */}
-      <Route path="/components" element={<DesignComponentsPage />} />
+      {/* Internal design-system gallery. Dev-only: `import.meta.env.DEV` is
+          replaced with false in production, so this route and its import are
+          removed from the release bundle. */}
+      {import.meta.env.DEV && (
+        <Route path="/components" element={<DesignComponentsPage />} />
+      )}
 
       {/* First sign-in with a temporary password: forces a change before use. */}
       <Route element={<ProtectedRoute allowWhilePasswordChange />}>

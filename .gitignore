@@ -48,6 +48,12 @@ docs/design/fonts/
 # of KB per batch). Only the human-readable .md report is committed.
 docs/design/**/*-verify.json
 
+# Playwright/E2E runtime output (screenshots, video, PID and reports)
+e2e/artifacts/
+e2e/test-results/
+e2e/playwright-report/
+e2e/fast-tour.log
+
 # Visual Studio files
 *.suo
 *.user

@@ -115,5 +115,29 @@ if (-not $proof) {
     throw "API started but did not emit the E2E safety proof line within 75 seconds. See $logPath"
 }
 
+# The safety proof is printed before seeding finishes and before Kestrel binds
+# the port. Wait for the real "Now listening" line so Playwright never races
+# the seeder on the first sign-in.
+$ready = $null
+while ((Get-Date) -lt $deadline) {
+    if ($process.HasExited) {
+        $stdout = if (Test-Path $logPath) { Get-Content $logPath -Raw } else { '' }
+        $stderr = if (Test-Path $errorLogPath) { Get-Content $errorLogPath -Raw } else { '' }
+        throw "API exited while starting the listener.`n$stdout`n$stderr"
+    }
+
+    if (Test-Path $logPath) {
+        $ready = Select-String -Path $logPath -Pattern 'Now listening on:' | Select-Object -First 1
+        if ($ready) { break }
+    }
+
+    Start-Sleep -Milliseconds 500
+}
+
+if (-not $ready) {
+    throw "API emitted the safety proof but never reported a listening URL within 75 seconds. See $logPath"
+}
+
 Write-Host $proof.Line
+Write-Host $ready.Line
 Write-Host "PID file: $pidPath"
