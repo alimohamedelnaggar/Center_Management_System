@@ -1,4 +1,5 @@
 import apiClient from "../api/axios";
+import { normalizePaginatedResponse } from "../utils/paginated";
 
 export const expenseCategoryService = {
   getAllPaged: async ({ pageNumber = 1, pageSize = 10 }) => {
@@ -11,7 +12,7 @@ export const expenseCategoryService = {
       `/ExpenseCategory/Paginated?${params.toString()}`,
     );
 
-    return response.data;
+    return normalizePaginatedResponse(response.data);
   },
 
   getAll: async () => {

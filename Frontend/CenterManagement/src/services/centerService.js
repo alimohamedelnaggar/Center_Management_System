@@ -1,4 +1,5 @@
 ﻿import apiClient from "../api/axios";
+import { normalizePaginatedResponse } from "../utils/paginated";
 
 export const centerService = {
   create: async (data) => {
@@ -33,7 +34,7 @@ export const centerService = {
     const response = await apiClient.get("/Center/Paginated", {
       params: { pageNumber, pageSize },
     });
-    return response.data;
+    return normalizePaginatedResponse(response.data);
   },
   // SuperAdmin: paginated list of every center with optional filters.
   getCentersPaged: async ({
@@ -46,7 +47,7 @@ export const centerService = {
     const response = await apiClient.get("/Center/Paginated", {
       params: { pageNumber, pageSize, search, status, type },
     });
-    return response.data;
+    return normalizePaginatedResponse(response.data);
   },
   getById: async (id) => {
     const response = await apiClient.get(`/Center/${id}`);

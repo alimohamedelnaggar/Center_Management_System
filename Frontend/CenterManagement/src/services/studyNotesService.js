@@ -1,5 +1,6 @@
 import axios from "axios";
 import apiClient, { getAccessToken } from "../api/axios";
+import { normalizePaginatedResponse } from "../utils/paginated";
 
 // The API base without the "/api/V1" suffix, so we can build static file URLs.
 const apiOrigin = () =>
@@ -39,7 +40,7 @@ export const studyNotesService = {
       `/StudyNote/Paginated?${params.toString()}`,
     );
 
-    return response.data;
+    return normalizePaginatedResponse(response.data);
   },
 
   create: async ({ title, description, groupIds, file }) => {

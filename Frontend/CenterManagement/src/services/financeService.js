@@ -1,4 +1,5 @@
 import apiClient from "../api/axios";
+import { normalizePaginatedResponse } from "../utils/paginated";
 
 const baseURL = import.meta.env.VITE_HUB_API_URL;
 
@@ -76,7 +77,7 @@ export const financeService = {
       },
     );
 
-    return response.data;
+    return normalizePaginatedResponse(response.data);
   },
 
   // =========================================================
@@ -142,7 +143,7 @@ export const financeService = {
       },
     );
 
-    return response.data;
+    return normalizePaginatedResponse(response.data);
   },
 
   // =========================================================
@@ -180,7 +181,7 @@ export const financeService = {
       },
     );
 
-    return response.data;
+    return normalizePaginatedResponse(response.data);
   },
 
   // =========================================================

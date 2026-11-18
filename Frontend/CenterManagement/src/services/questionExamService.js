@@ -1,4 +1,5 @@
 import apiClient from "../api/axios";
+import { normalizePaginatedResponse } from "../utils/paginated";
 
 export const questionExamService = {
   getPaged: async ({
@@ -26,7 +27,7 @@ export const questionExamService = {
       `/QuestionExam/Paginated?${params.toString()}`,
     );
 
-    return response.data;
+    return normalizePaginatedResponse(response.data);
   },
 
   getById: async (id) => {
