@@ -1,4 +1,5 @@
 import apiClient from "../api/axios";
+import { normalizePaginatedResponse } from "../utils/paginated";
 
 export const platformService = {
   getStatistics: async () => {
@@ -17,7 +18,7 @@ export const auditLogService = {
     const response = await apiClient.get("/AuditLogs/Paginated", {
       params: { pageNumber, pageSize, search, action },
     });
-    return response.data;
+    return normalizePaginatedResponse(response.data);
   },
 };
 

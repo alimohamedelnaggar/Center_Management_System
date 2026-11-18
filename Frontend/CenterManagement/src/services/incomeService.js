@@ -1,4 +1,5 @@
 import apiClient from "../api/axios";
+import { normalizePaginatedResponse } from "../utils/paginated";
 
 export const incomeService = {
   getAllPaged: async ({
@@ -23,7 +24,7 @@ export const incomeService = {
       `/Income/Paginated?${params.toString()}`,
     );
 
-    return response.data;
+    return normalizePaginatedResponse(response.data);
   },
 
   getAll: async (pageIndex = 1, pageSize = 7, search = "") => {
@@ -34,7 +35,7 @@ export const incomeService = {
         search,
       },
     });
-    return response.data?.data || response.data;
+    return normalizePaginatedResponse(response.data);
   },
 
   getById: async (id) => {

@@ -1,5 +1,6 @@
 import axios from "axios";
 import apiClient, { getAccessToken } from "../api/axios";
+import { normalizePaginatedResponse } from "../utils/paginated";
 
 // The API base without the "/api/V1" suffix, so we can build static image URLs.
 const apiOrigin = () =>
@@ -65,7 +66,7 @@ export const questionBankService = {
       `/QuestionBank/Paginated?${params.toString()}`,
     );
 
-    return response.data;
+    return normalizePaginatedResponse(response.data);
   },
 
   createBank: async (data) => {
