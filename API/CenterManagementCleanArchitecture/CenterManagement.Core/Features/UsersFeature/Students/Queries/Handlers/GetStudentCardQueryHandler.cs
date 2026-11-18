@@ -113,7 +113,7 @@ public class GetStudentCardQueryHandler : ResponseHandler,
             })
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (student is null)
+        if (student is null || !student.IsActive)
             return NotFound<StudentCardDTO>("مفيش طالب بالكود ده.");
 
         // The card is public, so its branding must come from the student's own
