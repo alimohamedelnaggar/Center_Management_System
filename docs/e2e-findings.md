@@ -243,12 +243,12 @@ matrix (§7) records the real behaviour per role instead of faking a card layout
 
 **Found:** 2026-10-27 while re-reading the SuperAdmin audit page to write the Stage C spec.
 
-**Symptom**
+**Symptom (as found)**
 
-The `الإجراء` column is Arabic only for three actions. Every other action — including all the
-actions the SuperAdmin performs during this tour — is displayed as the raw backend identifier.
+The `الإجراء` column was Arabic only for three actions. Every other action — including all the
+actions the SuperAdmin performs during this tour — was displayed as the raw backend identifier.
 
-`Frontend/CenterManagement/src/pages/AuditLogPage.jsx`:
+Before the fix, `Frontend/CenterManagement/src/pages/AuditLogPage.jsx` held:
 
 ```js
 const actionLabels = {
@@ -261,18 +261,31 @@ const formatAction = (action) => actionLabels[action] ?? action;
 ```
 
 The seeded log already contains `CenterCreated`, `SubscriptionRenewed`, `ModulesUpdated`,
-`PasswordReset`, `PlatformStatisticsViewed`, so the raw values are visible before any action.
+`PasswordReset`, `PlatformStatisticsViewed`, so the raw values were visible before any action.
 
-**Impact on the tour**
+**Status: FIXED** in the phase 3 follow-up on `feat/audit-event-labels`.
 
-SA-10 must **assert the real behaviour**: exactly three translated labels, and the rest raw.
-The chapter is not failed by this; F-004 is recorded and the assertion matches the product.
-The action **filter** is unaffected because it submits the raw action value.
+`formatAction` now uses the approved display map and falls back to `إجراء آخر` for unknown
+actions:
 
-**Why it is not fixed here**
+| Raw action | Arabic label |
+|---|---|
+| `OnboardCenter` | `إنشاء مركز` |
+| `CenterCreated` | `إنشاء مركز جديد` |
+| `SubscriptionRenewed` | `تجديد اشتراك` |
+| `ModulesUpdated` | `تعديل الوحدات المفعّلة` |
+| `PasswordReset` | `إعادة تعيين كلمة مرور` |
+| `PlatformStatisticsViewed` | `الاطلاع على إحصائيات المنصة` |
+| `Impersonate` | `بدء انتحال` |
+| `ImpersonationEnd` | `إنهاء انتحال` |
+| `ConfirmEmail` | `تأكيد البريد الإلكتروني` |
+| any other value | `إجراء آخر` |
 
-Adding a complete label map is a product/i18n change outside the recording task. It is listed as a
-follow-up; the filter and pagination still work.
+The map is **display only**: the raw identifier is still sent in the search and filter payload,
+and no endpoint or permission changed. SA-10 now searches by the raw
+`PlatformStatisticsViewed` and asserts the cell shows `الاطلاع على إحصائيات المنصة`, so the
+search contract and the label are both covered. `batch10SuperAdmin.test.jsx` asserts the same
+label and that the raw name is no longer rendered.
 
 ---
 

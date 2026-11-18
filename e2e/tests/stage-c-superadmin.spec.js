@@ -998,7 +998,7 @@ test('Stage C — SuperAdmin (SA-01 … SA-13)', async ({ page }, testInfo) => {
   await finish(8);
 
   // -------------------------------------------------------------------------
-  // SA-10 — audit log: real labels, raw labels, search, filter, pager
+  // SA-10 — audit log: Arabic labels, raw search value, filter, pager
   // -------------------------------------------------------------------------
   await begin(9);
 
@@ -1016,8 +1016,8 @@ test('Stage C — SuperAdmin (SA-01 … SA-13)', async ({ page }, testInfo) => {
   );
   expect(totalBefore).toBeGreaterThan(20);
 
-  // F-004: only three actions have Arabic labels. Search for a raw one and
-  // show the untranslated identifier exactly as the table renders it.
+  // F-004: the filter still matches the raw identifier, while the cell now
+  // shows the approved Arabic label. Both facts are asserted here.
   const auditSearch = page.getByPlaceholder('بحث في الأحداث...');
   await typeInto(page, auditSearch, 'PlatformStatisticsViewed');
   await clickWithCursor(
@@ -1025,8 +1025,9 @@ test('Stage C — SuperAdmin (SA-01 … SA-13)', async ({ page }, testInfo) => {
     page.getByRole('button', { name: 'بحث', exact: true }),
   );
   await expect(auditRows).toHaveCount(1, { timeout: 30_000 });
-  const rawActionCell = page.locator('tbody tr td:nth-child(3)').first();
-  await expect(rawActionCell).toHaveText('PlatformStatisticsViewed');
+  const labelledActionCell = page.locator('tbody tr td:nth-child(3)').first();
+  await expect(labelledActionCell).toHaveText('الاطلاع على إحصائيات المنصة');
+  await expect(labelledActionCell).not.toContainText('PlatformStatisticsViewed');
   await hold(page, 2_000);
 
   await typeInto(page, auditSearch, '');
