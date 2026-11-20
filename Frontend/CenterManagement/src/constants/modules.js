@@ -320,6 +320,10 @@ const PARENT_ROUTE_MODULES = {
   "/parent/dashboard": MODULES.PARENT_PORTAL,
   "/parent/notifications": MODULES.PARENT_PORTAL,
   "/parent/children": MODULES.PARENT_PORTAL,
+  // Staff page that creates parent accounts in bulk. Its sidebar entry is
+  // intentionally commented out, so it must be mapped here (not only through
+  // NAV_ITEMS) or ModuleRoute would let a center without `parent_portal` in.
+  "/bulk-parent-accounts": MODULES.PARENT_PORTAL,
 };
 
 /** Sidebar/route: which module gates each client-side path. */
