@@ -170,6 +170,14 @@ describe("moduleForPath", () => {
     expect(moduleForPath("/parent/dashboard")).toBe(MODULES.PARENT_PORTAL);
     expect(moduleForPath("/parent/notifications")).toBe(MODULES.PARENT_PORTAL);
   });
+
+  it("gates the bulk parent-accounts page with parent_portal", () => {
+    expect(moduleForPath("/bulk-parent-accounts")).toBe(MODULES.PARENT_PORTAL);
+    expect(moduleForPath("/bulk-parent-accounts/")).toBe(MODULES.PARENT_PORTAL);
+    expect(moduleForPath("/bulk-parent-accounts?step=2")).toBe(
+      MODULES.PARENT_PORTAL,
+    );
+  });
 });
 
 describe("message templates navigation", () => {
