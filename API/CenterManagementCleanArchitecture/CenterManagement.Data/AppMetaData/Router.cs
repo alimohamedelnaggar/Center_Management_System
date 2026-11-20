@@ -112,7 +112,7 @@ public static class Routing
         public const string Edit = Prefix + "Edit";
         public const string Delete = Prefix + "{id}";
         public const string ChangePassword = Prefix + "Change-Password";
-        public const string ResetPassword = Prefix + "Reset-Password";
+        public const string ResetPassword = Prefix + "/Reset-Password";
     }
     public static class StudentCardRouting
     {
