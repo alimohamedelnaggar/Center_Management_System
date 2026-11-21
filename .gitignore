@@ -67,3 +67,4 @@ docs/design/shots/
 docs/design/**/*.json
 docs/design/fonts/
 e2e/artifacts/*.pid
+e2e/artifacts/*.pid
