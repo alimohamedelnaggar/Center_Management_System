@@ -62,3 +62,8 @@ e2e/fast-tour.log
 *.ntvs*
 *.njsproj
 *.sw?
+# generated design artifacts
+docs/design/shots/
+docs/design/**/*.json
+docs/design/fonts/
+e2e/artifacts/*.pid
