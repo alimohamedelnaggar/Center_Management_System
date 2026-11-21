@@ -1061,11 +1061,10 @@ observed. The failing frame is a connection open/return inside the SQLite provid
 
 **Symptom**
 
-The checkbox label rendered literal CJK characters in the middle of the Arabic sentence:
-
-```
-تخطي الطلاب الذين跟他们 ولي أمر مرتبط بالفعل
-```
+The checkbox label contained foreign-script characters inserted in the middle of
+the Arabic sentence, so the label mixed two writing systems and appeared broken.
+The affected text has been removed from the documentation; the corrected Arabic
+wording is recorded in `docs/ui-text-changes.md`.
 
 The bug predates this branch (`git show HEAD:Frontend/.../BulkParentAccountsPage.jsx` has the same
 line), so it was a latent translation/paste defect that only became visible once the page was
@@ -1960,3 +1959,52 @@ the video it produces (GitHub caps a job at 360 minutes).
   Run the built DLL directly (or `dotnet run --no-launch-profile`) with `ASPNETCORE_ENVIRONMENT=E2E`.
 - The parent/student layouts use a logout button with visible text but no `title`; the sidebar uses
   `title="تسجيل خروج"`. The tour helper locates the button by accessible name so it works in both.
+
+---
+
+## F-039 — مسار حسابات أولياء الأمور فقد قيد الوحدة في وضع المسؤول المقيّد
+
+**الخطورة:** متوسطة (واجهة محظورة تظهر لمركز لا يملك الوحدة؛ لا فقدان بيانات)
+
+**تاريخ الاكتشاف:** 2026-11-18 أثناء إعادة كتابة جولة Stage C على الواجهة الحالية.
+
+**الوصف**
+
+عند انتحال حساب مالك «مركز الأمل»، وهو مركز عُطّلت فيه وحدة `parent_portal`، يفتح الرابط
+`/bulk-parent-accounts` صفحة «حسابات أولياء الأمور» بدل شاشة «غير مشترك في هذه الوحدة».
+الواجهة تعتمد في تحديد الوحدة المطلوبة لكل مسار على مدخل `NAV_ITEMS` الخاص بالصفحة، وهذا المدخل
+مُعلَّق حاليًا، فتُعيد الدالة `moduleForPath()` قيمة فارغة ويُتجاوز قيد `ModuleRoute` دون تحقق.
+
+**الأثر على الجولة**
+
+الفصل SA-06 يسجّل الملاحظة ويؤكد الوصول الفعلي للصفحة بدل شاشة القفل. لم تُضعف أي تأكيدات أخرى،
+ولم يتغير سلوك التطبيق؛ أُضيف وصف الفصل إلى `findings` في manifest الجولة.
+
+**الحالة:** FIXED (2026-11-20). أُضيف `/bulk-parent-accounts` إلى `PARENT_ROUTE_MODULES`
+ربطًا بوحدة `parent_portal`، مع اختبار يحقق المسار العادي ومع query/الشرطة المضافة.
+الإصلاح في الفرع `fix/bulk-parent-module-guard` (الالتزام `b51eaea`) ودُمج محليًا في `main`.
+
+---
+
+## F-040 — زر إعادة تعيين كلمة مرور المالك يُعيد خطأ 404
+
+**الخطورة:** عالية (وظيفة ظاهرة في شاشة إدارة المراكز لا تعمل إطلاقًا)
+
+**تاريخ الاكتشاف:** 2026-11-18 أثناء الجولة السريعة لـ Stage C، الفصل SA-12.
+
+**الوصف**
+
+يستدعي زر «إعادة تعيين كلمة المرور» في `CentersManagement.jsx` العنوان
+`/User/Reset-Password` عبر `centerService.resetUserPassword`. الخادم يُعيد `404` لأن ثابت المسار
+في `Routing.ApplicationUserRouting` بُني دون فاصل بين `User` و`Reset-Password`، فأصبح المسار
+الفعلي `Api/V1/UserReset-Password`. تعرض الواجهة رسالة خطأ عامة ويبقى مربع الحوار مفتوحًا.
+
+**الأثر على الجولة**
+
+تعذّر إكمال سيناريو كلمة المرور المؤقتة وتغييرها القسري داخل SA-12. سجّلت الجولة الملاحظة،
+وأغلقت مربع الحوار، وأكملت بقية الفصول. لم تُخفَ المشكلة ولا عُدِّل الكود؛ أُضيف `blockedBy`
+إلى بيانات الفصل في `chapters.json`.
+
+**الحالة:** FIXED (2026-11-20). صُحّح ثابت المسار إلى `Api/V1/User/Reset-Password`،
+مع اختبارات تتحقق من `200` على المسار الصحيح و`404/405` على المسار القديم.
+الإصلاح في الفرع `fix/owner-password-reset-route` (الالتزام `668dd34`) ودُمج محليًا في `main`.

@@ -1,7 +1,7 @@
 import apiClient from "../api/axios";
 import { normalizePaginatedResponse } from "../utils/paginated";
 
-const baseURL = import.meta.env.  VITE_API_BASE_URL;
+const baseURL = import.meta.env.VITE_HUB_API_URL;
 
 export const financeService = {
   // =========================================================
